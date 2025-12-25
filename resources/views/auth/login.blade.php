@@ -28,12 +28,19 @@
         @endif
 
         @if ($errors->any())
-            <div class="mb-4 text-xs text-red-300 border border-red-500/40 bg-red-900/30 rounded px-3 py-2">
+            <div class="mb-2 text-xs text-red-300 border border-red-500/40 bg-red-900/30 rounded px-3 py-2">
                 <ul class="list-disc list-inside space-y-0.5">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
+            </div>
+        @endif
+
+        @if (session('lock_remaining'))
+            <div id="lock-box" class="mb-4 text-xs text-red-300 border border-red-500/40 bg-red-900/30 rounded px-3 py-2 flex items-center justify-between">
+                <span>Tu cuenta está temporalmente bloqueada por intentos fallidos.</span>
+                <span class="font-mono text-red-100" id="lock-timer" data-remaining="{{ session('lock_remaining') }}"></span>
             </div>
         @endif
 
@@ -62,7 +69,7 @@
 
             <div class="pt-2 space-y-3">
                 <button type="submit"
-                    class="w-full inline-flex items-center justify-center rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:from-blue-500 hover:to-indigo-500 transition">
+                    class="w-full inline-flex items-center justify-center rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:from-blue-500 hover:to-indigo-500 transition cursor-pointer ">
                     Entrar
                 </button>
 
@@ -94,6 +101,35 @@ function togglePassword(_, btn) {
         icon.innerHTML = `<path stroke-linecap='round' stroke-linejoin='round' d='M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z'/><path stroke-linecap='round' stroke-linejoin='round' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'/>`;
     }
 }
+
+// Contador visual para el bloqueo de usuario
+document.addEventListener('DOMContentLoaded', () => {
+    const timerEl = document.getElementById('lock-timer');
+    if (!timerEl) return;
+
+    let remaining = parseInt(timerEl.dataset.remaining, 10) || 0;
+    const format = (sec) => {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${m}:${s.toString().padStart(2, '0')} (min:seg)`;
+    };
+
+    const update = () => {
+        if (remaining <= 0) {
+            // Cuando termina el tiempo, ocultamos completamente el mensaje de bloqueo
+            const box = document.getElementById('lock-box');
+            if (box) box.style.display = 'none';
+            return;
+        }
+        timerEl.textContent = format(remaining);
+        remaining--;
+        if (remaining >= 0) {
+            setTimeout(update, 1000);
+        }
+    };
+
+    update();
+});
 </script>
 @endpush
 </div>

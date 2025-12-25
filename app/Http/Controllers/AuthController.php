@@ -91,18 +91,70 @@ class AuthController extends Controller
             'name.required' => 'El nombre de usuario es obligatorio.',
             'password.required' => 'La contraseña es obligatoria.',
         ]);
+        // Buscar usuario por nombre de usuario
+        $user = User::where('name', $credentials['name'])->first();
+
+        // Si el usuario está bloqueado temporalmente, no permitir el intento
+        if ($user && $user->locked_until && $user->locked_until->isFuture()) {
+            // Diferencia en segundos (firmada) entre ahora y el fin del bloqueo
+            $diff = now()->diffInSeconds($user->locked_until, false);
+
+            if ($diff > 0) {
+                $totalSeconds = $diff;
+
+                // Solo mandamos el tiempo restante; el mensaje se muestra en la vista
+                return Redirect::back()
+                    ->withInput($request->only('name'))
+                    ->with('lock_remaining', $totalSeconds);
+            }
+
+            // Si el tiempo ya expiró, limpiar bloqueo
+            $user->locked_until = null;
+            $user->login_attempts = 0;
+            $user->save();
+        }
 
         // Intentar iniciar sesión usando el nombre de usuario y contraseña
         if (Auth::attempt(['name' => $credentials['name'], 'password' => $credentials['password']])) {
             $request->session()->regenerate();
 
+            if ($user) {
+                // Restablecer intentos y bloqueo al iniciar sesión correctamente
+                $user->login_attempts = 0;
+                $user->locked_until = null;
+                $user->save();
+            }
+
             return Redirect::route('dashboard');
+        }
+
+        // Si las credenciales no son válidas, incrementar intentos y bloquear si llega a 3
+        if ($user) {
+            $user->login_attempts = ($user->login_attempts ?? 0) + 1;
+
+            if ($user->login_attempts >= 3) {
+                // Bloquear 1 minuto a partir de este tercer intento fallido
+                $user->locked_until = now()->addMinute();
+                $user->login_attempts = 0; // reiniciar el contador tras bloquear
+                $user->save();
+
+                // Para el primer mensaje de bloqueo, mostramos siempre 60 segundos en el contador visual
+                $totalSeconds = 60;
+
+                return Redirect::back()
+                    ->withInput($request->only('name'))
+                    ->with('lock_remaining', $totalSeconds);
+            }
+
+            $user->save();
         }
 
         return Redirect::back()
             ->withErrors(['name' => 'Las credenciales no son válidas.'])
             ->withInput($request->only('name'));
     }
+
+
 
     /**
      * Cerrar sesión.

@@ -26,6 +26,7 @@ class User extends Authenticatable
         'security_animal_answer',
         'security_padre_answer',
         'login_attempts',
+        'locked_until',
     ];
 
     /**
@@ -50,6 +51,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'locked_until' => 'datetime',
         ];
     }
 }
