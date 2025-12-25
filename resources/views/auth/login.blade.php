@@ -108,6 +108,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!timerEl) return;
 
     let remaining = parseInt(timerEl.dataset.remaining, 10) || 0;
+    const passwordInput = document.getElementById('password');
+    const submitBtn = document.querySelector('button[type="submit"]');
+
+    // Mientras exista tiempo de bloqueo, deshabilitamos el campo de contraseña (y el botón)
+    if (remaining > 0) {
+        if (passwordInput) passwordInput.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
+    }
     const format = (sec) => {
         const m = Math.floor(sec / 60);
         const s = sec % 60;
@@ -119,6 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Cuando termina el tiempo, ocultamos completamente el mensaje de bloqueo
             const box = document.getElementById('lock-box');
             if (box) box.style.display = 'none';
+
+            // Rehabilitar controles cuando ya no haya bloqueo
+            if (passwordInput) passwordInput.disabled = false;
+            if (submitBtn) submitBtn.disabled = false;
             return;
         }
         timerEl.textContent = format(remaining);
