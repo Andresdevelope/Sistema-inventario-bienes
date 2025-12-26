@@ -24,7 +24,7 @@
                 </div>
 
                 <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
-                    <a href="#" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-slate-100 bg-gradient-to-r from-blue-600/80 to-indigo-600/80 shadow hover:from-blue-500 hover:to-indigo-500 transition">
+                    <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-slate-100 bg-gradient-to-r from-blue-600/80 to-indigo-600/80 shadow hover:from-blue-500 hover:to-indigo-500 transition">
                         <span class="flex h-8 w-8 items-center justify-center rounded-md bg-slate-950/30">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875A2.25 2.25 0 0112 13.875v0a2.25 2.25 0 012.25 2.25v4.875h4.125c.621 0 1.125-.504 1.125-1.125V9.75" />
@@ -60,7 +60,7 @@
                         </span>
                     </a>
 
-                    <a href="#" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-900/70 transition">
+                    <a href="{{ route('users.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-900/70 transition">
                         <span class="flex h-8 w-8 items-center justify-center rounded-md bg-slate-900/70 group-hover:bg-slate-800">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />

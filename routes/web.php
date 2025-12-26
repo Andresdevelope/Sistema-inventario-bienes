@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -27,6 +28,11 @@ Route::get('/dashboard', function () {
 Route::get('/perfil', function () {
     return view('profile');
 })->name('profile');
+
+// Gestión de usuarios (panel interno)
+Route::get('/usuarios', [UserController::class, 'index'])->name('users.index');
+Route::get('/usuarios/{user}/editar', [UserController::class, 'edit'])->name('users.edit');
+Route::put('/usuarios/{user}', [UserController::class, 'update'])->name('users.update');
 
 // Recuperación de contraseña por preguntas de seguridad
 // Recuperación de contraseña (solo vista unificada)

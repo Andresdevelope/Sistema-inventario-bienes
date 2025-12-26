@@ -55,12 +55,16 @@ class AuthController extends Controller
             'security_padre_answer.max' => 'La respuesta del nombre de tu padre no puede superar los 255 caracteres.',
         ]);
 
+        // Si es el primer usuario del sistema, lo marcamos como administrador.
+        // A partir del segundo, serán usuarios normales.
+        $role = User::count() === 0 ? 'admin' : 'user';
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             // El cast "hashed" del modelo se encarga de encriptar la contraseña
             'password' => $validated['password'],
-            'role' => 'user',
+            'role' => $role,
             'security_color_answer' => $validated['security_color_answer'],
             'security_animal_answer' => $validated['security_animal_answer'],
             'security_padre_answer' => $validated['security_padre_answer'],

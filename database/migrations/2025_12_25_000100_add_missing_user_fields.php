@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (!Schema::hasColumn('users', 'role')) {
-                $table->string('role')->default('user');
+                $table->string('role')->default('admin');
             }
             if (!Schema::hasColumn('users', 'security_color_answer')) {
                 $table->string('security_color_answer')->nullable();

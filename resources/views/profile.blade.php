@@ -35,20 +35,15 @@
                     </div>
                 </div>
             </div>
-
-            <div class="mt-6 flex flex-wrap gap-2">
-                <button type="button" class="inline-flex items-center justify-center rounded-md bg-slate-800 px-3 py-1.5 text-[11px] font-medium text-slate-100 hover:bg-slate-700 transition">
-                    Editar datos básicos
-                </button>
-                <button type="button" class="inline-flex items-center justify-center rounded-md border border-slate-700 px-3 py-1.5 text-[11px] font-medium text-slate-200 hover:border-blue-500 hover:text-blue-200 transition">
-                    Cambiar contraseña
-                </button>
-            </div>
         </div>
 
         <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl text-[11px] text-slate-300 space-y-2">
             <p class="font-semibold text-slate-100 text-xs">Notas</p>
-            <p class="text-slate-400">En esta sección podrás gestionar tu información personal relacionada con el sistema de inventario de bienes.</p>
+            <p class="text-slate-400">
+                Esta pantalla solo muestra información de tu usuario (nombre, correo y rol).
+                Los cambios de contraseña, nombre, correo, rol y preguntas de seguridad se harán desde el módulo de
+                <span class="text-slate-100 font-semibold">gestión de usuarios</span>.
+            </p>
         </div>
     </div>
 @endsection
