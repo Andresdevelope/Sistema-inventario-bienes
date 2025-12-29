@@ -47,16 +47,8 @@
                 </div>
             </dl>
 
-            <div class="mt-6 flex items-center justify-between text-xs">
+            <div class="mt-6 text-xs">
                 <a href="{{ route('bienes.index') }}" class="text-slate-400 hover:text-slate-200 underline underline-offset-2 cursor-pointer">Volver al listado</a>
-                <div class="flex items-center gap-2">
-                    <a href="{{ route('bienes.edit', $bien) }}" class="inline-flex items-center rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-100 hover:bg-slate-700 cursor-pointer">Editar</a>
-                    <form method="POST" action="{{ route('bienes.destroy', $bien) }}" onsubmit="return confirm('¿Seguro que deseas eliminar este bien?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="inline-flex items-center rounded-md border border-red-500/60 bg-red-500/10 px-3 py-1.5 text-xs text-red-200 hover:bg-red-500/20 cursor-pointer">Eliminar</button>
-                    </form>
-                </div>
             </div>
         </div>
     </div>
