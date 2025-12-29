@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bitacora;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,66 @@ class UserController extends Controller
         $users = User::orderBy('id')->get();
 
         return view('users.index', compact('users'));
+    }
+
+    /**
+     * Crear un nuevo usuario desde el panel de administración.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:users,name'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'role' => ['required', 'in:admin,user'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'security_color_answer' => ['required', 'string', 'max:255'],
+            'security_animal_answer' => ['required', 'string', 'max:255'],
+            'security_padre_answer' => ['required', 'string', 'max:255'],
+        ], [
+            'name.required' => 'El nombre de usuario es obligatorio.',
+            'name.unique' => 'El nombre de usuario ya esta registrado.',
+            'name.max' => 'El nombre de usuario no puede superar los 255 caracteres.',
+
+            'email.required' => 'El correo electronico es obligatorio.',
+            'email.email' => 'El correo electronico no tiene un formato valido.',
+            'email.unique' => 'El correo electronico ya esta registrado.',
+            'email.max' => 'El correo electronico no puede superar los 255 caracteres.',
+
+            'role.required' => 'El rol es obligatorio.',
+            'role.in' => 'El rol seleccionado no es valido.',
+
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.confirmed' => 'La confirmación de la contraseña no coincide.',
+
+            'security_color_answer.required' => 'La respuesta de color favorito es obligatoria.',
+            'security_color_answer.max' => 'La respuesta de color favorito no puede superar los 255 caracteres.',
+
+            'security_animal_answer.required' => 'La respuesta de animal favorito es obligatoria.',
+            'security_animal_answer.max' => 'La respuesta de animal favorito no puede superar los 255 caracteres.',
+
+            'security_padre_answer.required' => 'La respuesta del nombre de tu padre es obligatoria.',
+            'security_padre_answer.max' => 'La respuesta del nombre de tu padre no puede superar los 255 caracteres.',
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+            'role' => $validated['role'],
+            'security_color_answer' => $validated['security_color_answer'],
+            'security_animal_answer' => $validated['security_animal_answer'],
+            'security_padre_answer' => $validated['security_padre_answer'],
+        ]);
+
+        Bitacora::registrar(
+            'usuarios',
+            'crear',
+            $user->id,
+            sprintf('Creó el usuario "%s" (ID %d, rol %s).', $user->name, $user->id, $user->role)
+        );
+
+        return redirect()->route('users.index')->with('status', 'Usuario creado correctamente.');
     }
 
     /**
@@ -80,6 +141,13 @@ class UserController extends Controller
 
         $user->save();
 
+        Bitacora::registrar(
+            'usuarios',
+            'actualizar',
+            $user->id,
+            sprintf('Actualizó el usuario "%s" (ID %d, rol %s).', $user->name, $user->id, $user->role)
+        );
+
         return redirect()->route('users.index')->with('status', 'Usuario actualizado correctamente.');
     }
 
@@ -95,7 +163,18 @@ class UserController extends Controller
                 ->with('error', 'No puedes eliminar tu propio usuario desde este módulo.');
         }
 
+        $nombre = $user->name;
+        $id = $user->id;
+        $role = $user->role;
+
         $user->delete();
+
+        Bitacora::registrar(
+            'usuarios',
+            'eliminar',
+            $id,
+            sprintf('Eliminó el usuario "%s" (ID %d, rol %s).', $nombre, $id, $role)
+        );
 
         return redirect()
             ->route('users.index')

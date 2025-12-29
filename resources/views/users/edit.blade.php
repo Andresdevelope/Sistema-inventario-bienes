@@ -41,11 +41,18 @@
                             <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Administrador</option>
                         </select>
                     </div>
-                    <div class="space-y-1">
+                    <div class="space-y-1 relative">
                         <label class="block text-xs font-medium text-slate-300" for="password">Nueva contraseña (opcional)</label>
                         <input id="password" name="password" type="password"
-                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 pr-8 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Dejar en blanco para no cambiar">
+                        <button type="button" onclick="togglePassword('password', this)" tabindex="-1"
+                            class="absolute right-2 top-8 text-slate-400 hover:text-blue-400 focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
@@ -77,3 +84,20 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    function togglePassword(_, btn) {
+        const input = btn.parentElement.querySelector('input[type="password"], input[type="text"]');
+        const icon = btn.querySelector('svg');
+        if (!input) return;
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.innerHTML = "<path stroke-linecap='round' stroke-linejoin='round' d='M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z'/><path stroke-linecap='round' stroke-linejoin='round' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'/><path stroke-linecap='round' stroke-linejoin='round' d='M4.5 4.5l15 15' />";
+        } else {
+            input.type = 'password';
+            icon.innerHTML = "<path stroke-linecap='round' stroke-linejoin='round' d='M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z'/><path stroke-linecap='round' stroke-linejoin='round' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'/>";
+        }
+    }
+</script>
+@endpush

@@ -63,7 +63,7 @@
                         </span>
                     </a>
 
-                    <a href="#" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-violet-100 hover:bg-white/10 transition">
+                    <a href="{{ route('bitacora.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-violet-100 hover:bg-white/10 transition">
                         <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h15.75c.621 0 1.125.504 1.125 1.125v5.25A1.125 1.125 0 0119.875 19.5H4.125A1.125 1.125 0 013 18.375v-5.25z" />

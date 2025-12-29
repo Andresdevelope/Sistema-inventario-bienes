@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BienController;
+use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken as VerifyCsrfTokenMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -52,12 +53,13 @@ Route::middleware('auth')->group(function () {
 // Gestión de usuarios (panel interno) - solo admin
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/usuarios', [UserController::class, 'index'])->name('users.index');
+    Route::post('/usuarios', [UserController::class, 'store'])->name('users.store');
     Route::get('/usuarios/{user}/editar', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/usuarios/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
-    // Aquí podrás añadir también la ruta de la bitácora solo para admin, por ejemplo:
-    // Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
+    // Bitácora del sistema (solo administrador)
+    Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
 });
 
 // Recuperación de contraseña por preguntas de seguridad

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bien;
+use App\Models\Bitacora;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -73,7 +74,14 @@ class BienController extends Controller
             'valor.min' => 'El valor no puede ser negativo.',
         ]);
 
-        Bien::create($validated);
+        $bien = Bien::create($validated);
+
+        Bitacora::registrar(
+            'bienes', // módulo
+            'crear',  // acción
+            $bien->id,
+            sprintf('Registró el bien "%s" (código %s, ID %d).', $bien->nombre, $bien->codigo, $bien->id)
+        );
 
         return redirect()->route('bienes.index')->with('status', 'Bien registrado correctamente.');
     }
@@ -132,6 +140,13 @@ class BienController extends Controller
 
         $bien->update($validated);
 
+        Bitacora::registrar(
+            'bienes',
+            'actualizar',
+            $bien->id,
+            sprintf('Actualizó el bien "%s" (código %s, ID %d).', $bien->nombre, $bien->codigo, $bien->id)
+        );
+
         return redirect()->route('bienes.index')->with('status', 'Bien actualizado correctamente.');
     }
 
@@ -140,7 +155,18 @@ class BienController extends Controller
      */
     public function destroy(Bien $bien): RedirectResponse
     {
+        $nombre = $bien->nombre;
+        $codigo = $bien->codigo;
+        $id = $bien->id;
+
         $bien->delete();
+
+        Bitacora::registrar(
+            'bienes',
+            'eliminar',
+            $id,
+            sprintf('Eliminó el bien "%s" (código %s, ID %d).', $nombre, $codigo, $id)
+        );
 
         return redirect()->route('bienes.index')->with('status', 'Bien eliminado correctamente.');
     }
