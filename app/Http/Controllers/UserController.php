@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class UserController extends Controller
@@ -80,5 +81,24 @@ class UserController extends Controller
         $user->save();
 
         return redirect()->route('users.index')->with('status', 'Usuario actualizado correctamente.');
+    }
+
+    /**
+     * Eliminar un usuario.
+     */
+    public function destroy(User $user): RedirectResponse
+    {
+        // Evitar que un usuario elimine su propia cuenta desde aquí
+        if (Auth::id() === $user->id) {
+            return redirect()
+                ->route('users.index')
+                ->with('error', 'No puedes eliminar tu propio usuario desde este módulo.');
+        }
+
+        $user->delete();
+
+        return redirect()
+            ->route('users.index')
+            ->with('status', 'Usuario eliminado correctamente.');
     }
 }

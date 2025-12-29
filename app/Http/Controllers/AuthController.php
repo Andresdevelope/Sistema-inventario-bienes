@@ -56,8 +56,8 @@ class AuthController extends Controller
         ]);
 
         // Si es el primer usuario del sistema, lo marcamos como administrador.
-        // A partir del segundo, serán usuarios normales.
-        $role = User::count() === 0 ? 'admin' : 'user';
+        // A partir del segundo, serán usuarios operadores (rol "user").
+        $role = User::count() === 0 ? User::ROLE_ADMIN : User::ROLE_OPERADOR;
 
         $user = User::create([
             'name' => $validated['name'],

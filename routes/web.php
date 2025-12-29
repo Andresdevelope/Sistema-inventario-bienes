@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BienController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,24 +16,46 @@ Route::post('/register', [AuthController::class, 'register']);
 // Login
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+// Rutas protegidas: solo usuarios autenticados
+Route::middleware('auth')->group(function () {
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Logout
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    // Dashboard sencillo protegido
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
 
-// Dashboard sencillo protegido
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
+    // Perfil de usuario (vista simple por ahora)
+    Route::get('/perfil', function () {
+        return view('profile');
+    })->name('profile');
 
-// Perfil de usuario (vista simple por ahora)
-Route::get('/perfil', function () {
-    return view('profile');
-})->name('profile');
+    // Módulo de bienes (inventario):
+    // - Solo accesible para usuarios autenticados con rol admin u operador (user).
+    // - Permite registrar, consultar, editar y eliminar bienes.
+    Route::middleware('role:admin,user')->group(function () {
+        Route::get('/bienes', [BienController::class, 'index'])->name('bienes.index');
+        Route::get('/bienes/crear', [BienController::class, 'create'])->name('bienes.create');
+        Route::post('/bienes', [BienController::class, 'store'])->name('bienes.store');
 
-// Gestión de usuarios (panel interno)
-Route::get('/usuarios', [UserController::class, 'index'])->name('users.index');
-Route::get('/usuarios/{user}/editar', [UserController::class, 'edit'])->name('users.edit');
-Route::put('/usuarios/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::get('/bienes/{bien}', [BienController::class, 'show'])->name('bienes.show');
+        Route::get('/bienes/{bien}/editar', [BienController::class, 'edit'])->name('bienes.edit');
+        Route::put('/bienes/{bien}', [BienController::class, 'update'])->name('bienes.update');
+        Route::delete('/bienes/{bien}', [BienController::class, 'destroy'])->name('bienes.destroy');
+    });
+});
+
+// Gestión de usuarios (panel interno) - solo admin
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/usuarios', [UserController::class, 'index'])->name('users.index');
+    Route::get('/usuarios/{user}/editar', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/usuarios/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+    // Aquí podrás añadir también la ruta de la bitácora solo para admin, por ejemplo:
+    // Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
+});
 
 // Recuperación de contraseña por preguntas de seguridad
 // Recuperación de contraseña (solo vista unificada)

@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'Sistema Inventario') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+<!-- Layout general para páginas públicas/autenticación, ahora con tema claro -->
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-slate-100 antialiased flex items-center justify-center p-4">
+<body class="min-h-screen bg-slate-100 text-slate-900 antialiased flex items-center justify-center p-4">
     <div class="w-full max-w-5xl">
         @yield('content')
     </div>

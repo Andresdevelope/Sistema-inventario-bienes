@@ -13,6 +13,12 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * Constantes de roles para evitar usar strings "mágicos".
+     */
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_OPERADOR = 'user'; // "user" actúa como operador del sistema
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -53,5 +59,21 @@ class User extends Authenticatable
             'password' => 'hashed',
             'locked_until' => 'datetime',
         ];
+    }
+
+    /**
+     * Indica si el usuario es administrador.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    /**
+     * Indica si el usuario es operador (rol "user" u otro alias equivalente).
+     */
+    public function isOperador(): bool
+    {
+        return in_array($this->role, [self::ROLE_OPERADOR, 'operador'], true);
     }
 }
