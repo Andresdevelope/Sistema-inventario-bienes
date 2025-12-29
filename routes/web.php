@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BienController;
 use App\Http\Controllers\UserController;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken as VerifyCsrfTokenMiddleware;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -18,8 +19,10 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 // Rutas protegidas: solo usuarios autenticados
 Route::middleware('auth')->group(function () {
-    // Logout
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    // Logout (se excluye del middleware de CSRF para evitar errores 419 al cerrar sesión)
+    Route::post('/logout', [AuthController::class, 'logout'])
+        ->name('logout')
+        ->withoutMiddleware(VerifyCsrfTokenMiddleware::class);
 
     // Dashboard sencillo protegido
     Route::get('/dashboard', function () {
