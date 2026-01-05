@@ -30,7 +30,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255', 'unique:users,name'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'role' => ['required', 'in:admin,user'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:16', 'confirmed'],
             'security_color_answer' => ['required', 'string', 'max:255'],
             'security_animal_answer' => ['required', 'string', 'max:255'],
             'security_padre_answer' => ['required', 'string', 'max:255'],
@@ -48,7 +48,7 @@ class UserController extends Controller
             'role.in' => 'El rol seleccionado no es valido.',
 
             'password.required' => 'La contraseña es obligatoria.',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.min' => 'La contraseña debe tener al menos 16 caracteres.',
             'password.confirmed' => 'La confirmación de la contraseña no coincide.',
 
             'security_color_answer.required' => 'La respuesta de color favorito es obligatoria.',
@@ -98,7 +98,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255', 'unique:users,name,' . $user->id],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'role' => ['required', 'in:admin,user'],
-            'password' => ['nullable', 'string', 'min:8'],
+            'password' => ['nullable', 'string', 'min:16'],
             'security_color_answer' => ['required', 'string', 'max:255'],
             'security_animal_answer' => ['required', 'string', 'max:255'],
             'security_padre_answer' => ['required', 'string', 'max:255'],
@@ -115,7 +115,7 @@ class UserController extends Controller
             'role.required' => 'El rol es obligatorio.',
             'role.in' => 'El rol seleccionado no es valido.',
 
-            'password.min' => 'La nueva contraseña debe tener al menos 8 caracteres.',
+            'password.min' => 'La nueva contraseña debe tener al menos 16 caracteres.',
 
             'security_color_answer.required' => 'La respuesta de color favorito es obligatoria.',
             'security_color_answer.max' => 'La respuesta de color favorito no puede superar los 255 caracteres.',
@@ -163,6 +163,14 @@ class UserController extends Controller
                 ->with('error', 'No puedes eliminar tu propio usuario desde este módulo.');
         }
 
+        // Segunda capa: validar contraseña del administrador autenticado
+        request()->validate([
+            'admin_password' => ['required', 'current_password']
+        ], [
+            'admin_password.required' => 'Debes ingresar tu contraseña para confirmar la eliminación.',
+            'admin_password.current_password' => 'La contraseña ingresada no es correcta.'
+        ]);
+
         $nombre = $user->name;
         $id = $user->id;
         $role = $user->role;
@@ -179,5 +187,36 @@ class UserController extends Controller
         return redirect()
             ->route('users.index')
             ->with('status', 'Usuario eliminado correctamente.');
+    }
+
+    /**
+     * Desbloquear usuario (solo admin) con confirmación de contraseña del admin.
+     */
+    public function unlock(Request $request, User $user): RedirectResponse
+    {
+        // No permitir desbloquearse a sí mismo si no está bloqueado
+        if (!$user->locked_until) {
+            return redirect()->route('users.index')->with('status', 'Este usuario no está bloqueado.');
+        }
+
+        $request->validate([
+            'admin_password' => ['required', 'current_password']
+        ], [
+            'admin_password.required' => 'Debes ingresar tu contraseña para confirmar el desbloqueo.',
+            'admin_password.current_password' => 'La contraseña ingresada no es correcta.'
+        ]);
+
+        $user->locked_until = null;
+        $user->login_attempts = 0;
+        $user->save();
+
+        Bitacora::registrar(
+            'usuarios',
+            'desbloquear',
+            $user->id,
+            sprintf('Desbloqueó al usuario "%s" (ID %d).', $user->name, $user->id)
+        );
+
+        return redirect()->route('users.index')->with('status', 'Usuario desbloqueado correctamente.');
     }
 }

@@ -1,8 +1,8 @@
 @extends('layouts.dashboard')
 
 @section('content')
-    <div class="max-w-3xl mx-auto space-y-6">
-        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl">
+    <div class="max-w-4xl mx-auto space-y-8">
+        <div class="rounded-3xl border border-slate-800 bg-slate-900/80 p-10 shadow-2xl">
             <h1 class="text-lg font-semibold tracking-tight mb-1">Registrar nuevo bien</h1>
             <p class="text-[11px] text-slate-400 mb-4">Formulario base para el ingreso de bienes al sistema. Más adelante se podrán ajustar los campos.</p>
 
@@ -16,9 +16,9 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('bienes.store') }}" class="space-y-4">
+            <form method="POST" action="{{ route('bienes.store') }}" class="space-y-6">
                 @csrf
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="grid gap-6 md:grid-cols-2">
                     <div class="space-y-1">
                         <label class="block text-xs font-medium text-slate-300" for="codigo">nombre</label>
                         <input id="nombre" name="nombre" type="text" value="{{ old('nombre') }}" required
@@ -26,7 +26,7 @@
                             placeholder="Ej: Laptop Dell Inspiron">
                     </div>
 
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="grid gap-6 md:grid-cols-2">
                     <div class="space-y-1">
                         <label class="block text-xs font-medium text-slate-300" for="codigo">Código de bien</label>
                         <input id="codigo" name="codigo" type="text" value="{{ old('codigo') }}" required
@@ -35,14 +35,14 @@
                     </div>
                     
 
-                <div class="space-y-1">
+                <div class="space-y-1 md:col-span-2">
                     <label class="block text-xs font-medium text-slate-300" for="descripcion">Descripción</label>
                     <input id="descripcion" name="descripcion" type="text" value="{{ old('descripcion') }}" required
                         class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Descripción breve del bien">
                 </div>
 
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="grid gap-6 md:grid-cols-2">
                     <div class="space-y-1">
                         <label class="block text-xs font-medium text-slate-300" for="ubicacion">Ubicación</label>
                         <input id="ubicacion" name="ubicacion" type="text" value="{{ old('ubicacion') }}"
@@ -59,21 +59,21 @@
                     </div>
                 </div>
 
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div class="space-y-1">
+                <div class="grid gap-6 md:grid-cols-2">
+                    <div class="space-y-1 md:col-span-2">
                         <label class="block text-xs font-medium text-slate-300" for="fecha_adquisicion">Fecha de adquisición</label>
                         <input id="fecha_adquisicion" name="fecha_adquisicion" type="date" value="{{ old('fecha_adquisicion') }}"
-                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-3 text-base text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
-                    <div class="space-y-1">
+                    <div class="space-y-1 md:col-span-2">
                         <label class="block text-xs font-medium text-slate-300" for="valor">Valor estimado</label>
                         <input id="valor" name="valor" type="number" step="0.01" min="0" value="{{ old('valor') }}"
-                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-3 text-base text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Ej: 1500.00">
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between pt-2">
+                <div class="flex items-center justify-between pt-4">
                     <a href="{{ route('bienes.index') }}" class="text-[11px] text-slate-400 hover:text-slate-200 underline underline-offset-2 cursor-pointer">Volver al listado</a>
                     <button type="submit" class="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow hover:from-blue-500 hover:to-indigo-500 cursor-pointer">
                         Guardar bien

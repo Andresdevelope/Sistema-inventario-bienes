@@ -1,0 +1,113 @@
+DIAGRAMA ENTIDAD-RELACIÓN (DER)
+Sistema: Inventario de Bienes
+
+1. Objetivo del diagrama
+    - Representar las entidades principales del sistema, sus atributos y las
+       relaciones entre ellas, según la base de datos actual del sistema.
+
+2. Entidades
+
+    2.1. Entidad USUARIO
+            - id (PK)
+            - name
+            - email
+            - email_verified_at
+            - password
+            - role
+            - security_color_answer
+            - security_animal_answer
+            - security_padre_answer
+            - login_attempts
+            - remember_token
+            - created_at
+            - updated_at
+            - locked_until (campo lógico manejado en el modelo)
+
+    2.2. Entidad BIEN
+            - id (PK)
+            - nombre
+            - codigo (ÚNICO)
+            - descripcion
+            - ubicacion (opcional)
+            - estado (por defecto: "bueno")
+            - fecha_adquisicion (opcional)
+            - valor (opcional)
+            - created_at
+            - updated_at
+
+    2.3. Entidad BITÁCORA
+            - id (PK)
+            - user_id (FK a USUARIO)
+            - modulo (identifica el módulo afectado, p. ej. "bienes", "usuarios")
+            - entidad_id (identificador del registro afectado, opcional)
+            - accion (descripción corta de la acción, p. ej. "crear", "actualizar")
+            - resultado (por defecto: "exito")
+            - descripcion (detalle textual de la acción, opcional)
+            - created_at
+            - updated_at
+
+    2.4. Entidad PASSWORD_RESET_TOKEN (soporte técnico)
+            - email (PK)
+            - token
+            - created_at
+
+    2.5. Entidad SESSION (sesiones de usuario)
+            - id (PK)
+            - user_id (FK a USUARIO, opcional)
+            - ip_address
+            - user_agent
+            - payload
+            - last_activity
+
+3. Relaciones entre entidades
+
+    3.1. USUARIO — BITÁCORA
+          - Tipo: 1 a N
+          - Descripción:
+             Un USUARIO puede generar muchas entradas en la BITÁCORA.
+             Cada entrada de la BITÁCORA pertenece, opcionalmente, a un USUARIO.
+          - Cardinalidad:
+             USUARIO (1) -------- (0..N) BITÁCORA
+
+    3.2. USUARIO — SESSION
+          - Tipo: 1 a N
+          - Descripción:
+             Un USUARIO puede tener varias SESSION activas o históricas.
+             Una SESSION puede no estar asociada a un usuario (user_id nullable).
+          - Cardinalidad:
+             USUARIO (0..1) ---- (0..N) SESSION
+
+    3.3. BITÁCORA — ENTIDAD AFECTADA (BIEN u otra)
+          - Representación lógica:
+             BITÁCORA.entidad_id se usa como referencia genérica al registro
+             afectado en el módulo indicado por BITÁCORA.modulo.
+          - Ejemplo:
+             - Si modulo = "bienes", entonces entidad_id referencia el id de un BIEN.
+             - Si modulo = "usuarios", entonces entidad_id referencia el id de un USUARIO.
+          - En el DER puede representarse como una relación polimórfica entre
+             BITÁCORA y las entidades que audita (BIEN, USUARIO, etc.).
+
+    3.4. BIEN — BITÁCORA (caso específico de auditoría de bienes)
+          - Tipo: 1 a N (lógico, vía entidad_id cuando modulo = "bienes")
+          - Descripción:
+             Un BIEN puede tener muchas entradas de BITÁCORA relacionadas con
+             altas, modificaciones, cambios de estado, etc.
+          - Cardinalidad aproximada:
+             BIEN (0..1) ------- (0..N) BITÁCORA
+
+4. Notas y decisiones de diseño
+
+    - No existe en la base de datos actual un campo explícito de "responsable"
+       del bien (no hay FK desde BIEN hacia USUARIO). Si en el futuro se desea,
+       se puede agregar un campo user_id en BIEN.
+
+    - La entidad BITÁCORA está pensada como un registro genérico de acciones,
+       por eso usa (modulo, entidad_id) en lugar de una FK directa a BIEN u otras
+       tablas. Esto permite auditar diferentes módulos con una sola tabla.
+
+    - PASSWORD_RESET_TOKEN y SESSION son entidades de soporte técnico del
+       framework (gestión de contraseñas y sesiones). Puedes incluirlas o no en
+       el DER según el nivel de detalle requerido para el documento de tu trabajo.
+
+    - Los tipos de datos concretos (string, date, decimal, etc.) se detallan en
+       el modelo relacional.

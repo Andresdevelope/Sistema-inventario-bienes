@@ -1,0 +1,196 @@
+CASOS DE USO
+Sistema: Inventario de Bienes
+
+Formato sugerido por caso de uso:
+--------------------------------------------------
+Nombre:
+Actores:
+Descripción breve:
+Precondiciones:
+Flujo principal:
+Flujos alternos:
+Postcondiciones:
+Reglas de negocio:
+--------------------------------------------------
+
+1. CU-01 Iniciar sesión en el sistema
+   Actores:
+   - Usuario (administrador u operador)
+
+   Descripción breve:
+   - Permite que un usuario autenticado acceda al sistema de inventario
+     utilizando su correo y contraseña.
+
+   Precondiciones:
+   - El usuario está registrado en la tabla USERS.
+   - El usuario no se encuentra bloqueado (según login_attempts / locked_until).
+
+   Flujo principal:
+   1. El usuario accede a la pantalla de inicio de sesión.
+   2. El usuario ingresa email y contraseña.
+   3. El sistema valida las credenciales contra la tabla USERS.
+   4. Si las credenciales son correctas, el sistema crea una sesión (SESSIONS)
+      y redirige al panel principal.
+   5. El sistema registra en la BITÁCORA la acción "inicio de sesión" (modulo
+      = "auth", accion = "login", resultado = "exito").
+
+   Flujos alternos:
+   A1. Credenciales incorrectas:
+       1. El sistema incrementa login_attempts para el usuario.
+       2. El sistema muestra un mensaje de error y no permite el acceso.
+       3. El sistema puede registrar en BITÁCORA un intento fallido.
+
+   Postcondiciones:
+   - El usuario queda autenticado y con una sesión activa.
+
+   Reglas de negocio:
+   - Número máximo de intentos fallidos antes de bloquear la cuenta (configurable).
+
+--------------------------------------------------
+
+2. CU-02 Gestionar bienes
+   Actores:
+   - Administrador
+   - Operador de inventario
+
+   Descripción breve:
+   - Permite registrar, actualizar, consultar y dar de baja bienes en el
+     inventario institucional.
+
+   Precondiciones:
+   - El usuario tiene sesión iniciada.
+   - El usuario tiene permisos para acceder al módulo de bienes.
+
+   Flujo principal (alta de bien):
+   1. El usuario accede al módulo "Bienes".
+   2. El usuario selecciona la opción "Registrar bien".
+   3. El usuario llena el formulario con: nombre, codigo, descripcion,
+      ubicacion, estado, fecha_adquisicion, valor.
+   4. El sistema valida que el campo codigo no esté repetido.
+   5. El sistema guarda el registro en la tabla BIENES.
+   6. El sistema registra en BITÁCORA la creación del bien:
+      - modulo = "bienes"
+      - entidad_id = id del bien creado
+      - accion = "crear"
+      - resultado = "exito"
+      - descripcion = detalle de la operación.
+
+   Flujo principal (actualización de bien):
+   1. El usuario busca un bien existente.
+   2. El usuario selecciona la opción "Editar".
+   3. El usuario modifica la información necesaria.
+   4. El sistema valida los datos (incluyendo unicidad de codigo si se cambia).
+   5. El sistema actualiza el registro en BIENES.
+   6. El sistema registra en BITÁCORA la actualización del bien.
+
+   Flujos alternos:
+   A1. Código de bien duplicado:
+       - El sistema no guarda los cambios y muestra mensaje de error.
+
+   Postcondiciones:
+   - El inventario de bienes queda actualizado.
+
+   Reglas de negocio:
+   - El codigo del bien es único.
+   - Solo usuarios con rol adecuado pueden crear/editar bienes.
+
+--------------------------------------------------
+
+3. CU-03 Gestionar usuarios
+   Actores:
+   - Administrador del sistema
+
+   Descripción breve:
+   - Permite registrar nuevos usuarios del sistema, actualizar sus datos y
+     desactivarlos/bloquearlos.
+
+   Precondiciones:
+   - El actor ha iniciado sesión con rol de administrador.
+
+   Flujo principal (crear usuario):
+   1. El administrador accede al módulo "Usuarios".
+   2. Selecciona la opción "Crear usuario".
+   3. Ingresa: name, email, role, respuestas de seguridad, etc.
+   4. El sistema valida que el email no exista.
+   5. El sistema registra el nuevo usuario en USERS.
+   6. El sistema registra en BITÁCORA la acción de creación de usuario:
+      - modulo = "usuarios"
+      - entidad_id = id del usuario creado
+      - accion = "crear".
+
+   Flujo principal (actualizar usuario):
+   1. El administrador selecciona un usuario existente.
+   2. Modifica la información necesaria (ej. role).
+   3. El sistema valida los datos.
+   4. El sistema actualiza el registro en USERS.
+   5. El sistema registra la acción en BITÁCORA.
+
+   Flujos alternos:
+   A1. Email duplicado:
+       - El sistema no guarda los datos y muestra error.
+
+   Postcondiciones:
+   - La lista de usuarios del sistema queda actualizada.
+
+   Reglas de negocio:
+   - Solo administradores pueden gestionar usuarios.
+
+--------------------------------------------------
+
+4. CU-04 Consultar bitácora de acciones
+   Actores:
+   - Administrador
+   - (Opcional) Operador con permisos de auditoría
+
+   Descripción breve:
+   - Permite consultar las acciones registradas en BITÁCORA filtrando por
+     usuario, módulo, fecha, resultado, etc.
+
+   Precondiciones:
+   - El usuario tiene sesión iniciada.
+   - El usuario tiene permisos para acceder a la bitácora.
+
+   Flujo principal:
+   1. El usuario accede al módulo "Bitácora".
+   2. Define criterios de búsqueda (rango de fechas, usuario, módulo, acción).
+   3. El sistema consulta la tabla BITACORAS aplicando los filtros.
+   4. El sistema muestra la lista de registros de bitácora.
+   5. El usuario puede seleccionar un registro para ver el detalle.
+
+   Postcondiciones:
+   - El usuario obtiene información de auditoría del sistema.
+
+   Reglas de negocio:
+   - La bitácora es de solo lectura para los usuarios; no se permite editar ni
+     eliminar registros (salvo tareas de mantenimiento muy controladas).
+
+--------------------------------------------------
+
+5. CU-05 Recuperar contraseña (opcional según implementación)
+   Actores:
+   - Usuario
+
+   Descripción breve:
+   - Permite que un usuario restablezca su contraseña mediante un enlace de
+     recuperación enviado a su correo electrónico.
+
+   Precondiciones:
+   - El usuario está registrado en USERS.
+
+   Flujo principal:
+   1. El usuario solicita recuperar contraseña.
+   2. El sistema genera un token y lo almacena en PASSWORD_RESET_TOKENS.
+   3. El sistema envía un correo con un enlace de recuperación.
+   4. El usuario accede al enlace y define una nueva contraseña.
+   5. El sistema actualiza la contraseña en USERS y elimina/expira el token.
+
+   Postcondiciones:
+   - El usuario tiene una nueva contraseña válida para iniciar sesión.
+
+   Reglas de negocio:
+   - El token de recuperación tiene una vigencia limitada.
+
+--------------------------------------------------
+
+(Puedes agregar más casos de uso específicos, por ejemplo: generar reportes
+de bienes, exportar inventario, etc., siguiendo el mismo formato.)

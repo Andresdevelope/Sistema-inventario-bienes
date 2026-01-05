@@ -57,6 +57,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/usuarios/{user}/editar', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/usuarios/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::post('/usuarios/{user}/unlock', [UserController::class, 'unlock'])->name('users.unlock');
 
     // Bitácora del sistema (solo administrador)
     Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');

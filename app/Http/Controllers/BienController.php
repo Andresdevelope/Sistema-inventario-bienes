@@ -23,10 +23,32 @@ class BienController extends Controller
     /**
      * Mostrar listado paginado de bienes.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $bienes = Bien::orderBy('id', 'desc')->paginate(10);
+        $query = Bien::query();
+        // Filtro por búsqueda general (nombre, código, descripción)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nombre', 'like', "%$search%")
+                  ->orWhere('codigo', 'like', "%$search%")
+                  ->orWhere('descripcion', 'like', "%$search%");
+            });
+        }
+        // Filtro por estado
+        if ($request->filled('estado') && in_array($request->estado, ['bueno', 'regular', 'malo'])) {
+            $query->where('estado', $request->estado);
+        }
+        // Filtro por ubicación
+        if ($request->filled('ubicacion')) {
+            $query->where('ubicacion', 'like', "%{$request->ubicacion}%");
+        }
 
+        $bienes = $query->paginate(15)->appends($request->except('page'));
+
+        if ($request->ajax()) {
+            return view('bienes.partials.tabla', compact('bienes'));
+        }
         return view('bienes.index', compact('bienes'));
     }
 
@@ -170,4 +192,5 @@ class BienController extends Controller
 
         return redirect()->route('bienes.index')->with('status', 'Bien eliminado correctamente.');
     }
+
 }

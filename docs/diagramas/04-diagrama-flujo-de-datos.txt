@@ -1,0 +1,96 @@
+DIAGRAMA DE FLUJO DE DATOS (DFD)
+Sistema: Inventario de Bienes
+
+1. Nivel 0 (Diagrama de contexto)
+
+   Entidades externas:
+   - Usuario (Administrador / Operador)
+
+   Proceso principal:
+   - P0: Sistema de Inventario de Bienes
+
+   Almacenes de datos (vista global):
+   - D1: BD_Usuarios (tabla USERS)
+   - D2: BD_Bienes (tabla BIENES)
+   - D3: BD_Bitácora (tabla BITACORAS)
+
+   Flujos de datos principales:
+   - E1: Credenciales de acceso (email, contraseña) -> P0
+   - S1: Respuesta de autenticación / acceso concedido -> Usuario
+   - E2: Solicitudes de gestión de bienes (altas, bajas, modificaciones) -> P0
+   - S2: Listados y detalles de bienes -> Usuario
+   - E3: Solicitudes de gestión de usuarios (solo Administrador) -> P0
+   - S3: Listados y detalles de usuarios -> Usuario
+   - E4: Consultas de bitácora -> P0
+   - S4: Reportes / listados de bitácora -> Usuario
+
+2. Nivel 1 (Descomposición del sistema)
+
+   Procesos principales:
+
+   P1: Autenticación de usuarios
+       Entradas:
+       - E1: Credenciales (email, contraseña) desde Usuario.
+       Salidas:
+       - S1: Resultado de autenticación (éxito / error) hacia Usuario.
+       Acceso a datos:
+       - Lee D1: BD_Usuarios para validar credenciales.
+       - Escribe en D3: BD_Bitácora (registro de inicio de sesión exitoso o fallido).
+
+   P2: Gestión de bienes
+       Entradas:
+       - E2: Solicitudes de alta, baja, modificación, consulta de bienes desde Usuario.
+       Salidas:
+       - S2: Confirmación de registro/actualización/baja.
+       - Listado y detalles de bienes.
+       Acceso a datos:
+       - Lee y escribe D2: BD_Bienes.
+       - Escribe en D3: BD_Bitácora (acciones sobre bienes, usando modulo = "bienes").
+
+   P3: Gestión de usuarios
+       Entradas:
+       - E3: Solicitudes del Administrador para crear/editar usuarios.
+       Salidas:
+       - S3: Confirmación de operación sobre usuarios.
+       - Listado y detalles de usuarios.
+       Acceso a datos:
+       - Lee y escribe D1: BD_Usuarios.
+       - Escribe en D3: BD_Bitácora (acciones sobre usuarios, modulo = "usuarios").
+
+   P4: Consulta de bitácora
+       Entradas:
+       - E4: Criterios de búsqueda de registros de bitácora.
+       Salidas:
+       - S4: Listado de registros de bitácora y detalles.
+       Acceso a datos:
+       - Lee D3: BD_Bitácora.
+
+3. Detalle de almacenes de datos
+
+   D1: BD_Usuarios (USERS)
+       - Contiene información de identificación, autenticación y rol de los users.
+       - Es leído por P1 y P4 (indirectamente, si se muestran nombres de usuario).
+       - Es escrito por P3.
+
+   D2: BD_Bienes (BIENES)
+       - Contiene el inventario de bienes (nombre, código, estado, valor, etc.).
+       - Es leído y escrito por P2.
+
+   D3: BD_Bitácora (BITACORAS)
+       - Contiene registros de acciones: user_id, modulo, entidad_id, accion,
+         resultado, descripcion, timestamps.
+       - Es escrito por P1, P2 y P3.
+       - Es leído por P4.
+
+4. Notas para el diagrama gráfico
+
+   - En la herramienta gráfica (por ejemplo, draw.io, Lucidchart, etc.) puedes
+     representar:
+       * Al Usuario como entidad externa única con diferentes roles.
+       * Los procesos P1, P2, P3 y P4 como círculos o rectángulos redondeados.
+       * Los almacenes de datos D1, D2 y D3 como "almacenes" típicos de DFD.
+       * Flechas de flujo con los nombres E1, S1, E2, S2, etc., o con nombres
+         más descriptivos ("Solicitud de alta de bien", "Listado de bienes", etc.).
+
+   - Si tu trabajo lo requiere, puedes descomponer aún más P2 (Gestionar bienes)
+     en subprocesos como "Registrar bien", "Editar bien", "Dar de baja bien".

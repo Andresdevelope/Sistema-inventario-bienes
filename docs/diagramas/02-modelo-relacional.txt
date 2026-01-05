@@ -1,0 +1,101 @@
+MODELO RELACIONAL
+Sistema: Inventario de Bienes
+
+1. Tabla USERS (USUARIOS)
+   USERS (
+       id                BIGINT UNSIGNED PK AUTO_INCREMENT,
+       name              VARCHAR(255)        NOT NULL,
+       email             VARCHAR(255)        NOT NULL UNIQUE,
+       email_verified_at TIMESTAMP           NULL,
+       password          VARCHAR(255)        NOT NULL,
+       role              VARCHAR(255)        NOT NULL,
+       security_color_answer  VARCHAR(255)   NOT NULL,
+       security_animal_answer VARCHAR(255)   NOT NULL,
+       security_padre_answer  VARCHAR(255)   NOT NULL,
+       login_attempts    INT                 NOT NULL DEFAULT 0,
+       remember_token    VARCHAR(100)        NULL,
+       created_at        TIMESTAMP           NULL,
+       updated_at        TIMESTAMP           NULL
+       -- locked_until se maneja lógicamente en el modelo (no aparece en esta migración)
+   );
+
+2. Tabla BIENES
+   BIENES (
+       id                BIGINT UNSIGNED PK AUTO_INCREMENT,
+       nombre            VARCHAR(255)        NOT NULL,
+       codigo            VARCHAR(255)        NOT NULL UNIQUE,
+       descripcion       VARCHAR(255)        NOT NULL,
+       ubicacion         VARCHAR(255)        NULL,
+       estado            VARCHAR(255)        NOT NULL DEFAULT 'bueno',
+       fecha_adquisicion DATE                NULL,
+       valor             DECIMAL(12,2)       NULL,
+       created_at        TIMESTAMP           NULL,
+       updated_at        TIMESTAMP           NULL
+   );
+
+3. Tabla BITACORAS
+   BITACORAS (
+       id                BIGINT UNSIGNED PK AUTO_INCREMENT,
+       user_id           BIGINT UNSIGNED     NULL,
+       modulo            VARCHAR(50)         NOT NULL,
+       entidad_id        BIGINT UNSIGNED     NULL,
+       accion            VARCHAR(100)        NOT NULL,
+       resultado         VARCHAR(20)         NOT NULL DEFAULT 'exito',
+       descripcion       TEXT                NULL,
+       created_at        TIMESTAMP           NULL,
+       updated_at        TIMESTAMP           NULL,
+
+       CONSTRAINT fk_bitacoras_user
+           FOREIGN KEY (user_id)
+           REFERENCES users(id)
+           ON DELETE SET NULL
+   );
+
+4. Tabla PASSWORD_RESET_TOKENS (soporte de recuperación de contraseña)
+   PASSWORD_RESET_TOKENS (
+       email        VARCHAR(255)  PRIMARY KEY,
+       token        VARCHAR(255)  NOT NULL,
+       created_at   TIMESTAMP     NULL
+   );
+
+5. Tabla SESSIONS (sesiones de usuario)
+   SESSIONS (
+       id           VARCHAR(255)  PRIMARY KEY,
+       user_id      BIGINT UNSIGNED NULL,
+       ip_address   VARCHAR(45)   NULL,
+       user_agent   TEXT          NULL,
+       payload      LONGTEXT      NOT NULL,
+       last_activity INT          NOT NULL,
+
+       INDEX sessions_user_id_index (user_id),
+       INDEX sessions_last_activity_index (last_activity)
+   );
+
+6. Otras restricciones y consideraciones
+
+   - Índices y unicidad
+     * users.email es UNIQUE.
+     * bienes.codigo es UNIQUE.
+
+   - Integridad referencial
+     * fk_bitacoras_user: BITACORAS.user_id -> USERS.id (ON DELETE SET NULL).
+     * SESSIONS.user_id normalmente referencia USERS.id (sin FK explícita en la migración base).
+
+   - Relación BITACORAS.entidad_id
+     * No existe una FK directa en la base de datos; se usa como referencia
+       genérica al registro afectado según el valor de modulo.
+     * Ejemplo: si modulo = 'bienes', entidad_id apunta a BIENES.id.
+
+7. Observaciones
+
+   - Este modelo relacional está basado en las migraciones actuales del
+     proyecto Laravel. Si se agregan nuevas migraciones (por ejemplo, para
+     campos adicionales como locked_until en users o categoria en bienes),
+     debe actualizarse esta descripción.
+
+   - La tabla BITACORAS está diseñada para ser reutilizable por diferentes
+     módulos gracias a la combinación (modulo, entidad_id).
+
+   - PASSWORD_RESET_TOKENS y SESSIONS son tablas de soporte para
+     autenticación y sesiones; puedes omitirlas en el documento si tu enfoque
+     es solo funcional en lugar de técnico.

@@ -27,7 +27,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:users,name'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:16', 'confirmed'],
             'security_color_answer' => ['required', 'string', 'max:255'],
             'security_animal_answer' => ['required', 'string', 'max:255'],
             'security_padre_answer' => ['required', 'string', 'max:255'],
@@ -42,7 +42,7 @@ class AuthController extends Controller
             'email.max' => 'El correo electrónico no puede superar los 255 caracteres.',
 
             'password.required' => 'La contraseña es obligatoria.',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.min' => 'La contraseña debe tener al menos 16 caracteres.',
             'password.confirmed' => 'La confirmación de la contraseña no coincide.',
 
             'security_color_answer.required' => 'La respuesta de color favorito es obligatoria.',
@@ -98,24 +98,11 @@ class AuthController extends Controller
         // Buscar usuario por nombre de usuario
         $user = User::where('name', $credentials['name'])->first();
 
-        // Si el usuario está bloqueado temporalmente, no permitir el intento
-        if ($user && $user->locked_until && $user->locked_until->isFuture()) {
-            // Diferencia en segundos (firmada) entre ahora y el fin del bloqueo
-            $diff = now()->diffInSeconds($user->locked_until, false);
-
-            if ($diff > 0) {
-                $totalSeconds = $diff;
-
-                // Solo mandamos el tiempo restante; el mensaje se muestra en la vista
-                return Redirect::back()
-                    ->withInput($request->only('name'))
-                    ->with('lock_remaining', $totalSeconds);
-            }
-
-            // Si el tiempo ya expiró, limpiar bloqueo
-            $user->locked_until = null;
-            $user->login_attempts = 0;
-            $user->save();
+        // Si el usuario está bloqueado, no permitir el intento (bloqueo indefinido hasta que el admin lo desbloquee)
+        if ($user && $user->locked_until) {
+            return Redirect::back()
+                ->withInput($request->only('name'))
+                ->withErrors(['name' => 'El usuario está bloqueado. Contacte al administrador para desbloquear.']);
         }
 
         // Intentar iniciar sesión usando el nombre de usuario y contraseña
@@ -137,17 +124,14 @@ class AuthController extends Controller
             $user->login_attempts = ($user->login_attempts ?? 0) + 1;
 
             if ($user->login_attempts >= 3) {
-                // Bloquear 1 minuto a partir de este tercer intento fallido
-                $user->locked_until = now()->addMinute();
+                // Bloqueo indefinido (persistente) hasta acción del administrador
+                $user->locked_until = now();
                 $user->login_attempts = 0; // reiniciar el contador tras bloquear
                 $user->save();
 
-                // Para el primer mensaje de bloqueo, mostramos siempre 60 segundos en el contador visual
-                $totalSeconds = 60;
-
                 return Redirect::back()
                     ->withInput($request->only('name'))
-                    ->with('lock_remaining', $totalSeconds);
+                    ->withErrors(['name' => 'Usuario bloqueado por intentos fallidos. Contacte al administrador.']);
             }
 
             $user->save();
@@ -286,10 +270,10 @@ class AuthController extends Controller
         // Paso 3: cambio de contraseña
         if ($step === 3) {
             $validated = $request->validate([
-                'password' => ['required', 'string', 'min:8', 'confirmed'],
+                'password' => ['required', 'string', 'min:16', 'confirmed'],
             ], [
                 'password.required' => 'La nueva contraseña es obligatoria.',
-                'password.min' => 'La nueva contraseña debe tener al menos 8 caracteres.',
+                'password.min' => 'La nueva contraseña debe tener al menos 16 caracteres.',
                 'password.confirmed' => 'La confirmación de la contraseña no coincide.',
             ]);
 
@@ -305,6 +289,10 @@ class AuthController extends Controller
 
             $user->password = $validated['password']; // se encripta por el cast "hashed"
             $user->login_attempts = 0;
+            // Si la política lo permite, desbloqueamos automáticamente al restablecer contraseña
+            if (config('auth.unlock_on_password_reset')) {
+                $user->locked_until = null;
+            }
             $user->save();
 
             $request->session()->forget(['password_reset_user_id', 'password_recover_user_id', 'recovery_step', 'show_third_question']);

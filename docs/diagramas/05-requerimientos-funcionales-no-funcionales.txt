@@ -1,0 +1,182 @@
+REQUERIMIENTOS FUNCIONALES Y NO FUNCIONALES
+Sistema: Inventario de Bienes con Bitácora
+
+1. Descripción general
+   El sistema permite gestionar el inventario de bienes institucionales,
+   administrar los usuarios que acceden al sistema y registrar en una bitácora
+   las acciones relevantes realizadas por los usuarios.
+
+2. Módulos principales
+   - M1: Gestión de bienes
+   - M2: Gestión de usuarios
+   - M3: Registro y consulta de bitácora de movimientos
+
+======================================================================
+A) REQUERIMIENTOS FUNCIONALES
+======================================================================
+
+A.1. Módulo de Gestión de Bienes (M1)
+
+RF-01 El sistema debe permitir registrar nuevos bienes, capturando al menos:
+      nombre, código, descripción, ubicación, estado, fecha de adquisición y
+      valor (opcional).
+
+RF-02 El sistema debe validar que el código del bien sea único y no se repita
+      para diferentes registros.
+
+RF-03 El sistema debe permitir consultar un listado de bienes mostrando al
+      menos: nombre, código, estado y ubicación.
+
+RF-04 El sistema debe permitir filtrar la lista de bienes por código, nombre,
+      estado o ubicación.
+
+RF-05 El sistema debe permitir visualizar el detalle de un bien específico.
+
+RF-06 El sistema debe permitir modificar los datos de un bien registrado,
+      respetando la unicidad del código.
+
+RF-07 El sistema debe permitir cambiar el estado de un bien (por ejemplo:
+      "bueno", "regular", "dañado", "de baja").
+
+RF-08 El sistema debe permitir marcar un bien como dado de baja (baja lógica o
+      cambio de estado), manteniendo el historial en la base de datos.
+
+
+A.2. Módulo de Gestión de Usuarios (M2)
+
+RF-09 El sistema debe permitir al administrador registrar nuevos usuarios,
+      capturando: nombre, correo electrónico, contraseña, rol y respuestas de
+      seguridad.
+
+RF-10 El sistema debe validar que el correo electrónico del usuario sea único.
+
+RF-11 El sistema debe permitir al administrador consultar un listado de
+       usuarios con: nombre, correo y rol.
+
+RF-12 El sistema debe permitir al administrador modificar los datos de un
+       usuario, incluyendo su rol (por ejemplo: administrador u operador).
+
+RF-13 El sistema debe permitir desactivar o bloquear usuarios para impedir su
+       acceso al sistema, sin eliminar su registro histórico.
+
+RF-14 El sistema debe permitir a los usuarios autenticarse mediante correo
+       electrónico y contraseña.
+
+RF-15 El sistema debe controlar los intentos fallidos de inicio de sesión y,
+       al superar un umbral definido, bloquear temporalmente la cuenta.
+
+
+A.3. Módulo de Bitácora de Movimientos (M3)
+
+RF-16 El sistema debe registrar automáticamente en la bitácora las acciones
+       relevantes realizadas por los usuarios, incluyendo al menos:
+       usuario (si aplica), módulo afectado, identificador de la entidad
+       afectada, acción realizada, resultado y fecha/hora.
+
+RF-17 El sistema debe registrar en la bitácora las operaciones de creación,
+       actualización y baja lógica de bienes.
+
+RF-18 El sistema debe registrar en la bitácora las operaciones de creación y
+       modificación de usuarios, así como bloqueos o cambios de rol.
+
+RF-19 El sistema debe permitir consultar la bitácora mediante filtros por
+       rango de fechas, usuario, módulo, tipo de acción y resultado.
+
+RF-20 El sistema debe permitir visualizar el detalle de un registro de
+       bitácora, incluyendo la descripción de la acción.
+
+RF-21 El sistema debe impedir la modificación o eliminación manual de los
+       registros de bitácora por parte de usuarios finales.
+
+
+======================================================================
+B) REQUERIMIENTOS NO FUNCIONALES
+======================================================================
+
+B.1. Seguridad
+
+RNF-01 El sistema debe exigir autenticación de usuarios para acceder a los
+        módulos de gestión de bienes, usuarios y bitácora.
+
+RNF-02 Las contraseñas de los usuarios deben almacenarse de forma cifrada o
+        con hash seguro (por ejemplo, mediante las funciones provistas por
+        el framework Laravel).
+
+RNF-03 El sistema debe restringir el acceso al módulo de Gestión de Usuarios y
+        a la configuración del sistema solo a usuarios con rol de administrador.
+
+RNF-04 El sistema debe protegerse frente a accesos no autorizados mediante el
+        uso de sesiones seguras y cierre de sesión.
+
+
+B.2. Usabilidad
+
+RNF-05 La interfaz de usuario debe ser sencilla e intuitiva, permitiendo que
+        los usuarios localicen rápidamente las opciones de registro y consulta
+        de bienes.
+
+RNF-06 Los mensajes de error y validación deben ser claros, indicando al
+        usuario qué campo debe corregir.
+
+
+B.3. Rendimiento y capacidad
+
+RNF-07 El sistema debe ser capaz de listar los bienes existentes en un tiempo
+        de respuesta razonable (por ejemplo, menos de 3 segundos en condiciones
+        normales de uso y volumen de datos moderado).
+
+RNF-08 El sistema debe poder manejar un número moderado de usuarios concurrentes
+        (por ejemplo, entre 5 y 20 usuarios) sin degradar de manera notoria el
+        rendimiento.
+
+
+B.4. Mantenibilidad y extensibilidad
+
+RNF-09 El sistema debe estar desarrollado siguiendo la arquitectura del
+        framework Laravel, permitiendo agregar nuevos módulos o campos sin
+        reescribir completamente la aplicación.
+
+RNF-10 El sistema debe contar con una estructura de código clara (controladores,
+        modelos, vistas) que facilite su mantenimiento por parte de otros
+        desarrolladores.
+
+
+B.5. Auditoría y trazabilidad
+
+RNF-11 El sistema debe mantener un registro histórico suficiente en la
+        bitácora para reconstruir las acciones críticas realizadas sobre bienes
+        y usuarios.
+
+RNF-12 Los registros de bitácora deben conservarse durante el tiempo que
+        establezca la política institucional (por ejemplo, mínimo 1 año), salvo
+        tareas de mantenimiento controladas.
+
+
+B.6. Portabilidad y entorno
+
+RNF-13 El sistema debe poder desplegarse en un entorno típico de servidor web
+        con PHP y MySQL/MariaDB compatibles con la versión de Laravel utilizada.
+
+RNF-14 El sistema debe ser accesible desde navegadores web modernos.
+
+
+B.7. Plataforma tecnológica y metodología
+
+RNF-15 El backend del sistema debe implementarse en PHP versión 8.2 utilizando
+        el framework Laravel (versión 12).
+
+RNF-16 La base de datos debe implementarse en MySQL (o compatible), siguiendo
+        el modelo relacional definido para el sistema de inventario y bitácora.
+
+RNF-17 El servidor de aplicaciones web debe ejecutarse sobre Apache HTTP
+        Server, correctamente configurado para soportar aplicaciones Laravel.
+
+RNF-18 El frontend debe desarrollarse utilizando HTML, CSS (framework
+        Tailwind CSS) y JavaScript, integrados con las vistas de Laravel.
+
+RNF-19 El desarrollo del sistema debe seguir la metodología ágil Extreme
+        Programming (XP), aplicando prácticas como iteraciones cortas,
+        retroalimentación continua y refactorización frecuente del código.
+
+(Estos requerimientos pueden ajustarse y ampliarse según las indicaciones del
+proyecto de grado o de tu tutor.)

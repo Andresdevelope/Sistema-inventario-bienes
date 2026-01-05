@@ -112,4 +112,16 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Política de desbloqueo tras restablecer contraseña
+    |--------------------------------------------------------------------------
+    |
+    | Si se establece en true, cuando un usuario restablece su contraseña
+    | mediante el flujo de recuperación, se removerá el estado de bloqueo
+    | (locked_until) automáticamente para permitir el inicio de sesión.
+    | Por defecto es false para que solo el administrador pueda desbloquear.
+    */
+    'unlock_on_password_reset' => env('AUTH_UNLOCK_ON_PASSWORD_RESET', false),
+
 ];

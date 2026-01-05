@@ -163,6 +163,181 @@
         </div>
     </div>
 
+
+    <!-- Modales globales (moved here to ensure fixed positioning and correct centering) -->
+    <div id="create-user-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div class="w-full max-w-lg max-h-[calc(100vh-6rem)] overflow-auto rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 text-xs text-slate-100">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h2 class="text-sm font-semibold">Registrar nuevo usuario</h2>
+                    <p class="text-[11px] text-slate-400">Completa los datos para crear un usuario en el sistema.</p>
+                </div>
+                <button type="button" data-close-modal class="text-slate-400 hover:text-slate-200 cursor-pointer text-sm">✕</button>
+            </div>
+
+            <form method="POST" action="{{ route('users.store') }}" class="space-y-3" id="create-user-form">
+                                <div id="create-user-errors" class="mb-2 text-xs text-red-300 border border-red-500/40 bg-red-900/30 rounded px-3 py-2 hidden"></div>
+                @csrf
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-300 mb-1">Nombre de usuario</label>
+                        <input type="text" name="name" value="{{ old('name') }}"
+                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-300 mb-1">Correo electrónico</label>
+                        <input type="email" name="email" value="{{ old('email') }}"
+                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-300 mb-1">Rol</label>
+                        <select name="role"
+                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <option value="user" {{ old('role') === 'user' ? 'selected' : '' }}>Usuario</option>
+                            <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Administrador</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="relative">
+                        <label class="block text-[11px] font-medium text-slate-300 mb-1">Contraseña <span class="text-red-400">(mínimo 16 caracteres)</span></label>
+                        <input type="password" name="password" id="create-user-password"
+                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-1.5 pr-8 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <button type="button" onclick="togglePassword('password', this)" tabindex="-1"
+                            class="absolute right-2 top-7 text-slate-400 hover:text-blue-400 focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <label class="block text-[11px] font-medium text-slate-300 mb-1">Confirmar contraseña</label>
+                        <input type="password" name="password_confirmation" id="create-user-password-confirm"
+                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-1.5 pr-8 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <button type="button" onclick="togglePassword('password_confirmation', this)" tabindex="-1"
+                            class="absolute right-2 top-7 text-slate-400 hover:text-blue-400 focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <script>
+                    // Validación frontend para el modal de crear usuario
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const form = document.getElementById('create-user-form');
+                        if (!form) return;
+                        form.addEventListener('submit', function (e) {
+                            const password = document.getElementById('create-user-password');
+                            const passwordConfirm = document.getElementById('create-user-password-confirm');
+                            const errorBox = document.getElementById('create-user-errors');
+                            let errors = [];
+                            if (password.value.length < 16) {
+                                errors.push('La contraseña debe tener al menos 16 caracteres.');
+                            }
+                            if (password.value !== passwordConfirm.value) {
+                                errors.push('La confirmación de la contraseña no coincide.');
+                            }
+                            if (errors.length > 0) {
+                                e.preventDefault();
+                                errorBox.innerHTML = '<ul><li>' + errors.join('</li><li>') + '</li></ul>';
+                                errorBox.classList.remove('hidden');
+                                password.classList.add('border-red-500');
+                                passwordConfirm.classList.add('border-red-500');
+                            } else {
+                                errorBox.classList.add('hidden');
+                                password.classList.remove('border-red-500');
+                                passwordConfirm.classList.remove('border-red-500');
+                            }
+                        });
+                    });
+                    </script>
+                </div>
+
+                <div class="space-y-2">
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-300 mb-1">¿Cuál es tu color favorito?</label>
+                        <input type="text" name="security_color_answer" value="{{ old('security_color_answer') }}"
+                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-300 mb-1">¿Cuál es tu animal favorito?</label>
+                        <input type="text" name="security_animal_answer" value="{{ old('security_animal_answer') }}"
+                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-300 mb-1">¿Cuál es el nombre de tu padre?</label>
+                        <input type="text" name="security_padre_answer" value="{{ old('security_padre_answer') }}"
+                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="mt-4 flex items-center justify-end gap-2 text-[11px]">
+                    <button type="button" data-close-modal
+                        class="inline-flex items-center rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-slate-100 hover:bg-slate-700 cursor-pointer">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="inline-flex items-center rounded-md bg-blue-600 px-4 py-1.5 text-white text-[11px] font-semibold hover:bg-blue-500 cursor-pointer">
+                        Guardar usuario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirm-delete-user-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div class="w-full max-w-sm max-h-[calc(100vh-6rem)] overflow-auto rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-5 text-xs text-slate-100">
+            <h2 class="text-sm font-semibold mb-2 flex items-center gap-2" data-modal-user-title>
+                Eliminar usuario
+            </h2>
+            <p class="text-[11px] text-slate-300 mb-4" data-modal-user-text>
+                ¿Seguro que deseas eliminar este usuario? Esta acción no se puede deshacer.
+            </p>
+            <div class="mb-4">
+                <label class="block text-[11px] font-medium text-slate-300 mb-1">Confirma tu contraseña</label>
+                <input type="password" data-modal-admin-password class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div class="flex justify-end gap-2 text-[11px]">
+                <button type="button" data-modal-user-cancel class="inline-flex items-center rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-slate-100 hover:bg-slate-700 cursor-pointer">
+                    Cancelar
+                </button>
+                <button type="button" data-modal-user-confirm class="inline-flex items-center rounded-md border border-red-500/60 bg-red-500/10 px-3 py-1.5 text-red-200 hover:bg-red-500/20 cursor-pointer">
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-unlock-user-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div class="w-full max-w-sm max-h-[calc(100vh-6rem)] overflow-auto rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-5 text-xs text-slate-100">
+            <h2 class="text-sm font-semibold mb-2 flex items-center gap-2">
+                Desbloquear usuario
+            </h2>
+            <p class="text-[11px] text-slate-300 mb-4" data-modal-unlock-text>
+                Para desbloquear este usuario, ingresa tu contraseña.
+            </p>
+            <div class="mb-4">
+                <label class="block text-[11px] font-medium text-slate-300 mb-1">Confirma tu contraseña</label>
+                <input type="password" data-modal-admin-password-unlock class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div class="flex justify-end gap-2 text-[11px]">
+                <button type="button" data-modal-unlock-cancel class="inline-flex items-center rounded-md border border-slate-600 bg-slate-800 px-3 py-1.5 text-slate-100 hover:bg-slate-700 cursor-pointer">
+                    Cancelar
+                </button>
+                <button type="button" data-modal-unlock-confirm class="inline-flex items-center rounded-md border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-emerald-200 hover:bg-emerald-500/20 cursor-pointer">
+                    Desbloquear
+                </button>
+            </div>
+        </div>
+    </div>
+
     @stack('scripts')
     <script>
         function toggleProfileMenu(btn) {

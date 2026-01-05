@@ -16,7 +16,8 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('users.update', $user) }}" class="space-y-4">
+            <form method="POST" action="{{ route('users.update', $user) }}" class="space-y-4" id="edit-user-form">
+                                <div id="edit-user-errors" class="mb-2 text-xs text-red-300 border border-red-500/40 bg-red-900/30 rounded px-3 py-2 hidden"></div>
                 @csrf
                 @method('PUT')
 
@@ -42,8 +43,8 @@
                         </select>
                     </div>
                     <div class="space-y-1 relative">
-                        <label class="block text-xs font-medium text-slate-300" for="password">Nueva contraseña (opcional)</label>
-                        <input id="password" name="password" type="password"
+                        <label class="block text-xs font-medium text-slate-300" for="password">Nueva contraseña (opcional, mínimo 16 caracteres)</label>
+                        <input id="edit-password" name="password" type="password"
                             class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 pr-8 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Dejar en blanco para no cambiar">
                         <button type="button" onclick="togglePassword('password', this)" tabindex="-1"
@@ -54,6 +55,32 @@
                             </svg>
                         </button>
                     </div>
+                @push('scripts')
+                <script>
+                    // Validación frontend para el formulario de editar usuario
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const form = document.getElementById('edit-user-form');
+                        if (!form) return;
+                        form.addEventListener('submit', function (e) {
+                            const password = document.getElementById('edit-password');
+                            const errorBox = document.getElementById('edit-user-errors');
+                            let errors = [];
+                            if (password.value.length > 0 && password.value.length < 16) {
+                                errors.push('La nueva contraseña debe tener al menos 16 caracteres.');
+                            }
+                            if (errors.length > 0) {
+                                e.preventDefault();
+                                errorBox.innerHTML = '<ul><li>' + errors.join('</li><li>') + '</li></ul>';
+                                errorBox.classList.remove('hidden');
+                                password.classList.add('border-red-500');
+                            } else {
+                                errorBox.classList.add('hidden');
+                                password.classList.remove('border-red-500');
+                            }
+                        });
+                    });
+                </script>
+                @endpush
                 </div>
 
                 <div class="grid gap-4 sm:grid-cols-3">
