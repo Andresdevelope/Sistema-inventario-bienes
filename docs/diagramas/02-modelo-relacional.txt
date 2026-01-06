@@ -25,6 +25,7 @@ Sistema: Inventario de Bienes
        nombre            VARCHAR(255)        NOT NULL,
        codigo            VARCHAR(255)        NOT NULL UNIQUE,
        descripcion       VARCHAR(255)        NOT NULL,
+     categoria         VARCHAR(100)        NULL,
        ubicacion         VARCHAR(255)        NULL,
        estado            VARCHAR(255)        NOT NULL DEFAULT 'bueno',
        fecha_adquisicion DATE                NULL,
@@ -89,9 +90,8 @@ Sistema: Inventario de Bienes
 7. Observaciones
 
    - Este modelo relacional está basado en las migraciones actuales del
-     proyecto Laravel. Si se agregan nuevas migraciones (por ejemplo, para
-     campos adicionales como locked_until en users o categoria en bienes),
-     debe actualizarse esta descripción.
+     proyecto Laravel. Se ha agregado el campo "categoria" (VARCHAR(100),
+     NULL) en la tabla BIENES mediante migración adicional.
 
    - La tabla BITACORAS está diseñada para ser reutilizable por diferentes
      módulos gracias a la combinación (modulo, entidad_id).

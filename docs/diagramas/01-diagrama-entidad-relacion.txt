@@ -28,6 +28,7 @@ Sistema: Inventario de Bienes
             - nombre
             - codigo (ÚNICO)
             - descripcion
+          - categoria (opcional)
             - ubicacion (opcional)
             - estado (por defecto: "bueno")
             - fecha_adquisicion (opcional)

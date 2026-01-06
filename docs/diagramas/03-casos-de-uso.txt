@@ -65,7 +65,7 @@ Reglas de negocio:
    1. El usuario accede al módulo "Bienes".
    2. El usuario selecciona la opción "Registrar bien".
    3. El usuario llena el formulario con: nombre, codigo, descripcion,
-      ubicacion, estado, fecha_adquisicion, valor.
+      categoria (opcional), ubicacion, estado, fecha_adquisicion, valor.
    4. El sistema valida que el campo codigo no esté repetido.
    5. El sistema guarda el registro en la tabla BIENES.
    6. El sistema registra en BITÁCORA la creación del bien:

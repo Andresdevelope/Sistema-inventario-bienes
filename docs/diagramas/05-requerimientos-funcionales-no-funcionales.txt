@@ -18,8 +18,8 @@ A) REQUERIMIENTOS FUNCIONALES
 A.1. Módulo de Gestión de Bienes (M1)
 
 RF-01 El sistema debe permitir registrar nuevos bienes, capturando al menos:
-      nombre, código, descripción, ubicación, estado, fecha de adquisición y
-      valor (opcional).
+        nombre, código, descripción, categoría (opcional), ubicación, estado,
+        fecha de adquisición y valor (opcional).
 
 RF-02 El sistema debe validar que el código del bien sea único y no se repita
       para diferentes registros.
@@ -28,7 +28,7 @@ RF-03 El sistema debe permitir consultar un listado de bienes mostrando al
       menos: nombre, código, estado y ubicación.
 
 RF-04 El sistema debe permitir filtrar la lista de bienes por código, nombre,
-      estado o ubicación.
+        estado, ubicación o categoría.
 
 RF-05 El sistema debe permitir visualizar el detalle de un bien específico.
 
