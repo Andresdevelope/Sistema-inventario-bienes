@@ -17,13 +17,14 @@ Route::post('/register', [AuthController::class, 'register']);
 
 // Login
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/login', [AuthController::class, 'login'])
+    ->name('login.post')
+    ->middleware('throttle:login');
 // Rutas protegidas: solo usuarios autenticados
 Route::middleware('auth')->group(function () {
     // Logout (se excluye del middleware de CSRF para evitar errores 419 al cerrar sesión)
     Route::post('/logout', [AuthController::class, 'logout'])
-        ->name('logout')
-        ->withoutMiddleware(VerifyCsrfTokenMiddleware::class);
+        ->name('logout');
 
     // Dashboard sencillo protegido
     Route::get('/dashboard', function () {
@@ -42,7 +43,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/bienes', [BienController::class, 'index'])->name('bienes.index');
         Route::get('/bienes/crear', [BienController::class, 'create'])->name('bienes.create');
         Route::post('/bienes', [BienController::class, 'store'])->name('bienes.store');
-
+        
+        Route::get('/bienes', [BienController::class, 'index'])->name('bienes.index');
         Route::get('/bienes/{bien}', [BienController::class, 'show'])->name('bienes.show');
         Route::get('/bienes/{bien}/editar', [BienController::class, 'edit'])->name('bienes.edit');
         Route::put('/bienes/{bien}', [BienController::class, 'update'])->name('bienes.update');
@@ -66,4 +68,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 // Recuperación de contraseña por preguntas de seguridad
 // Recuperación de contraseña (solo vista unificada)
 Route::get('/password/recover', [AuthController::class, 'showRecoveryForm'])->name('password.recover');
-Route::post('/password/recover', [AuthController::class, 'handleRecovery'])->name('password.recover.handle');
+Route::post('/password/recover', [AuthController::class, 'handleRecovery'])
+    ->name('password.recover.handle')
+    ->middleware('throttle:recover');

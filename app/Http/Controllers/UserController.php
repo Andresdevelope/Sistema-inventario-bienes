@@ -94,6 +94,7 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user): RedirectResponse
     {
+        $oldRole = $user->role; // Guardar rol previo para detectar cambios
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:users,name,' . $user->id],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
@@ -140,6 +141,16 @@ class UserController extends Controller
         }
 
         $user->save();
+
+        // Bitácora: si cambió el rol, registrar el cambio específico
+        if ($oldRole !== $validated['role']) {
+            \App\Models\Bitacora::registrar(
+                'usuarios',
+                'cambiar_rol',
+                $user->id,
+                sprintf('Cambió el rol del usuario "%s" (ID %d) de %s a %s.', $user->name, $user->id, $oldRole, $user->role)
+            );
+        }
 
         Bitacora::registrar(
             'usuarios',

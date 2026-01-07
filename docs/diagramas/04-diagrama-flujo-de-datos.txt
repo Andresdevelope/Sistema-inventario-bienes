@@ -73,7 +73,7 @@ Sistema: Inventario de Bienes
        - Es escrito por P3.
 
    D2: BD_Bienes (BIENES)
-       - Contiene el inventario de bienes (nombre, código, descripción,
+        - Contiene el inventario de bienes (nombre, código, descripción,
          categoría, ubicación, estado, valor, etc.).
        - Es leído y escrito por P2.
 

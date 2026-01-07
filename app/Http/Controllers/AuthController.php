@@ -6,11 +6,51 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    /**
+     * Genera un CAPTCHA simple (suma) y lo guarda en sesión para el contexto dado.
+     * Contextos soportados: 'login', 'recover1', 'recover2'.
+     */
+    protected function generateCaptcha(string $context): void
+    {
+        $a = random_int(1, 9);
+        $b = random_int(1, 9);
+        $question = sprintf('¿Cuánto es %d + %d?', $a, $b);
+        $answer = (string) ($a + $b);
+
+        // Guardar como arreglo anidado para acceder con dot notation en Blade
+        $captcha = session()->get('captcha', []);
+        $captcha[$context] = [
+            'question' => $question,
+            'answer' => $answer,
+            'generated_at' => now()->toISOString(),
+        ];
+        session()->put('captcha', $captcha);
+    }
+
+    /**
+     * Valida la respuesta del CAPTCHA para el contexto indicado.
+     */
+    protected function validateCaptcha(Request $request, string $context): bool
+    {
+        $captcha = session()->get("captcha.$context", null);
+        $input = (string) $request->input('captcha_answer', '');
+        $ok = is_array($captcha) && isset($captcha['answer']) && trim($input) === (string) $captcha['answer'];
+        // Invalida el captcha usado para evitar reuso
+        if ($ok) {
+            $all = session()->get('captcha', []);
+            unset($all[$context]);
+            session()->put('captcha', $all);
+        }
+        return $ok;
+    }
+
     /**
      * Mostrar formulario de registro.
      */
@@ -105,6 +145,13 @@ class AuthController extends Controller
                 ->withErrors(['name' => 'El usuario está bloqueado. Contacte al administrador para desbloquear.']);
         }
 
+        // Validar reCAPTCHA (si falla, no continuar)
+        if (! $this->validateRecaptcha($request)) {
+            return Redirect::back()
+                ->withInput($request->only('name'))
+                ->withErrors(['recaptcha' => 'Verificación reCAPTCHA fallida.']);
+        }
+
         // Intentar iniciar sesión usando el nombre de usuario y contraseña
         if (Auth::attempt(['name' => $credentials['name'], 'password' => $credentials['password']])) {
             $request->session()->regenerate();
@@ -114,7 +161,18 @@ class AuthController extends Controller
                 $user->login_attempts = 0;
                 $user->locked_until = null;
                 $user->save();
+
+                // Bitácora: ingreso (login) exitoso
+                \App\Models\Bitacora::registrar(
+                    'auth',
+                    'login',
+                    $user->id,
+                    sprintf('Inicio de sesión exitoso del usuario "%s" (ID %d) desde IP %s.', $user->name, $user->id, $request->ip())
+                );
             }
+
+            // Limpiar requisito de captcha al iniciar sesión
+            session()->forget(['captcha_login_required', 'captcha.login']);
 
             return Redirect::route('dashboard');
         }
@@ -122,18 +180,27 @@ class AuthController extends Controller
         // Si las credenciales no son válidas, incrementar intentos y bloquear si llega a 3
         if ($user) {
             $user->login_attempts = ($user->login_attempts ?? 0) + 1;
-
+            // Si el usuario va por el tercer intento, mostrar aviso
+            if ($user->login_attempts === 2) {
+                session()->flash('lock_remaining', '¡Atención! Si fallas el siguiente intento, tu cuenta será bloqueada.');
+            }
             if ($user->login_attempts >= 3) {
                 // Bloqueo indefinido (persistente) hasta acción del administrador
                 $user->locked_until = now();
                 $user->login_attempts = 0; // reiniciar el contador tras bloquear
                 $user->save();
 
+                    \App\Models\Bitacora::registrar(
+                        'usuarios',
+                        'bloqueado ',
+                        $user->id,
+                        sprintf('Bloqueó automáticamente al usuario "%s" (ID %d) por intentos fallidos de login.', $user->name, $user->id)
+                    );
+
                 return Redirect::back()
                     ->withInput($request->only('name'))
                     ->withErrors(['name' => 'Usuario bloqueado por intentos fallidos. Contacte al administrador.']);
             }
-
             $user->save();
         }
 
@@ -149,6 +216,16 @@ class AuthController extends Controller
      */
     public function logout(Request $request): RedirectResponse
     {
+        // Registrar logout antes de cerrar la sesión para conservar el user_id
+        $uid = Auth::id();
+        if ($uid) {
+            \App\Models\Bitacora::registrar(
+                'auth',
+                'logout',
+                $uid,
+                sprintf('Cierre de sesión del usuario ID %d desde IP %s.', $uid, $request->ip())
+            );
+        }
         Auth::logout();
 
         $request->session()->invalidate();
@@ -173,6 +250,8 @@ class AuthController extends Controller
         $step = (int) $request->session()->get('recovery_step', 1);
         $showThirdQuestion = (bool) $request->session()->get('show_third_question', false);
 
+        // Con reCAPTCHA v2 no generamos captcha local
+
         return view('auth.password_recover', [
             'step' => $step,
             'showThirdQuestion' => $showThirdQuestion,
@@ -188,6 +267,10 @@ class AuthController extends Controller
 
         // Paso 1: recibir correo
         if ($step === 1) {
+            // Validar reCAPTCHA en paso 1
+            if (! $this->validateRecaptcha($request)) {
+                return back()->withErrors(['recaptcha' => 'Verificación reCAPTCHA fallida.'])->onlyInput('email');
+            }
             $validated = $request->validate([
                 'email' => ['required', 'email'],
             ], [
@@ -210,6 +293,10 @@ class AuthController extends Controller
 
         // Paso 2: primero dos preguntas; si fallan, solo la tercera
         if ($step === 2) {
+            // Validar reCAPTCHA en paso 2
+            if (! $this->validateRecaptcha($request)) {
+                return back()->withErrors(['recaptcha' => 'Verificación reCAPTCHA fallida.']);
+            }
             $userId = $request->session()->get('password_recover_user_id');
             if (! $userId) {
                 return redirect()->route('password.recover')->withErrors(['email' => 'Sesión de recuperación no válida.']);
@@ -312,5 +399,41 @@ class AuthController extends Controller
     protected function compareAnswer(string $stored, string $input): bool
     {
         return mb_strtolower(trim($stored)) === mb_strtolower(trim($input));
+    }
+
+    /**
+     * Validar Google reCAPTCHA v2 usando la secret key del .env.
+     */
+    protected function validateRecaptcha(Request $request): bool
+    {
+        $token = (string) $request->input('g-recaptcha-response', '');
+        $secret = (string) env('RECAPTCHA_SECRET_KEY');
+        if ($secret === '') {
+            Log::warning('reCAPTCHA secret key missing.');
+            return false;
+        }
+        if ($token === '') {
+            // Falta marcar el captcha en el formulario
+            return false;
+        }
+        try {
+            $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret' => $secret,
+                'response' => $token,
+                'remoteip' => $request->ip(),
+            ]);
+            $json = $response->json();
+            $ok = (bool) ($json['success'] ?? false);
+            if (! $ok) {
+                Log::info('reCAPTCHA failed', [
+                    'ip' => $request->ip(),
+                    'codes' => $json['error-codes'] ?? null,
+                ]);
+            }
+            return $ok;
+        } catch (\Throwable $e) {
+            Log::error('reCAPTCHA verify exception: ' . $e->getMessage());
+            return false;
+        }
     }
 }
