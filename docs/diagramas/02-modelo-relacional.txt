@@ -13,10 +13,10 @@ Sistema: Inventario de Bienes
        security_animal_answer VARCHAR(255)   NOT NULL,
        security_padre_answer  VARCHAR(255)   NOT NULL,
        login_attempts    INT                 NOT NULL DEFAULT 0,
+       locked_until      TIMESTAMP           NULL,
        remember_token    VARCHAR(100)        NULL,
        created_at        TIMESTAMP           NULL,
        updated_at        TIMESTAMP           NULL
-       -- locked_until se maneja lógicamente en el modelo (no aparece en esta migración)
    );
 
 2. Tabla BIENES
@@ -93,9 +93,14 @@ Sistema: Inventario de Bienes
      proyecto Laravel. Se ha agregado el campo "categoria" (VARCHAR(100),
      NULL) en la tabla BIENES mediante migración adicional.
 
+   - En USERS, el campo "locked_until" (TIMESTAMP NULL) fue incorporado
+     mediante migración adicional para soportar el bloqueo por intentos.
+
    - La tabla BITACORAS está diseñada para ser reutilizable por diferentes
      módulos gracias a la combinación (modulo, entidad_id).
 
    - PASSWORD_RESET_TOKENS y SESSIONS son tablas de soporte para
-     autenticación y sesiones; puedes omitirlas en el documento si tu enfoque
-     es solo funcional en lugar de técnico.
+     sesiones; puedes omitirlas en el documento si tu enfoque es solo funcional
+     en lugar de técnico. La recuperación de contraseña en esta implementación
+     se realiza mediante preguntas de seguridad, por lo que la tabla
+     PASSWORD_RESET_TOKENS no es utilizada.

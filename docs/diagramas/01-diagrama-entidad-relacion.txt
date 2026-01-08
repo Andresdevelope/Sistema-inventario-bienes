@@ -21,7 +21,7 @@ Sistema: Inventario de Bienes
             - remember_token
             - created_at
             - updated_at
-            - locked_until (campo lógico manejado en el modelo)
+          - locked_until (TIMESTAMP NULL; indica bloqueo del usuario hasta fecha/hora)
 
     2.2. Entidad BIEN
             - id (PK)
@@ -106,9 +106,12 @@ Sistema: Inventario de Bienes
        por eso usa (modulo, entidad_id) en lugar de una FK directa a BIEN u otras
        tablas. Esto permite auditar diferentes módulos con una sola tabla.
 
-    - PASSWORD_RESET_TOKEN y SESSION son entidades de soporte técnico del
-       framework (gestión de contraseñas y sesiones). Puedes incluirlas o no en
-       el DER según el nivel de detalle requerido para el documento de tu trabajo.
+    - SESSION es una entidad de soporte técnico (gestión de sesiones). Puedes
+       incluirla o no según el nivel de detalle requerido.
+
+    - La autenticación se realiza por nombre de usuario (USUARIO.name) y
+       contraseña; se validan intentos fallidos y se bloquea al tercer fallo
+       (USUARIO.login_attempts + USUARIO.locked_until).
 
     - Los tipos de datos concretos (string, date, decimal, etc.) se detallan en
        el modelo relacional.

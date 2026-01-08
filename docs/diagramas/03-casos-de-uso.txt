@@ -18,8 +18,8 @@ Reglas de negocio:
    - Usuario (administrador u operador)
 
    Descripción breve:
-   - Permite que un usuario autenticado acceda al sistema de inventario
-     utilizando su correo y contraseña.
+    - Permite que un usuario autenticado acceda al sistema de inventario
+       utilizando su nombre de usuario y contraseña, con verificación reCAPTCHA.
 
    Precondiciones:
    - El usuario está registrado en la tabla USERS.
@@ -27,7 +27,8 @@ Reglas de negocio:
 
    Flujo principal:
    1. El usuario accede a la pantalla de inicio de sesión.
-   2. El usuario ingresa email y contraseña.
+   2. El usuario ingresa nombre de usuario y contraseña.
+   2.1. El sistema verifica reCAPTCHA v2.
    3. El sistema valida las credenciales contra la tabla USERS.
    4. Si las credenciales son correctas, el sistema crea una sesión (SESSIONS)
       y redirige al panel principal.
@@ -35,10 +36,14 @@ Reglas de negocio:
       = "auth", accion = "login", resultado = "exito").
 
    Flujos alternos:
-   A1. Credenciales incorrectas:
+      A1. Credenciales incorrectas:
        1. El sistema incrementa login_attempts para el usuario.
        2. El sistema muestra un mensaje de error y no permite el acceso.
        3. El sistema puede registrar en BITÁCORA un intento fallido.
+      A2. Cuenta bloqueada por intentos:
+         1. Si el usuario alcanza 3 intentos fallidos, el sistema fija locked_until
+           y bloquea el acceso.
+         2. El sistema informa que debe contactar al administrador para desbloqueo.
 
    Postcondiciones:
    - El usuario queda autenticado y con una sesión activa.
@@ -166,29 +171,32 @@ Reglas de negocio:
 
 --------------------------------------------------
 
-5. CU-05 Recuperar contraseña (opcional según implementación)
+5. CU-05 Recuperar contraseña por preguntas de seguridad
    Actores:
    - Usuario
 
    Descripción breve:
-   - Permite que un usuario restablezca su contraseña mediante un enlace de
-     recuperación enviado a su correo electrónico.
+    - Permite que un usuario restablezca su contraseña respondiendo preguntas
+       de seguridad en un flujo por pasos, con verificación reCAPTCHA.
 
    Precondiciones:
    - El usuario está registrado en USERS.
 
    Flujo principal:
-   1. El usuario solicita recuperar contraseña.
-   2. El sistema genera un token y lo almacena en PASSWORD_RESET_TOKENS.
-   3. El sistema envía un correo con un enlace de recuperación.
-   4. El usuario accede al enlace y define una nueva contraseña.
-   5. El sistema actualiza la contraseña en USERS y elimina/expira el token.
+   1. El usuario solicita recuperar contraseña (Paso 1) e ingresa su correo.
+   2. El sistema verifica reCAPTCHA y valida que el correo exista.
+   3. El sistema solicita dos preguntas de seguridad (Paso 2): color favorito
+      y animal favorito; si alguna falla, solicita una tercera (nombre del padre).
+   4. Si las respuestas son correctas, el sistema permite definir una nueva
+      contraseña (Paso 3), validando longitud mínima de 16.
+   5. El sistema actualiza la contraseña en USERS y limpia el estado del flujo.
 
    Postcondiciones:
    - El usuario tiene una nueva contraseña válida para iniciar sesión.
 
    Reglas de negocio:
-   - El token de recuperación tiene una vigencia limitada.
+    - Las preguntas de seguridad deben coincidir con las respuestas registradas;
+       se aplica verificación reCAPTCHA en los pasos 1 y 2.
 
 --------------------------------------------------
 

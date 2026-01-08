@@ -1,0 +1,152 @@
+INSTRUMENTO DE EVALUACIÓN DE SISTEMAS TRAYECTO III
+
+TÍTULO:
+AUTORES:
+FECHA: 2026-01-07
+
+FORMATO DE RESULTADOS (Si / Med / No)
+- [Si] Cumple completamente
+- [Med] Cumple medianamente
+- [No] No cumple
+Nota: P indica la ponderación del ítem.
+
+========================================
+Categoría: Requerimiento de validación
+========================================
+1. Requerimientos recolectados, analizados e implementados (P:1)
+   Estado: [Med]
+   Observaciones: Implementados los de seguridad y flujo básico; pendiente medición de rendimiento/UI.
+
+2. Diseño del sistema sencillo, básico y robusto (P:1)
+   Estado: [Si]
+   Observaciones: Vistas simples y rutas claras.
+
+=====================
+Categoría: UI
+=====================
+3. Estilo visual homogéneo (P:1)
+   Estado: [Med]
+   Observaciones: Layout base y estilos consistentes; revisar vistas para homogenizar.
+
+4. Performance óptimo (Lighthouse >90, LCP <=7s) (P:1)
+   Estado: [No]
+   Observaciones: Pendiente medición con Lighthouse en entorno de despliegue.
+
+5. Web adaptable (responsive) (P:2)
+   Estado: [Med]
+   Observaciones: Tailwind/Vite presentes; validar en móviles y tablets.
+
+6. Cumple estándares W3C (P:1)
+   Estado: [Med]
+   Observaciones: Pendiente validación HTML/CSS.
+
+7. Mensajes de ayuda al usuario (P:2)
+   Estado: [Si]
+   Observaciones: Mensajes de validación y estados en formularios.
+
+======================================
+Categoría: Eficiencia y funcionalidad
+======================================
+8. Tiempo de respuesta del servidor óptimo (P:2)
+   Estado: [Med]
+   Observaciones: Pendiente profiling; optimizaciones básicas aplicadas.
+
+9. Hardware adecuado para cargas (P:1)
+   Estado: [No]
+   Observaciones: Depende del entorno de producción; no evaluado.
+
+10. Mantenible, escalable, observable y testeable (P:2)
+	Estado: [Med]
+	Observaciones: Estructura mantenible; observabilidad y tests avanzados pendientes.
+
+=========================
+Categoría: Usabilidad
+=========================
+11. Interfaz comprensible (P:1)
+	Estado: [Si]
+	Observaciones: Formularios simples.
+
+12. Facilidad considerando limitaciones del usuario (P:1)
+	Estado: [Med]
+	Observaciones: Mensajería y validaciones; accesibilidad avanzada pendiente.
+
+13. Validaciones para proteger datos y prevenir errores (P:2)
+	Estado: [Si]
+	Observaciones: Validaciones en controladores y formularios.
+
+14. Flujo de navegación mantenido (P:1)
+	Estado: [Si]
+	Observaciones: Redirecciones y rutas coherentes.
+
+=======================
+Categoría: Seguridad
+=======================
+15. Autenticación con varias capas (P:1)
+	Estado: [Si]
+	Observaciones: reCAPTCHA, throttling, bloqueo por intentos.
+
+16. Protección e integridad de datos (P:2)
+	Estado: [Si]
+	Observaciones: CSRF, CORS, validaciones, RBAC.
+
+17. Bloqueo tras tres intentos erróneos (P:2)
+	Estado: [Si]
+	Observaciones: lock + contador de intentos.
+
+18. Bloqueo/desbloqueo solo por operador con privilegio (P:1)
+	Estado: [Si]
+	Observaciones: Acciones restringidas a admin; requiere contraseña.
+
+19. Autenticación adicional para eliminar usuario (P:2)
+	Estado: [Si]
+	Observaciones: current_password del admin.
+
+20. Autorización por RBAC/ReBAC/ABAC/MAC (P:2)
+	Estado: [Si]
+	Observaciones: RBAC mediante RoleMiddleware y grupos de rutas.
+
+21. Deniega accesos no autorizados (P:1)
+	Estado: [Si]
+	Observaciones: Middleware auth y role.
+
+22. Contraseñas hasheadas (una sola vía) (P:2)
+	Estado: [Si]
+	Observaciones: bcrypt (OWASP/NIST) en lugar de SHA directo.
+
+23. Longitud mínima de contraseña 16 (P:2)
+	Estado: [Si]
+	Observaciones: Validaciones min:16 en registro, actualización y recuperación.
+
+24. Mecanismo de recuperación de contraseña (P:1)
+	Estado: [Si]
+	Observaciones: Flujo por preguntas de seguridad con reCAPTCHA.
+
+25. Información confidencial fuera de lugares accesibles (P:2)
+	Estado: [Si]
+	Observaciones: Secretos en .env; cookies seguras; almacenamiento privado.
+
+26. Bitácora de acciones/transacciones (P:2)
+	Estado: [Si]
+	Observaciones: Modelo Bitacora y registros en acciones críticas.
+
+27. Protecciones servidor (CSRF, CORS, TLS, cookies) (P:1)
+	Estado: [Med]
+	Observaciones: CSRF y CORS activos; cookies httpOnly/secure; TLS pendiente de despliegue.
+
+====================================
+Totales y valoración
+====================================
+TOTAL PONDERADO: 32.5 / 40
+VALORACIÓN: Con correcciones (29 – 34)
+
+Observaciones generales:
+- Pendiente medición y optimización de performance (Lighthouse y LCP).
+- Validar y mejorar responsive y estándares W3C.
+- Configurar TLS/HSTS en producción.
+- Opcional: añadir 2FA (TOTP) para fortalecer autenticación.
+
+DATOS DEL VALIDADOR
+Nombre y Apellido:
+Cédula:
+Firma:
+Fecha:

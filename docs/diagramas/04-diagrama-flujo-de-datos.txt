@@ -13,10 +13,13 @@ Sistema: Inventario de Bienes
    - D1: BD_Usuarios (tabla USERS)
    - D2: BD_Bienes (tabla BIENES)
    - D3: BD_Bitácora (tabla BITACORAS)
+  - D4: BD_Sesiones (tabla SESSIONS)
 
-   Flujos de datos principales:
+  Flujos de datos principales:
    - E1: Credenciales de acceso (email, contraseña) -> P0
    - S1: Respuesta de autenticación / acceso concedido -> Usuario
+    Servicios externos:
+    - X1: Google reCAPTCHA (verificación de tokens)
    - E2: Solicitudes de gestión de bienes (altas, bajas, modificaciones) -> P0
    - S2: Listados y detalles de bienes -> Usuario
    - E3: Solicitudes de gestión de usuarios (solo Administrador) -> P0
@@ -30,12 +33,14 @@ Sistema: Inventario de Bienes
 
    P1: Autenticación de usuarios
        Entradas:
-       - E1: Credenciales (email, contraseña) desde Usuario.
+       - E1: Credenciales (usuario, contraseña) desde Usuario.
+       - X1: Token reCAPTCHA desde Usuario / verificación con servicio externo.
        Salidas:
        - S1: Resultado de autenticación (éxito / error) hacia Usuario.
        Acceso a datos:
        - Lee D1: BD_Usuarios para validar credenciales.
        - Escribe en D3: BD_Bitácora (registro de inicio de sesión exitoso o fallido).
+       - Escribe en D4: BD_Sesiones (aplica si SESSION_DRIVER=database).
 
    P2: Gestión de bienes
        Entradas:
@@ -56,6 +61,7 @@ Sistema: Inventario de Bienes
        Acceso a datos:
        - Lee y escribe D1: BD_Usuarios.
        - Escribe en D3: BD_Bitácora (acciones sobre usuarios, modulo = "usuarios").
+      - Bloqueo/desbloqueo: actualiza campos login_attempts y locked_until en D1.
 
    P4: Consulta de bitácora
        Entradas:
@@ -92,6 +98,11 @@ Sistema: Inventario de Bienes
        * Los almacenes de datos D1, D2 y D3 como "almacenes" típicos de DFD.
        * Flechas de flujo con los nombres E1, S1, E2, S2, etc., o con nombres
          más descriptivos ("Solicitud de alta de bien", "Listado de bienes", etc.).
+       * Representar X1 (Google reCAPTCHA) como entidad externa con flujo hacia P1.
 
    - Si tu trabajo lo requiere, puedes descomponer aún más P2 (Gestionar bienes)
      en subprocesos como "Registrar bien", "Editar bien", "Dar de baja bien".
+
+   - Considerar en el diagrama las protecciones a nivel de middleware:
+     * CSRF (VerifyCsrfToken) para formularios.
+     * CORS (HandleCors) para accesos cross-origin.
