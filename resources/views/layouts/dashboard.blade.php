@@ -10,22 +10,22 @@
 <body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
     <div class="flex min-h-screen">
         {{-- Sidebar de navegación --}}
-        <aside class="hidden md:flex md:w-64 lg:w-72 border-r border-violet-800/70 bg-gradient-to-b from-violet-800 via-violet-900 to-purple-900 text-violet-50">
+        <aside class="hidden md:flex md:w-64 lg:w-72 border-r border-blue-900/70 bg-slate-900 text-white">
             <div class="flex flex-col w-full h-full">
-                <div class="px-5 pt-5 pb-4 border-b border-violet-700/70">
+                <div class="px-5 pt-5 pb-4 border-b border-blue-800/70">
                     <div class="flex items-center gap-3">
                         <div class="h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center text-sm font-bold shadow-lg">
                             SI
                         </div>
                         <div>
-                            <p class="text-xs font-semibold tracking-wide text-violet-50 uppercase">Sistema de inventario</p>
-                            <p class="text-[11px] text-violet-200/80">Bienes institucionales</p>
+                            <p class="text-xs font-semibold tracking-wide text-blue-50 uppercase">Sistema de inventario</p>
+                            <p class="text-[11px] text-blue-100/80">Bienes institucionales</p>
                         </div>
                     </div>
                 </div>
 
                 <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
-                    <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-violet-50 bg-white/10 shadow hover:bg-white/15 transition">
+                    <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-blue-50 bg-white/10 shadow hover:bg-white/15 transition">
                         <span class="flex h-8 w-8 items-center justify-center rounded-md bg-black/10">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875A2.25 2.25 0 0112 13.875v0a2.25 2.25 0 012.25 2.25v4.875h4.125c.621 0 1.125-.504 1.125-1.125V9.75" />
@@ -33,11 +33,11 @@
                         </span>
                         <span class="flex-1">
                             <span class="block font-medium leading-tight">Inicio</span>
-                            <span class="block text-[11px] text-violet-100/90">Resumen general del sistema</span>
+                            <span class="block text-[11px] text-blue-100/90">Resumen general del sistema</span>
                         </span>
                     </a>
 
-                    <a href="{{ route('bienes.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-violet-100 hover:bg-white/10 transition">
+                    <a href="{{ route('bienes.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-blue-100 hover:bg-white/10 transition">
                         <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-15.75 0v-12A1.125 1.125 0 016 6.375h3.375M4.875 19.5h4.5m0 0V8.25A1.125 1.125 0 0110.5 7.125H14.25m-4.875 12.375h9.75m0 0V10.125A1.125 1.125 0 0018 9h-3.375" />
@@ -45,12 +45,12 @@
                         </span>
                         <span class="flex-1">
                             <span class="block font-medium leading-tight">Bienes</span>
-                            <span class="block text-[11px] text-violet-100/80">Registro y control de bienes</span>
+                            <span class="block text-[11px] text-blue-100/80">Registro y control de bienes</span>
                         </span>
                     </a>
 
                     
-                    <a href="{{ route('users.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-violet-100 hover:bg-white/10 transition">
+                    <a href="{{ route('users.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-blue-100 hover:bg-white/10 transition">
                         <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
@@ -59,11 +59,11 @@
                         </span>
                         <span class="flex-1">
                             <span class="block font-medium leading-tight">Usuarios</span>
-                            <span class="block text-[11px] text-violet-100/80">Gestión de responsables</span>
+                            <span class="block text-[11px] text-blue-100/80">Gestión de responsables</span>
                         </span>
                     </a>
 
-                    <a href="{{ route('bitacora.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-violet-100 hover:bg-white/10 transition">
+                    <a href="{{ route('bitacora.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-blue-100 hover:bg-white/10 transition">
                         <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h15.75c.621 0 1.125.504 1.125 1.125v5.25A1.125 1.125 0 0119.875 19.5H4.125A1.125 1.125 0 013 18.375v-5.25z" />
@@ -72,13 +72,13 @@
                         </span>
                         <span class="flex-1">
                             <span class="block font-medium leading-tight">Bitacora</span>
-                            <span class="block text-[11px] text-violet-100/80">Registro de movimientos</span>
+                            <span class="block text-[11px] text-blue-100/80">Registro de movimientos</span>
                         </span>
                     </a>
                 </nav>
 
                 {{-- Pie del sidebar (vacío por ahora, sin texto de sesión) --}}
-                <div class="px-4 py-4 border-t border-violet-700/70 text-[11px] text-violet-200/80">
+                <div class="px-4 py-4 border-t border-blue-800/70 text-[11px] text-blue-100/80">
                 </div>
             </div>
         </aside>
