@@ -70,7 +70,7 @@ Reglas de negocio:
    1. El usuario accede al módulo "Bienes".
    2. El usuario selecciona la opción "Registrar bien".
    3. El usuario llena el formulario con: nombre, codigo, descripcion,
-      categoria (opcional), ubicacion, estado, fecha_adquisicion, valor.
+      categoria, ubicacion, estado, fecha_adquisicion, valor (opcional).
    4. El sistema valida que el campo codigo no esté repetido.
    5. El sistema guarda el registro en la tabla BIENES.
    6. El sistema registra en BITÁCORA la creación del bien:
@@ -202,3 +202,41 @@ Reglas de negocio:
 
 (Puedes agregar más casos de uso específicos, por ejemplo: generar reportes
 de bienes, exportar inventario, etc., siguiendo el mismo formato.)
+--------------------------------------------------
+
+6. CU-06 Activar y usar autenticación de doble factor (2FA) [pendiente]
+    Actores:
+    - Usuario (especialmente administradores)
+
+    Descripción breve:
+    - Permite que un usuario habilite 2FA basada en TOTP (Google Authenticator/FreeOTP)
+       y la utilice en el inicio de sesión tras ingresar su contraseña.
+
+    Precondiciones:
+    - El usuario tiene sesión iniciada.
+    - La funcionalidad de 2FA está habilitada por configuración.
+
+    Flujo principal (activación):
+    1. El usuario accede a su perfil y selecciona "Activar 2FA".
+    2. El sistema genera un secreto TOTP y muestra un código QR.
+    3. El usuario escanea el QR con su app de autenticación y confirma con un código válido.
+    4. El sistema guarda el secreto de forma segura y genera códigos de respaldo.
+
+    Flujo principal (inicio de sesión con 2FA):
+    1. El usuario ingresa nombre de usuario y contraseña (y reCAPTCHA).
+    2. Si tiene 2FA habilitado, el sistema solicita el código TOTP.
+    3. El usuario ingresa el código y el sistema valida dentro de la ventana de tiempo permitida.
+    4. El sistema crea sesión y registra el éxito en Bitácora.
+
+    Flujos alternos:
+    A1. Código TOTP inválido:
+          - El sistema indica error, aplica límite de intentos y puede bloquear la verificación 2FA temporalmente.
+    A2. Pérdida de acceso al generador:
+          - El usuario puede usar un código de respaldo y posteriormente desactivar/rotar el secreto.
+
+    Postcondiciones:
+    - El usuario queda autenticado con 2FA.
+
+    Reglas de negocio:
+    - 2FA obligatorio para administradores; opcional para operadores.
+    - Almacenar secreto y códigos de respaldo de forma segura; permitir rotación.

@@ -25,7 +25,7 @@ Sistema: Inventario de Bienes
        nombre            VARCHAR(255)        NOT NULL,
        codigo            VARCHAR(255)        NOT NULL UNIQUE,
        descripcion       VARCHAR(255)        NOT NULL,
-     categoria         VARCHAR(100)        NULL,
+       categoria         VARCHAR(100)        NULL,
        ubicacion         VARCHAR(255)        NULL,
        estado            VARCHAR(255)        NOT NULL DEFAULT 'bueno',
        fecha_adquisicion DATE                NULL,

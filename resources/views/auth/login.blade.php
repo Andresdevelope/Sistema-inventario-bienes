@@ -3,23 +3,20 @@
 @section('content')
 <div class="grid gap-10 md:grid-cols-2 items-center">
     {{-- Columna de bienvenida --}}
-    <div class="space-y-4">
-        <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">Bienvenido al sistema de inventario de bienes</h1>
-        <p class="text-sm text-slate-700 max-w-md">
-            Inicia sesión con tu usuario y contraseña para gestionar los bienes del sistema. Mantén tus credenciales en
-            un lugar seguro.
-        </p>
+    <div class="space-y-3">
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">Bienvenido al Sistema Inventario de Bienes</h1>
+        <p class="text-sm text-slate-700 max-w-md">Inicia sesión con tu usuario y contraseña para gestionar los bienes del sistema. Mantén tus credenciales en un lugar seguro.</p>
         <ul class="text-sm text-slate-700 space-y-1 list-disc list-inside">
             <li>Accede rápidamente al panel principal.</li>
             <li>Registra y consulta movimientos de inventario.</li>
-            <li>Protegido con preguntas de seguridad personalizadas.</li>
+            <li>Protección adicional con preguntas de seguridad.</li>
         </ul>
     </div>
 
     {{-- Tarjeta de login --}}
-    <div class="w-full max-w-md mx-auto bg-white/90 backdrop-blur border border-slate-200 shadow-xl rounded-2xl p-6 md:p-8">
-        <h2 class="text-2xl font-semibold mb-2 text-center">Iniciar sesión</h2>
-        <p class="text-xs text-slate-400 mb-4 text-center">Introduce tu usuario y contraseña para continuar.</p>
+    <div class="w-full max-w-md mx-auto bg-white/90 backdrop-blur border border-slate-200 shadow-2xl rounded-2xl p-6 md:p-8">
+        <h2 class="text-2xl font-semibold mb-1 text-center">Iniciar sesión</h2>
+        <p class="text-xs text-slate-600 mb-4 text-center">Introduce tu usuario y contraseña para continuar.</p>
 
         @if (session('status'))
             <div class="mb-4 text-xs text-emerald-300 border border-emerald-500/40 bg-emerald-900/30 rounded px-3 py-2">
@@ -38,12 +35,12 @@
         @endif
 
         @if (session('lock_remaining'))
-            <div class="mb-4 text-xs text-yellow-300 border border-yellow-500/40 bg-yellow-900/30 rounded px-3 py-2">
+            <div class="mb-4 text-xs text-yellow-700 border border-yellow-200 bg-yellow-50 rounded px-3 py-2">
                 {{ session('lock_remaining') }}
             </div>
-            <div id="lock-box" class="mb-4 text-xs text-red-300 border border-red-500/40 bg-red-900/30 rounded px-3 py-2 flex items-center justify-between">
+            <div id="lock-box" class="mb-4 text-xs text-red-700 border border-red-200 bg-red-50 rounded px-3 py-2 flex items-center justify-between">
                 <span>Tu cuenta está temporalmente bloqueada por intentos fallidos.</span>
-                <span class="font-mono text-red-100" id="lock-timer" data-remaining="{{ session('lock_remaining') }}"></span>
+                <span class="font-mono" id="lock-timer" data-remaining="{{ session('lock_remaining') }}"></span>
             </div>
         @endif
 

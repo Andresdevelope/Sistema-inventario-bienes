@@ -4,7 +4,7 @@
 <div class="w-full max-w-3xl mx-auto bg-white/90 backdrop-blur border border-slate-200 shadow-2xl rounded-2xl p-6 md:p-8 text-slate-900">
     <div class="mb-6 text-center">
         <h1 class="text-3xl font-bold tracking-tight mb-1">Crear cuenta</h1>
-        <p class="text-xs text-slate-600">Registra tu usuario para acceder al sistema de inventario.</p>
+        <p class="text-xs text-slate-600">Registra tu usuario para acceder al Sistema Inventario de Bienes.</p>
     </div>
 
     @if ($errors->any())
@@ -62,7 +62,7 @@
             </div>
         </div>
 
-        <div class="border-t border-slate-700/60 pt-4 mt-2">
+        <div class="border-t border-slate-200 pt-4 mt-2">
             <h2 class="text-sm font-semibold text-slate-900 mb-1">Preguntas de seguridad</h2>
             <p class="text-xs text-slate-600 mb-3">Se utilizarán para recuperar tu cuenta en caso de olvidar la contraseña.</p>
 
