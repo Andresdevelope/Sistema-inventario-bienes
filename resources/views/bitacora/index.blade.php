@@ -12,7 +12,7 @@
                 </div>
                 <div class="flex flex-col">
                     <label class="text-[11px] font-medium text-slate-700">Módulo</label>
-                    <select name="modulo" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600 md:w-40">
+                    <select name="modulo" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 cursor-pointer focus:border-slate-600 md:w-40">
                         <option value="">Todos</option>
                         @isset($modulos)
                             @foreach ($modulos as $mod)
@@ -23,7 +23,7 @@
                 </div>
                 <div class="flex flex-col">
                     <label class="text-[11px] font-medium text-slate-700">Acción</label>
-                    <select name="accion" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600 md:w-40">
+                    <select name="accion" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 cursor-pointer focus:border-slate-600 md:w-40">
                         <option value="">Todas</option>
                         @isset($acciones)
                             @foreach ($acciones as $acc)
@@ -34,7 +34,7 @@
                 </div>
                 <div class="flex flex-col">
                     <label class="text-[11px] font-medium text-slate-700">Resultado</label>
-                    <select name="resultado" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600 md:w-36">
+                    <select name="resultado" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 cursor-pointer focus:border-slate-600 md:w-36">
                         <option value="">Todos</option>
                         @isset($resultados)
                             @foreach ($resultados as $res)
@@ -45,16 +45,16 @@
                 </div>
 
                 <div class="flex items-center gap-2 ml-auto">
-                    <button type="button" id="toggle-advanced" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-50">Avanzado</button>
-                    <button type="submit" class="inline-flex items-center justify-center rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-slate-800">Filtrar</button>
-                    <a href="{{ route('bitacora.index') }}" class="text-slate-700 hover:text-slate-900 underline underline-offset-2">Limpiar</a>
+                    <button type="button" id="toggle-advanced" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 cursor-pointer">Avanzado</button>
+                    <button type="submit" class="inline-flex items-center justify-center rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-slate-800 cursor-pointer">Filtrar</button>
+                    <a href="{{ route('bitacora.index') }}" class="inline-flex items-center justify-center rounded-md bg-white border  border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow hover:bg-slate-100 cursor-pointer">Limpiar</a>
                 </div>
             </div>
 
             <div id="advanced-filters" class="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 {{ (request('desde') || request('hasta') || request('user_id')) ? '' : 'hidden' }}">
                 <div class="flex flex-col">
                     <label class="text-[11px] font-medium text-slate-700">Usuario</label>
-                    <select name="user_id" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
+                    <select name="user_id" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600 cursor-pointer">
                         <option value="">Todos</option>
                         @isset($usuarios)
                             @foreach ($usuarios as $u)
@@ -66,12 +66,12 @@
                 <div class="flex flex-col">
                     <label class="text-[11px] font-medium text-slate-700">Desde</label>
                     <input type="date" name="desde" value="{{ request('desde') }}"
-                           class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
+                           class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 cursor-pointer focus:border-slate-600">
                 </div>
                 <div class="flex flex-col">
                     <label class="text-[11px] font-medium text-slate-700">Hasta</label>
                     <input type="date" name="hasta" value="{{ request('hasta') }}"
-                           class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
+                           class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 cursor-pointer focus:border-slate-600">
                 </div>
             </div>
             <script>

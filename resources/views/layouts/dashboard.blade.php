@@ -7,8 +7,8 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 <!-- Layout del panel interno, actualizado a tema claro -->
 </head>
-<body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
-    <div class="flex min-h-screen">
+<body class="min-h-screen bg-slate-100 text-slate-900 antialiased flex flex-col">
+    <div class="flex flex-1">
         {{-- Sidebar de navegación --}}
         <aside class="hidden md:flex md:w-64 lg:w-72 border-r border-blue-900/70 bg-slate-900 text-white">
             <div class="flex flex-col w-full h-full">
@@ -25,7 +25,7 @@
                 </div>
 
                 <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
-                    <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-blue-50 bg-white/10 shadow hover:bg-white/15 transition">
+                    <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 {{ request()->routeIs('dashboard') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
                         <span class="flex h-8 w-8 items-center justify-center rounded-md bg-black/10">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875A2.25 2.25 0 0112 13.875v0a2.25 2.25 0 012.25 2.25v4.875h4.125c.621 0 1.125-.504 1.125-1.125V9.75" />
@@ -37,7 +37,7 @@
                         </span>
                     </a>
 
-                    <a href="{{ route('bienes.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-blue-100 hover:bg-white/10 transition">
+                    <a href="{{ route('bienes.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 {{ request()->routeIs('bienes.*') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
                         <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-15.75 0v-12A1.125 1.125 0 016 6.375h3.375M4.875 19.5h4.5m0 0V8.25A1.125 1.125 0 0110.5 7.125H14.25m-4.875 12.375h9.75m0 0V10.125A1.125 1.125 0 0018 9h-3.375" />
@@ -50,7 +50,7 @@
                     </a>
 
                     
-                    <a href="{{ route('users.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-blue-100 hover:bg-white/10 transition">
+                    <a href="{{ route('users.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 {{ request()->routeIs('users.*') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
                         <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
@@ -63,7 +63,7 @@
                         </span>
                     </a>
 
-                    <a href="{{ route('bitacora.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-blue-100 hover:bg-white/10 transition">
+                    <a href="{{ route('bitacora.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 {{ request()->routeIs('bitacora.*') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
                         <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h15.75c.621 0 1.125.504 1.125 1.125v5.25A1.125 1.125 0 0119.875 19.5H4.125A1.125 1.125 0 013 18.375v-5.25z" />
@@ -87,12 +87,21 @@
         <div class="flex-1 flex flex-col min-w-0">
             <header class="border-b border-slate-200 bg-white">
                 <div class="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
-                    <div>
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <!-- Botón móvil para abrir sidebar -->
+                        <button type="button" class="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/50"
+                                aria-controls="mobile-sidebar" aria-expanded="false" onclick="openMobileSidebar()">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                            </svg>
+                            <span class="sr-only">Abrir navegación</span>
+                        </button>
+                        <div>
                         <p class="text-[11px] font-semibold tracking-[0.2em] text-blue-600 uppercase">Panel principal</p>
                         <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900">Sistema inventario de bienes</h1>
                         <p class="text-xs text-slate-500 mt-1">Visión general de los bienes y operaciones del sistema.</p>
+                        </div>
                     </div>
-
                     <div class="flex items-center gap-3">
                         <div class="hidden sm:flex flex-col items-end">
                             <p class="text-xs text-slate-500">Bienvenido,</p>
@@ -127,7 +136,7 @@
                                 </a>
                                 <form method="POST" action="{{ route('logout') }}" class="border-t border-slate-200">
                                     @csrf
-                                    <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 text-left text-red-600 hover:bg-red-50">
+                                    <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 text-left text-red-600 hover:bg-red-50 cursor-pointer">
                                         <span class="h-5 w-5 rounded-md bg-red-100 flex items-center justify-center text-red-600">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3.5 w-3.5">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15" />
@@ -163,6 +172,76 @@
         </div>
     </div>
 
+    <!-- Sidebar móvil (off-canvas) y overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-black/50 hidden z-40 md:hidden" onclick="closeMobileSidebar()"></div>
+    <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-white transform -translate-x-full transition-transform duration-300 z-50 md:hidden shadow-xl">
+        <div class="flex items-center justify-between px-4 pt-4 pb-3 border-b border-blue-800/70">
+            <div class="flex items-center gap-2">
+                <div class="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold">SI</div>
+                <div>
+                    <p class="text-[11px] font-semibold tracking-wide text-blue-50 uppercase">Inventario</p>
+                    <p class="text-[10px] text-blue-100/80">Bienes</p>
+                </div>
+            </div>
+            <button type="button" class="inline-flex items-center justify-center h-9 w-9 rounded-md border border-white/15 text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30" onclick="closeMobileSidebar()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5">
+                    <path fill-rule="evenodd" d="M6.225 4.811a.75.75 0 011.06 0L12 9.525l4.716-4.714a.75.75 0 111.06 1.06L13.06 10.586l4.715 4.716a.75.75 0 11-1.06 1.06L12 11.646l-4.715 4.716a.75.75 0 11-1.06-1.06l4.714-4.716-4.714-4.715a.75.75 0 010-1.06z" clip-rule="evenodd" />
+                </svg>
+                <span class="sr-only">Cerrar</span>
+            </button>
+        </div>
+        <nav class="px-3 py-4 space-y-1 text-sm">
+            <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition {{ request()->routeIs('dashboard') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
+                <span class="flex h-8 w-8 items-center justify-center rounded-md bg-black/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875A2.25 2.25 0 0112 13.875v0a2.25 2.25 0 012.25 2.25v4.875h4.125c.621 0 1.125-.504 1.125-1.125V9.75" />
+                    </svg>
+                </span>
+                <span class="flex-1">
+                    <span class="block font-medium leading-tight">Inicio</span>
+                    <span class="block text-[11px] text-blue-100/90">Resumen general del sistema</span>
+                </span>
+            </a>
+
+            <a href="{{ route('bienes.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition {{ request()->routeIs('bienes.*') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
+                <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-15.75 0v-12A1.125 1.125 0 016 6.375h3.375M4.875 19.5h4.5m0 0V8.25A1.125 1.125 0 0110.5 7.125H14.25m-4.875 12.375h9.75m0 0V10.125A1.125 1.125 0 0018 9h-3.375" />
+                    </svg>
+                </span>
+                <span class="flex-1">
+                    <span class="block font-medium leading-tight">Bienes</span>
+                    <span class="block text-[11px] text-blue-100/80">Registro y control de bienes</span>
+                </span>
+            </a>
+
+            <a href="{{ route('users.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition {{ request()->routeIs('users.*') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
+                <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5a6.75 6.75 0 0113.5 0" />
+                    </svg>
+                </span>
+                <span class="flex-1">
+                    <span class="block font-medium leading-tight">Usuarios</span>
+                    <span class="block text-[11px] text-blue-100/80">Gestión de responsables</span>
+                </span>
+            </a>
+
+            <a href="{{ route('bitacora.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition {{ request()->routeIs('bitacora.*') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
+                <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h15.75c.621 0 1.125.504 1.125 1.125v5.25A1.125 1.125 0 0119.875 19.5H4.125A1.125 1.125 0 013 18.375v-5.25z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 12V6.75a3.75 3.75 0 017.5 0V12" />
+                    </svg>
+                </span>
+                <span class="flex-1">
+                    <span class="block font-medium leading-tight">Bitacora</span>
+                    <span class="block text-[11px] text-blue-100/80">Registro de movimientos</span>
+                </span>
+            </a>
+        </nav>
+    </aside>
 
     <!-- Modales globales (moved here to ensure fixed positioning and correct centering) -->
     <div id="create-user-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -360,5 +439,30 @@
             }
         });
     </script>
+    <script>
+        function openMobileSidebar() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if (!sidebar || !overlay) return;
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        }
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if (!sidebar || !overlay) return;
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        }
+        // Cerrar con ESC en móvil
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMobileSidebar();
+        });
+    </script>
+
+    <!-- Footer global, siempre abajo -->
+    <footer class="w-full bg-slate-900 text-white text-center py-2 shadow mt-0">
+        <span class="text-xs tracking-wide">Sistema Inventario Bienes © 2026</span>
+    </footer>
 </body>
 </html>
