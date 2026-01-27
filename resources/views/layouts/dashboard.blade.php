@@ -154,16 +154,34 @@
             </header>
 
             <main class="flex-1 px-4 sm:px-6 lg:px-8 py-6">
-                {{-- Mensajes de estado / error globales --}}
+                {{-- Mensajes globales (éxito / error) con diseño consistente al tema --}}
                 @if (session('status'))
-                    <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-800">
-                        {{ session('status') }}
+                    <div class="mb-4 flex items-start gap-3 rounded-xl border-l-4 border-emerald-500 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 shadow" role="alert" data-alert data-alert-timeout="6000">
+                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                            <!-- icono check -->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+                                <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.036-1.59a.75.75 0 10-1.072-1.048l-3.863 3.95-1.486-1.556a.75.75 0 10-1.086 1.034l2.043 2.14a.75.75 0 001.085-.002l4.38-4.518z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <div class="flex-1">{{ session('status') }}</div>
+                        <button type="button" class="text-emerald-700/70 hover:text-emerald-900" onclick="this.closest('[role=alert]').remove()" aria-label="Cerrar">
+                            ✕
+                        </button>
                     </div>
                 @endif
 
                 @if (session('error'))
-                    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-800">
-                        {{ session('error') }}
+                    <div class="mb-4 flex items-start gap-3 rounded-xl border-l-4 border-red-600 bg-red-50 px-4 py-3 text-sm text-red-900 shadow" role="alert" data-alert data-alert-timeout="8000">
+                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-700">
+                            <!-- icono error -->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+                                <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-.75 6a.75.75 0 011.5 0v5.25a.75.75 0 11-1.5 0V8.25zm.75 8.25a1.125 1.125 0 100-2.25 1.125 1.125 0 000 2.25z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                        <div class="flex-1">{{ session('error') }}</div>
+                        <button type="button" class="text-red-700/70 hover:text-red-900" onclick="this.closest('[role=alert]').remove()" aria-label="Cerrar">
+                            ✕
+                        </button>
                     </div>
                 @endif
 
@@ -437,6 +455,23 @@
             if (!event.target.closest('[data-profile-menu-wrapper]')) {
                 document.querySelectorAll('[data-profile-menu]').forEach(m => m.classList.add('hidden'));
             }
+        });
+    </script>
+    <script>
+        // Auto-dismiss de notificaciones globales tras 5–8 segundos
+        document.addEventListener('DOMContentLoaded', () => {
+            const alerts = document.querySelectorAll('[data-alert]');
+            alerts.forEach(alert => {
+                const timeoutAttr = alert.getAttribute('data-alert-timeout');
+                const timeout = Number(timeoutAttr) || 6000; // por defecto 6s
+                setTimeout(() => {
+                    // transicionar antes de quitar
+                    alert.style.transition = 'opacity 300ms ease, transform 300ms ease';
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-4px)';
+                    setTimeout(() => alert.remove(), 320);
+                }, timeout);
+            });
         });
     </script>
     <script>

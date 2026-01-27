@@ -1,13 +1,15 @@
 @extends('layouts.dashboard')
 
 @section('content')
-    <div class="max-w-3xl mx-auto space-y-6">
-        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl">
-            <h1 class="text-lg font-semibold tracking-tight mb-1">Editar usuario</h1>
-            <p class="text-[11px] text-slate-400 mb-4">Modifica los datos del usuario seleccionado.</p>
+    <div class="w-full max-w-4xl mx-auto">
+        <div class="bg-white/90 backdrop-blur border border-slate-200 shadow-2xl rounded-2xl p-6 md:p-8 text-slate-900">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold tracking-tight mb-1">Editar usuario</h1>
+                <p class="text-xs text-slate-600">Modifica los datos del usuario seleccionado y guarda los cambios.</p>
+            </div>
 
             @if ($errors->any())
-                <div class="mb-4 text-xs text-red-300 border border-red-500/40 bg-red-900/30 rounded px-3 py-2">
+                <div class="mb-4 text-xs text-red-700 border border-red-200 bg-red-50 rounded px-3 py-2">
                     <ul class="list-disc list-inside space-y-0.5">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -16,94 +18,67 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('users.update', $user) }}" class="space-y-4" id="edit-user-form">
-                                <div id="edit-user-errors" class="mb-2 text-xs text-red-300 border border-red-500/40 bg-red-900/30 rounded px-3 py-2 hidden"></div>
+            <form method="POST" action="{{ route('users.update', $user) }}" class="space-y-6" id="edit-user-form">
+                <div id="edit-user-errors" class="mb-2 text-xs text-red-700 border border-red-200 bg-red-50 rounded px-3 py-2 hidden"></div>
                 @csrf
                 @method('PUT')
 
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div class="space-y-1">
-                        <label class="block text-xs font-medium text-slate-300" for="name">Nombre de usuario</label>
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div class="space-y-1 md:col-span-1">
+                        <label class="block text-xs font-medium text-slate-700" for="name">Nombre de usuario</label>
                         <input id="name" name="name" type="text" value="{{ old('name', $user->name) }}" required
-                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
-                    <div class="space-y-1">
-                        <label class="block text-xs font-medium text-slate-300" for="email">Correo electronico</label>
+                    <div class="space-y-1 md:col-span-1">
+                        <label class="block text-xs font-medium text-slate-700" for="email">Correo electrónico</label>
                         <input id="email" name="email" type="email" value="{{ old('email', $user->email) }}" required
-                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
-                </div>
 
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div class="space-y-1">
-                        <label class="block text-xs font-medium text-slate-300" for="role">Rol</label>
-                        <select id="role" name="role" class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <div class="space-y-1 md:col-span-1">
+                        <label class="block text-xs font-medium text-slate-700" for="role">Rol</label>
+                        <select id="role" name="role" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                             <option value="user" {{ old('role', $user->role) === 'user' ? 'selected' : '' }}>Usuario</option>
                             <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Administrador</option>
                         </select>
                     </div>
-                    <div class="space-y-1 relative">
-                        <label class="block text-xs font-medium text-slate-300" for="password">Nueva contraseña (opcional, mínimo 16 caracteres)</label>
+                    <div class="space-y-1 md:col-span-1 relative">
+                        <label class="block text-xs font-medium text-slate-700" for="password">Nueva contraseña (opcional, mínimo 16 caracteres)</label>
                         <input id="edit-password" name="password" type="password"
-                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 pr-8 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 pr-8 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600"
                             placeholder="Dejar en blanco para no cambiar">
                         <button type="button" onclick="togglePassword('password', this)" tabindex="-1"
-                            class="absolute right-2 top-8 text-slate-400 hover:text-blue-400 focus:outline-none">
+                            class="absolute right-2 top-8 text-slate-500 hover:text-slate-700 focus:outline-none">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                         </button>
                     </div>
-                @push('scripts')
-                <script>
-                    // Validación frontend para el formulario de editar usuario
-                    document.addEventListener('DOMContentLoaded', function () {
-                        const form = document.getElementById('edit-user-form');
-                        if (!form) return;
-                        form.addEventListener('submit', function (e) {
-                            const password = document.getElementById('edit-password');
-                            const errorBox = document.getElementById('edit-user-errors');
-                            let errors = [];
-                            if (password.value.length > 0 && password.value.length < 16) {
-                                errors.push('La nueva contraseña debe tener al menos 16 caracteres.');
-                            }
-                            if (errors.length > 0) {
-                                e.preventDefault();
-                                errorBox.innerHTML = '<ul><li>' + errors.join('</li><li>') + '</li></ul>';
-                                errorBox.classList.remove('hidden');
-                                password.classList.add('border-red-500');
-                            } else {
-                                errorBox.classList.add('hidden');
-                                password.classList.remove('border-red-500');
-                            }
-                        });
-                    });
-                </script>
-                @endpush
                 </div>
 
-                <div class="grid gap-4 sm:grid-cols-3">
-                    <div class="space-y-1">
-                        <label class="block text-xs font-medium text-slate-300" for="security_color_answer">Color favorito</label>
+                <div class="grid gap-4 md:grid-cols-3">
+                    <div class="space-y-1 md:col-span-1">
+                        <label class="block text-xs font-medium text-slate-700" for="security_color_answer">Color favorito</label>
                         <input id="security_color_answer" name="security_color_answer" type="text" value="{{ old('security_color_answer', $user->security_color_answer) }}" required
-                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
-                    <div class="space-y-1">
-                        <label class="block text-xs font-medium text-slate-300" for="security_animal_answer">Animal favorito</label>
+                    <div class="space-y-1 md:col-span-1">
+                        <label class="block text-xs font-medium text-slate-700" for="security_animal_answer">Animal favorito</label>
                         <input id="security_animal_answer" name="security_animal_answer" type="text" value="{{ old('security_animal_answer', $user->security_animal_answer) }}" required
-                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
-                    <div class="space-y-1">
-                        <label class="block text-xs font-medium text-slate-300" for="security_padre_answer">Nombre de tu padre</label>
+                    <div class="space-y-1 md:col-span-1">
+                        <label class="block text-xs font-medium text-slate-700" for="security_padre_answer">Nombre de tu padre</label>
                         <input id="security_padre_answer" name="security_padre_answer" type="text" value="{{ old('security_padre_answer', $user->security_padre_answer) }}" required
-                            class="w-full rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between pt-2">
-                    <a href="{{ route('users.index') }}" class="text-[11px] text-slate-400 hover:text-slate-200 underline underline-offset-2 cursor-pointer">Volver al listado</a>
-                    <button type="submit" class="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow hover:from-blue-500 hover:to-indigo-500 cursor-pointer">
+                <div class="pt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <a href="{{ route('users.index') }}" class="text-xs text-slate-700 hover:text-slate-900 underline underline-offset-2">Volver al listado</a>
+                    <button type="submit"
+                        class="w-full md:w-auto inline-flex items-center justify-center rounded-md bg-slate-900 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-slate-800 transition">
                         Guardar cambios
                     </button>
                 </div>

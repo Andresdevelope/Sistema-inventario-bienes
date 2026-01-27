@@ -46,14 +46,20 @@
                             </td>
                             <td class="px-4 py-2.5 align-middle text-right">
                                 <div class="inline-flex items-center gap-2">
-                                    <a href="{{ route('users.edit', $user) }}" class="inline-flex items-center rounded-md bg-slate-800 px-3 py-1.5 text-xs text-slate-100 hover:bg-slate-700 cursor-pointer">
+                                    <a href="{{ route('users.edit', $user) }}" class="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-500 cursor-pointer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l2.651 2.651M5.25 15.75l9.513-9.513a1.5 1.5 0 012.121 0l1.379 1.379a1.5 1.5 0 010 2.121L8.75 19.25H5.25v-3.5z" />
+                                        </svg>
                                         Editar
                                     </a>
 
                                     @if($user->locked_until)
                                         <form method="POST" action="{{ route('users.unlock', $user) }}" data-unlock-user-form>
                                             @csrf
-                                            <button type="button" class="inline-flex items-center rounded-md border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-200 hover:bg-emerald-500/20 cursor-pointer" data-unlock-user-trigger>
+                                            <button type="button" class="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs text-white hover:bg-emerald-500 cursor-pointer" data-unlock-user-trigger>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5">
+                                                    <path fill-rule="evenodd" d="M3 13.125C3 12.504 3.504 12 4.125 12h15.75c.621 0 1.125.504 1.125 1.125v5.25A1.125 1.125 0 0119.875 19.5H4.125A1.125 1.125 0 013 18.375v-5.25zm5.25-1.875V6.75a3.75 3.75 0 117.5 0V12" clip-rule="evenodd" />
+                                                </svg>
                                                 Desbloquear
                                             </button>
                                         </form>
@@ -63,7 +69,10 @@
                                         <form method="POST" action="{{ route('users.destroy', $user) }}" data-delete-user-form>
                                             @csrf
                                             @method('DELETE')
-                                            <button type="button" class="inline-flex items-center rounded-md border border-red-500/60 bg-red-500/10 px-3 py-1.5 text-xs text-red-200 hover:bg-red-500/20 cursor-pointer" data-delete-user-trigger>
+                                            <button type="button" class="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-xs text-white hover:bg-red-500 cursor-pointer" data-delete-user-trigger>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5">
+                                                    <path fill-rule="evenodd" d="M16.5 4.5a.75.75 0 01.75.75V6h3a.75.75 0 010 1.5h-.638l-1.018 11.2a2.25 2.25 0 01-2.245 2.05H7.652a2.25 2.25 0 01-2.245-2.05L4.39 7.5H3.75A.75.75 0 013 6h3V5.25a.75.75 0 01.75-.75h9.75zm-7.5 4.5a.75.75 0 00-1.5 0v9a.75.75 0 001.5 0v-9zm7.5 0a.75.75 0 00-1.5 0v9a.75.75 0 001.5 0v-9z" clip-rule="evenodd" />
+                                                </svg>
                                                 Eliminar
                                             </button>
                                         </form>
