@@ -7,8 +7,14 @@
                 <h1 class="text-xl font-semibold tracking-tight">Inventario de bienes</h1>
                 <p class="text-sm text-slate-400">Listado básico de bienes registrados en el sistema.</p>
             </div>
-            <a href="{{ route('bienes.create') }}" class="inline-flex items-center rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow hover:from-blue-500 hover:to-indigo-500 cursor-pointer">
+            <a href="{{ route('bienes.create') }}" class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-accent-400 to-accent-500 px-4 py-2 text-xs font-semibold text-brand-900 shadow-lg shadow-accent-900/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-accent-900/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                </svg>
                 Registrar nuevo bien
+                <span class="inline-flex items-center rounded-full border border-brand-900/20 bg-brand-900/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-900">
+                    +1
+                </span>
             </a>
         </div>
         <!-- buscador o filtrador de bienes -->

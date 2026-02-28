@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('ubicacion')->nullable();
             $table->string('estado')->default('bueno');
             $table->date('fecha_adquisicion')->nullable();
-            $table->decimal('valor', 12, 2)->nullable();
             $table->timestamps();
         });
     }

@@ -29,7 +29,6 @@ class Bien extends Model
         'ubicacion',
         'estado',
         'fecha_adquisicion',
-        'valor',
     ];
 
     /**
@@ -37,6 +36,5 @@ class Bien extends Model
      */
     protected $casts = [
         'fecha_adquisicion' => 'date',
-        'valor' => 'decimal:2',
     ];
 }

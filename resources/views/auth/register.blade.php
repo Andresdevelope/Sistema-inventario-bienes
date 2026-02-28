@@ -87,16 +87,31 @@
             </div>
         </div>
 
-        <div class="pt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="pt-2 space-y-3">
             <button type="submit"
-                class="w-full md:w-auto inline-flex items-center justify-center rounded-md bg-slate-900 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-slate-800 transition">
-                Registrarse
+                class="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-900/30 transition duration-300 hover:-translate-y-0.5 hover:shadow-brand-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-300">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5a7.5 7.5 0 0115 0" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25v4.5m2.25-2.25H17.25" />
+                </svg>
+                Crear cuenta segura
             </button>
 
-            <p class="text-xs text-slate-600 text-center md:text-right w-full">
-                ¿Ya tienes cuenta?
-                <a href="{{ route('login') }}" class="text-slate-700 hover:text-slate-900 underline underline-offset-2">Inicia sesión</a>
-            </p>
+            <div class="grid gap-3 text-xs sm:grid-cols-2 items-center">
+                <a href="{{ route('login') }}"
+                    class="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-4 py-2 font-semibold text-brand-700 shadow-inner shadow-brand-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-brand-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-9a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 004.5 21h9a2.25 2.25 0 002.25-2.25V15" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 12h-9m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    Ya tengo cuenta
+                </a>
+
+                <p class="text-xs text-slate-600 text-center sm:text-right">
+                    ¿Ya estás registrado? <span class="font-semibold text-slate-700">Inicia sesión</span>
+                </p>
+            </div>
         </div>
     </form>
 </div>

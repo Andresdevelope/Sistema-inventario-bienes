@@ -2,10 +2,7 @@
 <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
     <div class="flex items-center justify-between mb-4">
         <p class="text-xs font-medium text-slate-600">Actividad reciente</p>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('bienes.index') }}" class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50">Ver inventario</a>
-            <a href="{{ route('bitacora.index') }}" class="inline-flex items-center rounded-md border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50">Ver bitácora</a>
-        </div>
+       
     </div>
 
     <div class="grid gap-6 md:grid-cols-2">
@@ -13,7 +10,13 @@
         <div>
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-sm font-semibold text-slate-900">Últimos bienes</h3>
-                <a href="{{ route('bienes.create') }}" class="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow hover:bg-blue-500">Registrar bien</a>
+                <a href="{{ route('bienes.create') }}" class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-accent-400 to-accent-500 px-3.5 py-1.5 text-[11px] font-semibold text-brand-900 shadow-lg shadow-accent-900/15 transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3.5 w-3.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                    </svg>
+                    Registrar bien
+                    <span class="inline-flex items-center rounded-full border border-brand-900/10 bg-brand-50/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-900">Nuevo</span>
+                </a>
             </div>
             <ul class="relative">
                 {{-- Línea de tiempo --}}

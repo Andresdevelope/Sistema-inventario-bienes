@@ -73,7 +73,6 @@ class BienController extends Controller
             'ubicacion' => ['nullable', 'string', 'max:150'],
             'estado' => ['required', 'in:bueno,regular,malo'],
             'fecha_adquisicion' => ['nullable', 'date'],
-            'valor' => ['nullable', 'numeric', 'min:0'],
         ], [
             'nombre.required' => 'El nombre del bien es obligatorio.',
             'codigo.required' => 'El código del bien es obligatorio.',
@@ -91,9 +90,6 @@ class BienController extends Controller
             'estado.in' => 'El estado seleccionado no es válido.',
 
             'fecha_adquisicion.date' => 'La fecha de adquisición no tiene un formato válido.',
-
-            'valor.numeric' => 'El valor debe ser un número.',
-            'valor.min' => 'El valor no puede ser negativo.',
         ]);
 
         $bien = Bien::create($validated);
@@ -137,7 +133,6 @@ class BienController extends Controller
             'ubicacion' => ['nullable', 'string', 'max:150'],
             'estado' => ['required', 'in:bueno,regular,malo'],
             'fecha_adquisicion' => ['nullable', 'date'],
-            'valor' => ['nullable', 'numeric', 'min:0'],
         ], [
             'nombre.required' => 'El nombre del bien es obligatorio.',
             'codigo.required' => 'El código del bien es obligatorio.',
@@ -155,9 +150,6 @@ class BienController extends Controller
             'estado.in' => 'El estado seleccionado no es válido.',
 
             'fecha_adquisicion.date' => 'La fecha de adquisición no tiene un formato válido.',
-
-            'valor.numeric' => 'El valor debe ser un número.',
-            'valor.min' => 'El valor no puede ser negativo.',
         ]);
 
         $bien->update($validated);

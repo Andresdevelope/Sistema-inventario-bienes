@@ -69,13 +69,6 @@
                         <input id="fecha_adquisicion" name="fecha_adquisicion" type="date" value="{{ old('fecha_adquisicion', optional($bien->fecha_adquisicion)->format('Y-m-d')) }}"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
-
-                    <div class="space-y-1 md:col-span-1">
-                        <label class="block text-xs font-medium text-slate-700" for="valor">Valor estimado</label>
-                        <input id="valor" name="valor" type="number" step="0.01" min="0" value="{{ old('valor', $bien->valor) }}"
-                            class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600"
-                            placeholder="Ej: 1500.00">
-                    </div>
                 </div>
 
                 <div class="pt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-3">

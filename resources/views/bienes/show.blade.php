@@ -60,16 +60,6 @@
                     <p class="text-[11px] font-medium text-slate-700">Fecha de adquisición</p>
                     <p class="text-sm">{{ optional($bien->fecha_adquisicion)->format('d/m/Y') ?? '—' }}</p>
                 </div>
-                <div class="space-y-1">
-                    <p class="text-[11px] font-medium text-slate-700">Valor estimado</p>
-                    <p class="text-sm">
-                        @if (!is_null($bien->valor))
-                            {{ number_format($bien->valor, 2, ',', '.') }}
-                        @else
-                            —
-                        @endif
-                    </p>
-                </div>
             </div>
         </div>
     </div>

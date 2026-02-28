@@ -406,8 +406,12 @@ class AuthController extends Controller
      */
     protected function validateRecaptcha(Request $request): bool
     {
+        if (! config('services.recaptcha.enabled', true)) {
+            return true;
+        }
+
         $token = (string) $request->input('g-recaptcha-response', '');
-        $secret = (string) env('RECAPTCHA_SECRET_KEY');
+        $secret = (string) config('services.recaptcha.secret_key', '');
         if ($secret === '') {
             Log::warning('reCAPTCHA secret key missing.');
             return false;

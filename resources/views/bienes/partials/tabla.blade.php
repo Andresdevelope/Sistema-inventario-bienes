@@ -8,7 +8,6 @@
                 <th class="px-4 py-2.5 text-left font-medium hidden md:table-cell">Categoría</th>
                 <th class="px-4 py-2.5 text-left font-medium hidden md:table-cell">Ubicación</th>
                 <th class="px-4 py-2.5 text-left font-medium">Estado</th>
-                <th class="px-4 py-2.5 text-right font-medium hidden lg:table-cell">Valor</th>
                 <th class="px-4 py-2.5 text-right font-medium">Acciones</th>
             </tr>
         </thead>
@@ -30,23 +29,16 @@
                             {{ ucfirst($bien->estado) }}
                         </span>
                     </td>
-                    <td class="px-4 py-2.5 align-middle text-right text-slate-300 hidden lg:table-cell">
-                        @if (!is_null($bien->valor))
-                            {{ number_format($bien->valor, 2, ',', '.') }}
-                        @else
-                            —
-                        @endif
-                    </td>
                     <td class="px-4 py-2.5 align-middle text-right">
                         <div class="inline-flex items-center gap-2">
-                            <a href="{{ route('bienes.show', $bien) }}" class="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-500 cursor-pointer">
+                            <a href="{{ route('bienes.show', $bien) }}" class="inline-flex items-center gap-1.5 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-3 py-1.5 text-xs font-semibold text-brand-700 shadow-inner shadow-brand-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-brand-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                                 Ver
                             </a>
-                            <a href="{{ route('bienes.edit', $bien) }}" class="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-500 cursor-pointer">
+                            <a href="{{ route('bienes.edit', $bien) }}" class="inline-flex items-center gap-1.5 rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-3 py-1.5 text-xs font-semibold text-white shadow-lg shadow-brand-900/20 transition duration-300 hover:-translate-y-0.5 hover:shadow-brand-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-300 cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l2.651 2.651M5.25 15.75l9.513-9.513a1.5 1.5 0 012.121 0l1.379 1.379a1.5 1.5 0 010 2.121L8.75 19.25H5.25v-3.5z" />
                                 </svg>
@@ -55,9 +47,9 @@
                             <form method="POST" action="{{ route('bienes.destroy', $bien) }}" class="inline" data-delete-form>
                                 @csrf
                                 @method('DELETE')
-                                <button type="button" class="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-xs text-white hover:bg-red-500 cursor-pointer" data-delete-trigger>
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5">
-                                        <path fill-rule="evenodd" d="M16.5 4.5a.75.75 0 01.75.75V6h3a.75.75 0 010 1.5h-.638l-1.018 11.2a2.25 2.25 0 01-2.245 2.05H7.652a2.25 2.25 0 01-2.245-2.05L4.39 7.5H3.75A.75.75 0 013 6h3V5.25a.75.75 0 01.75-.75h9.75zm-7.5 4.5a.75.75 0 00-1.5 0v9a.75.75 0 001.5 0v-9zm7.5 0a.75.75 0 00-1.5 0v9a.75.75 0 001.5 0v-9z" clip-rule="evenodd" />
+                                <button type="button" class="inline-flex items-center gap-1.5 rounded-2xl border border-red-500/50 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-200 shadow-inner shadow-red-900/20 transition duration-300 hover:-translate-y-0.5 hover:bg-red-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 cursor-pointer" data-delete-trigger>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0 1 15.916 21H8.084a2.25 2.25 0 0 1-2.245-2.327L4.772 5.79m14.456 0A48.108 48.108 0 0 0 15.75 5.25m3.478.54c-1.156-.175-2.33-.296-3.478-.36m0 0V4.5c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0C9.16 2.336 8.25 3.32 8.25 4.5v.93m3.75 0a48.667 48.667 0 0 0-3.478.36" />
                                     </svg>
                                     Eliminar
                                 </button>

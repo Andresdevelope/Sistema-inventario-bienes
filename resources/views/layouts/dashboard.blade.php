@@ -4,54 +4,55 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'Sistema Inventario') }} - Panel</title>
+    <link rel="icon" type="image/png" href="{{ asset('logo-institucion.jpg') }}">
+    <link rel="apple-touch-icon" href="{{ asset('logo-institucion.jpg') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 <!-- Layout del panel interno, actualizado a tema claro -->
 </head>
-<body class="min-h-screen bg-slate-100 text-slate-900 antialiased flex flex-col">
+<body class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-100 text-slate-900 antialiased flex flex-col">
     <div class="flex flex-1">
         {{-- Sidebar de navegación --}}
-        <aside class="hidden md:flex md:w-64 lg:w-72 border-r border-blue-900/70 bg-slate-900 text-white">
+        <aside class="hidden md:flex md:w-64 lg:w-72 border-r border-brand-900/40 bg-gradient-to-b from-brand-950 via-brand-900 to-brand-800 text-white">
             <div class="flex flex-col w-full h-full">
-                <div class="px-5 pt-5 pb-4 border-b border-blue-800/70">
+                <div class="px-5 pt-5 pb-4 border-b border-brand-800/40">
                     <div class="flex items-center gap-3">
-                        <div class="h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center text-sm font-bold shadow-lg">
-                            SI
-                        </div>
+                        <img src="{{ asset('logo-institucion.jpg') }}" alt="Logo institucional"
+                             class="h-12 w-12 rounded-xl border border-white/20 bg-white/95 p-1 object-contain shadow-lg shadow-brand-950/50">
                         <div>
-                            <p class="text-xs font-semibold tracking-wide text-blue-50 uppercase">Sistema de inventario</p>
-                            <p class="text-[11px] text-blue-100/80">Bienes institucionales</p>
+                            <p class="text-xs font-semibold tracking-wide text-brand-50 uppercase">Sistema de inventario</p>
+                            <p class="text-[11px] text-brand-100/80">Bienes institucionales</p>
                         </div>
                     </div>
                 </div>
 
                 <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
-                    <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 {{ request()->routeIs('dashboard') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-md bg-black/10">
+                    <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-200/50 {{ request()->routeIs('dashboard') ? 'bg-brand-500/20 text-white shadow-lg shadow-brand-900/40' : 'text-brand-100 hover:bg-brand-500/10' }}">
+                        <span class="flex h-8 w-8 items-center justify-center rounded-md bg-brand-900/40">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875A2.25 2.25 0 0112 13.875v0a2.25 2.25 0 012.25 2.25v4.875h4.125c.621 0 1.125-.504 1.125-1.125V9.75" />
                             </svg>
                         </span>
                         <span class="flex-1">
                             <span class="block font-medium leading-tight">Inicio</span>
-                            <span class="block text-[11px] text-blue-100/90">Resumen general del sistema</span>
+                            <span class="block text-[11px] text-brand-100/90">Resumen general del sistema</span>
                         </span>
                     </a>
 
-                    <a href="{{ route('bienes.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 {{ request()->routeIs('bienes.*') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
+                    <a href="{{ route('bienes.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-200/50 {{ request()->routeIs('bienes.*') ? 'bg-brand-500/20 text-white shadow-lg shadow-brand-900/40' : 'text-brand-100 hover:bg-brand-500/10' }}">
+                        <span class="flex h-8 w-8 items-center justify-center rounded-md bg-brand-900/30 group-hover:bg-brand-900/40">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-15.75 0v-12A1.125 1.125 0 016 6.375h3.375M4.875 19.5h4.5m0 0V8.25A1.125 1.125 0 0110.5 7.125H14.25m-4.875 12.375h9.75m0 0V10.125A1.125 1.125 0 0018 9h-3.375" />
                             </svg>
                         </span>
                         <span class="flex-1">
                             <span class="block font-medium leading-tight">Bienes</span>
-                            <span class="block text-[11px] text-blue-100/80">Registro y control de bienes</span>
+                            <span class="block text-[11px] text-brand-100/80">Registro y control de bienes</span>
                         </span>
                     </a>
 
                     
-                    <a href="{{ route('users.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 {{ request()->routeIs('users.*') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
+                    <a href="{{ route('users.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-200/50 {{ request()->routeIs('users.*') ? 'bg-brand-500/20 text-white shadow-lg shadow-brand-900/40' : 'text-brand-100 hover:bg-brand-500/10' }}">
+                        <span class="flex h-8 w-8 items-center justify-center rounded-md bg-brand-900/30 group-hover:bg-brand-900/40">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5a6.75 6.75 0 0113.5 0" />
@@ -59,12 +60,12 @@
                         </span>
                         <span class="flex-1">
                             <span class="block font-medium leading-tight">Usuarios</span>
-                            <span class="block text-[11px] text-blue-100/80">Gestión de responsables</span>
+                            <span class="block text-[11px] text-brand-100/80">Gestión de responsables</span>
                         </span>
                     </a>
 
-                    <a href="{{ route('bitacora.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 {{ request()->routeIs('bitacora.*') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
-                        <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
+                    <a href="{{ route('bitacora.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-200/50 {{ request()->routeIs('bitacora.*') ? 'bg-brand-500/20 text-white shadow-lg shadow-brand-900/40' : 'text-brand-100 hover:bg-brand-500/10' }}">
+                        <span class="flex h-8 w-8 items-center justify-center rounded-md bg-brand-900/30 group-hover:bg-brand-900/40">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h15.75c.621 0 1.125.504 1.125 1.125v5.25A1.125 1.125 0 0119.875 19.5H4.125A1.125 1.125 0 013 18.375v-5.25z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 12V6.75a3.75 3.75 0 017.5 0V12" />
@@ -72,13 +73,13 @@
                         </span>
                         <span class="flex-1">
                             <span class="block font-medium leading-tight">Bitacora</span>
-                            <span class="block text-[11px] text-blue-100/80">Registro de movimientos</span>
+                            <span class="block text-[11px] text-brand-100/80">Registro de movimientos</span>
                         </span>
                     </a>
                 </nav>
 
                 {{-- Pie del sidebar (vacío por ahora, sin texto de sesión) --}}
-                <div class="px-4 py-4 border-t border-blue-800/70 text-[11px] text-blue-100/80">
+                <div class="px-4 py-4 border-t border-brand-800/40 text-[11px] text-brand-100/80">
                 </div>
             </div>
         </aside>
@@ -97,12 +98,12 @@
                             <span class="sr-only">Abrir navegación</span>
                         </button>
                         <div>
-                        <p class="text-[11px] font-semibold tracking-[0.2em] text-blue-600 uppercase">Panel principal</p>
+                        <p class="text-[11px] font-semibold tracking-[0.2em] text-brand-600 uppercase">Panel principal</p>
                         <h1 class="text-xl md:text-2xl font-bold tracking-tight text-slate-900">Sistema inventario de bienes</h1>
                         <p class="text-xs text-slate-500 mt-1">Visión general de los bienes y operaciones del sistema.</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-4">
                         <div class="hidden sm:flex flex-col items-end">
                             <p class="text-xs text-slate-500">Bienvenido,</p>
                             <p class="text-sm font-medium text-slate-900 truncate max-w-[160px]">
@@ -111,7 +112,7 @@
                         </div>
 
                         <div class="relative" data-profile-menu-wrapper>
-                            <button type="button" onclick="toggleProfileMenu(this)" class="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-sm font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400/60 cursor-pointer">
+                            <button type="button" onclick="toggleProfileMenu(this)" class="h-10 w-10 rounded-full bg-gradient-to-tr from-brand-500 via-brand-600 to-brand-700 flex items-center justify-center text-sm font-semibold shadow-md shadow-brand-900/40 focus:outline-none focus:ring-2 focus:ring-brand-300/60 cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 text-white">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5a6.75 6.75 0 0113.5 0" />
@@ -192,13 +193,13 @@
 
     <!-- Sidebar móvil (off-canvas) y overlay -->
     <div id="mobile-overlay" class="fixed inset-0 bg-black/50 hidden z-40 md:hidden" onclick="closeMobileSidebar()"></div>
-    <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-white transform -translate-x-full transition-transform duration-300 z-50 md:hidden shadow-xl">
-        <div class="flex items-center justify-between px-4 pt-4 pb-3 border-b border-blue-800/70">
+    <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-brand-950 via-brand-900 to-brand-800 text-white transform -translate-x-full transition-transform duration-300 z-50 md:hidden shadow-xl">
+        <div class="flex items-center justify-between px-4 pt-4 pb-3 border-b border-brand-800/40">
             <div class="flex items-center gap-2">
-                <div class="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold">SI</div>
+                <img src="{{ asset('logo-institucion.jpg') }}" alt="Logo institucional" class="h-10 w-10 rounded-lg border border-white/20 bg-white/95 p-1 object-contain">
                 <div>
-                    <p class="text-[11px] font-semibold tracking-wide text-blue-50 uppercase">Inventario</p>
-                    <p class="text-[10px] text-blue-100/80">Bienes</p>
+                    <p class="text-[11px] font-semibold tracking-wide text-brand-50 uppercase">Inventario</p>
+                    <p class="text-[10px] text-brand-100/80">Bienes</p>
                 </div>
             </div>
             <button type="button" class="inline-flex items-center justify-center h-9 w-9 rounded-md border border-white/15 text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30" onclick="closeMobileSidebar()">
@@ -209,32 +210,32 @@
             </button>
         </div>
         <nav class="px-3 py-4 space-y-1 text-sm">
-            <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition {{ request()->routeIs('dashboard') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
-                <span class="flex h-8 w-8 items-center justify-center rounded-md bg-black/10">
+            <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition {{ request()->routeIs('dashboard') ? 'bg-brand-500/20 text-white shadow-lg shadow-brand-900/40' : 'text-brand-100 hover:bg-brand-500/10' }}">
+                <span class="flex h-8 w-8 items-center justify-center rounded-md bg-brand-900/40">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875A2.25 2.25 0 0112 13.875v0a2.25 2.25 0 012.25 2.25v4.875h4.125c.621 0 1.125-.504 1.125-1.125V9.75" />
                     </svg>
                 </span>
                 <span class="flex-1">
                     <span class="block font-medium leading-tight">Inicio</span>
-                    <span class="block text-[11px] text-blue-100/90">Resumen general del sistema</span>
+                    <span class="block text-[11px] text-brand-100/90">Resumen general del sistema</span>
                 </span>
             </a>
 
-            <a href="{{ route('bienes.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition {{ request()->routeIs('bienes.*') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
-                <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
+            <a href="{{ route('bienes.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition {{ request()->routeIs('bienes.*') ? 'bg-brand-500/20 text-white shadow-lg shadow-brand-900/40' : 'text-brand-100 hover:bg-brand-500/10' }}">
+                <span class="flex h-8 w-8 items-center justify-center rounded-md bg-brand-900/30 group-hover:bg-brand-900/40">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-15.75 0v-12A1.125 1.125 0 016 6.375h3.375M4.875 19.5h4.5m0 0V8.25A1.125 1.125 0 0110.5 7.125H14.25m-4.875 12.375h9.75m0 0V10.125A1.125 1.125 0 0018 9h-3.375" />
                     </svg>
                 </span>
                 <span class="flex-1">
                     <span class="block font-medium leading-tight">Bienes</span>
-                    <span class="block text-[11px] text-blue-100/80">Registro y control de bienes</span>
+                    <span class="block text-[11px] text-brand-100/80">Registro y control de bienes</span>
                 </span>
             </a>
 
-            <a href="{{ route('users.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition {{ request()->routeIs('users.*') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
-                <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
+            <a href="{{ route('users.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition {{ request()->routeIs('users.*') ? 'bg-brand-500/20 text-white shadow-lg shadow-brand-900/40' : 'text-brand-100 hover:bg-brand-500/10' }}">
+                <span class="flex h-8 w-8 items-center justify-center rounded-md bg-brand-900/30 group-hover:bg-brand-900/40">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6.75a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5a6.75 6.75 0 0113.5 0" />
@@ -242,12 +243,12 @@
                 </span>
                 <span class="flex-1">
                     <span class="block font-medium leading-tight">Usuarios</span>
-                    <span class="block text-[11px] text-blue-100/80">Gestión de responsables</span>
+                    <span class="block text-[11px] text-brand-100/80">Gestión de responsables</span>
                 </span>
             </a>
 
-            <a href="{{ route('bitacora.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition {{ request()->routeIs('bitacora.*') ? 'bg-white/15 text-blue-50 shadow' : 'text-blue-100 hover:bg-white/10' }}">
-                <span class="flex h-8 w-8 items-center justify-center rounded-md bg-white/10 group-hover:bg-white/15">
+            <a href="{{ route('bitacora.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 transition {{ request()->routeIs('bitacora.*') ? 'bg-brand-500/20 text-white shadow-lg shadow-brand-900/40' : 'text-brand-100 hover:bg-brand-500/10' }}">
+                <span class="flex h-8 w-8 items-center justify-center rounded-md bg-brand-900/30 group-hover:bg-brand-900/40">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h15.75c.621 0 1.125.504 1.125 1.125v5.25A1.125 1.125 0 0119.875 19.5H4.125A1.125 1.125 0 013 18.375v-5.25z" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 12V6.75a3.75 3.75 0 017.5 0V12" />
@@ -255,7 +256,7 @@
                 </span>
                 <span class="flex-1">
                     <span class="block font-medium leading-tight">Bitacora</span>
-                    <span class="block text-[11px] text-blue-100/80">Registro de movimientos</span>
+                    <span class="block text-[11px] text-brand-100/80">Registro de movimientos</span>
                 </span>
             </a>
         </nav>

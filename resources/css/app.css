@@ -16,4 +16,30 @@
 	--text-sm: 1.05rem;   /* antes ~0.875rem */
 	--text-base: 1.15rem; /* tamaño general */
 	--text-lg: 1.30rem;   /* títulos medios */
+
+	/* Paleta institucional basada en el logo (#0070B8) */
+	--color-brand-50: #e7f4ff;
+	--color-brand-100: #c8e8ff;
+	--color-brand-200: #a8dbff;
+	--color-brand-300: #7ac6f2;
+	--color-brand-400: #4baee6;
+	--color-brand-500: #0070b8;
+	--color-brand-600: #005c94;
+	--color-brand-700: #004670;
+	--color-brand-800: #00324e;
+	--color-brand-900: #001d2d;
+	--color-brand-950: #00101b;
+
+	/* Acento ámbar institucional (#FFB81C) para botones destacados */
+	--color-accent-50: #fff9ea;
+	--color-accent-100: #ffefc4;
+	--color-accent-200: #ffe49c;
+	--color-accent-300: #ffd367;
+	--color-accent-400: #ffc53a;
+	--color-accent-500: #ffb81c;
+	--color-accent-600: #e39c12;
+	--color-accent-700: #ba7a0d;
+	--color-accent-800: #8c5809;
+	--color-accent-900: #533405;
+	--color-accent-950: #2c1b02;
 }
