@@ -120,9 +120,12 @@
                 </div>
 
                 <div class="pt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <a href="{{ route('users.index') }}" class="text-xs text-slate-700 hover:text-slate-900 underline underline-offset-2">Volver al listado</a>
+                    <a href="{{ route('users.index') }}" class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-2 text-[12px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300">Volver al listado</a>
                     <button type="submit"
-                        class="w-full md:w-auto inline-flex items-center justify-center rounded-md bg-slate-900 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-slate-800 transition">
+                        class="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-accent-400 to-accent-500 px-6 py-2 text-[12px] font-semibold text-brand-900 shadow-lg shadow-accent-900/20 transition hover:-translate-y-0.5 hover:shadow-accent-900/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
                         Guardar cambios
                     </button>
                 </div>

@@ -31,7 +31,7 @@ return [
     | indicate that via the expire_on_close configuration option.
     |
     */
-
+        // se coloca en 30 minutos
     'lifetime' => (int) env('SESSION_LIFETIME', 30),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),

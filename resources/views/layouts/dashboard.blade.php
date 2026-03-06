@@ -489,11 +489,14 @@
 
                 <div class="mt-4 flex items-center justify-end gap-2 text-[11px]">
                     <button type="button" data-close-modal
-                        class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-700 hover:bg-slate-100 cursor-pointer">
+                        class="inline-flex items-center rounded-2xl border border-slate-300 bg-white px-4 py-2 text-[12px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 cursor-pointer">
                         Cancelar
                     </button>
                     <button type="submit"
-                        class="inline-flex items-center rounded-md bg-slate-900 px-4 py-1.5 text-white text-[11px] font-semibold hover:bg-slate-800 cursor-pointer">
+                        class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-accent-400 to-accent-500 px-4 py-2 text-[12px] font-semibold text-brand-900 shadow-lg shadow-accent-900/20 transition hover:-translate-y-0.5 hover:shadow-accent-900/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
                         Guardar usuario
                     </button>
                 </div>
@@ -514,10 +517,13 @@
                 <input type="password" data-modal-admin-password class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
             </div>
             <div class="flex justify-end gap-2 text-[11px]">
-                <button type="button" data-modal-user-cancel class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-700 hover:bg-slate-100 cursor-pointer">
+                <button type="button" data-modal-user-cancel class="inline-flex items-center rounded-2xl border border-slate-300 bg-white px-4 py-2 text-[12px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 cursor-pointer">
                     Cancelar
                 </button>
-                <button type="button" data-modal-user-confirm class="inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-white hover:bg-red-500 cursor-pointer">
+                <button type="button" data-modal-user-confirm class="inline-flex items-center gap-2 rounded-2xl border border-red-700 bg-red-600 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-red-900/40 transition hover:-translate-y-0.5 hover:bg-red-500 hover:shadow-red-900/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-200 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+                        <path fill-rule="evenodd" d="M16.5 4.5a.75.75 0 01.75.75V6h3a.75.75 0 010 1.5h-.638l-1.018 11.2a2.25 2.25 0 01-2.245 2.05H7.652a2.25 2.25 0 01-2.245-2.05L4.39 7.5H3.75A.75.75 0 013 6h3V5.25a.75.75 0 01.75-.75h9.75zm-7.5 4.5a.75.75 0 00-1.5 0v9a.75.75 0 001.5 0v-9zm7.5 0a.75.75 0 00-1.5 0v9a.75.75 0 001.5 0v-9z" clip-rule="evenodd" />
+                    </svg>
                     Eliminar
                 </button>
             </div>
@@ -540,7 +546,7 @@
                 <button type="button" data-modal-unlock-cancel class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-700 hover:bg-slate-100 cursor-pointer">
                     Cancelar
                 </button>
-                <button type="button" data-modal-unlock-confirm class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-brand-900/30 transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 cursor-pointer">
+                <button type="button" data-modal-unlock-confirm class="inline-flex items-center gap-2 rounded-2xl border border-red-700 bg-red-600 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-red-900/40 transition hover:-translate-y-0.5 hover:bg-red-500 hover:shadow-red-900/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-200 cursor-pointer">
                     Desbloquear
                 </button>
             </div>

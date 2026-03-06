@@ -29,31 +29,47 @@ class BienController extends Controller
      */
     public function index(Request $request): View
     {
-        $perPage = max(10, min((int) $request->integer('per_page', 15), 100));
+        $allowedPerPage = [10, 15, 25, 50, 100];
+        $perPage = (int) $request->integer('per_page', 15);
+        if (!in_array($perPage, $allowedPerPage, true)) {
+            $perPage = 15;
+        }
+
         $search = trim((string) $request->input('search', ''));
+        $estado = trim((string) $request->input('estado', ''));
+        $categoria = trim((string) $request->input('categoria', ''));
+        $estadosDisponibles = ['bueno', 'regular', 'malo', 'de_baja'];
+
+        if (!in_array($estado, $estadosDisponibles, true)) {
+            $estado = '';
+        }
 
         $query = Bien::query()
             ->select(['id', 'nombre', 'codigo', 'descripcion', 'categoria', 'ubicacion', 'estado'])
             ->latest('id');
 
-        // Filtro por búsqueda general (nombre, código, descripción)
-        if ($search !== '' && mb_strlen($search, 'UTF-8') >= 2) {
+        // Filtro por búsqueda general (nombre, código, descripción, categoría, ubicación)
+        if ($search !== '') {
             $query->where(function($q) use ($search) {
                 $q->where('nombre', 'like', "%$search%")
                   ->orWhere('codigo', 'like', "%$search%")
-                  ->orWhere('descripcion', 'like', "%$search%");
+                  ->orWhere('descripcion', 'like', "%$search%")
+                  ->orWhere('categoria', 'like', "%$search%")
+                  ->orWhere('ubicacion', 'like', "%$search%");
             });
         }
+
         // Filtro por estado
-        if ($request->filled('estado') && in_array($request->estado, ['bueno', 'regular', 'malo', 'de_baja'])) {
-            $query->where('estado', $request->estado);
-        }
-        // Filtro por ubicación
-        if ($request->filled('ubicacion')) {
-            $query->where('ubicacion', 'like', "%{$request->ubicacion}%");
+        if ($estado !== '') {
+            $query->where('estado', $estado);
         }
 
-        $bienes = $query->simplePaginate($perPage)->appends($request->except('page'));
+        // Filtro por categoría
+        if ($categoria !== '') {
+            $query->where('categoria', $categoria);
+        }
+
+        $bienes = $query->paginate($perPage)->withQueryString();
 
         if ($request->ajax()) {
             return view('bienes.partials.tabla', compact('bienes'));
@@ -61,8 +77,14 @@ class BienController extends Controller
 
         $categoriasActivas = $this->activeCategoryNames();
         $resumenCategorias = $this->categorySummary();
+        $filtros = [
+            'search' => $search,
+            'estado' => $estado,
+            'categoria' => $categoria,
+            'per_page' => $perPage,
+        ];
 
-        return view('bienes.index', compact('bienes', 'categoriasActivas', 'resumenCategorias'));
+        return view('bienes.index', compact('bienes', 'categoriasActivas', 'resumenCategorias', 'filtros', 'estadosDisponibles', 'allowedPerPage'));
     }
 
     /**

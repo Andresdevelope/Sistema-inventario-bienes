@@ -122,7 +122,16 @@
         </tbody>
     </table>
     </div>
-    <div>
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pt-1">
+        <p class="text-[11px] text-slate-500">
+            @if($bienes->total() > 0)
+                Mostrando <span class="font-semibold text-slate-700">{{ $bienes->firstItem() }}</span>
+                a <span class="font-semibold text-slate-700">{{ $bienes->lastItem() }}</span>
+                de <span class="font-semibold text-slate-700">{{ $bienes->total() }}</span> bienes
+            @else
+                No hay resultados para los filtros actuales.
+            @endif
+        </p>
         {{ $bienes->onEachSide(1)->links() }}
     </div>
 </div>
