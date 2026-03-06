@@ -1,0 +1,58 @@
+SISTEMA INVENTARIO DE BIENES - PRIVILEGIOS POR ROL
+Fecha: 06/03/2026
+
+==================================================
+ROLES ACTUALES
+==================================================
+- admin: Administrador del sistema
+- user: Operador del sistema
+
+Nota técnica:
+- En el código, el operador se guarda como rol "user".
+
+==================================================
+REGLAS GENERALES
+==================================================
+1) Solo usuarios autenticados pueden entrar al panel.
+2) Solo rol admin puede acceder al módulo de Usuarios y a Bitácora.
+3) Bienes y Categorías pueden ser usados por admin y operador.
+4) El primer usuario registrado en un sistema vacío queda como admin.
+5) Desde el segundo registro en adelante, se crean como operador (user).
+6) Solo admin puede asignar el rol admin a otro usuario.
+7) El sistema no permite dejar la plataforma sin administradores:
+   - no permite cambiar el rol del último admin a operador
+   - no permite eliminar al último admin
+
+==================================================
+MATRIZ DE PRIVILEGIOS
+==================================================
+[ADMIN]
+- Dashboard: SI
+- Perfil: SI
+- Bienes (listar/crear/editar/eliminar): SI
+- Categorías (listar/crear/editar/activar-desactivar): SI
+- Exportar reportes PDF: SI
+- Usuarios (listar/crear/editar/eliminar): SI
+- Cambiar rol de usuarios: SI
+- Asignar admin a otro usuario: SI
+- Desbloquear usuarios bloqueados: SI
+- Ver bitácora: SI
+
+[OPERADOR (user)]
+- Dashboard: SI
+- Perfil: SI
+- Bienes (listar/crear/editar/eliminar): SI
+- Categorías (listar/crear/editar/activar-desactivar): SI
+- Exportar reportes PDF: SI
+- Usuarios (listar/crear/editar/eliminar): NO
+- Cambiar rol de usuarios: NO
+- Asignar admin: NO
+- Desbloquear usuarios bloqueados: NO
+- Ver bitácora: NO
+
+==================================================
+RECOMENDACIÓN OPERATIVA
+==================================================
+- Mantener mínimo 2 administradores para contingencia.
+- Asignar rol operador al personal que solo ejecuta inventario diario.
+- Registrar en bitácora cualquier cambio de rol realizado.

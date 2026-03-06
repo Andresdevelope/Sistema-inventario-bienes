@@ -7,7 +7,7 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 class="text-xl font-semibold tracking-tight text-slate-900">Panel de control</h1>
-                    <p class="text-xs text-slate-500 mt-1 max-w-2xl">Gestiona los tres módulos principales del sistema: Bienes, Usuarios y Bitácora. Accede rápido y mantén el control, todo en azul y blanco.</p>
+                    <p class="text-xs text-slate-500 mt-1 max-w-2xl">Gestiona los tres módulos principales del sistema: Bienes, Usuarios y Bitácora. Accede rápido y mantén el control.</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <a href="{{ route('bienes.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-brand-900/30 transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">

@@ -16,7 +16,7 @@
             <div class="flex flex-col w-full h-full">
                 <div class="px-5 pt-5 pb-4 border-b border-brand-800/40">
                     <div class="flex items-center gap-3">
-                        <img src="{{ asset('logo-institucion.jpg') }}" alt="Logo institucional"
+                            <img src="{{ asset('logo-institucion.jpg') }}" alt="Logo institucional" width="48" height="48" decoding="async"
                              class="h-12 w-12 rounded-xl border border-white/20 bg-white/95 p-1 object-contain shadow-lg shadow-brand-950/50">
                         <div>
                             <p class="text-xs font-semibold tracking-wide text-brand-50 uppercase">Sistema de inventario</p>
@@ -196,7 +196,7 @@
     <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-brand-950 via-brand-900 to-brand-800 text-white transform -translate-x-full transition-transform duration-300 z-50 md:hidden shadow-xl">
         <div class="flex items-center justify-between px-4 pt-4 pb-3 border-b border-brand-800/40">
             <div class="flex items-center gap-2">
-                <img src="{{ asset('logo-institucion.jpg') }}" alt="Logo institucional" class="h-10 w-10 rounded-lg border border-white/20 bg-white/95 p-1 object-contain">
+                <img src="{{ asset('logo-institucion.jpg') }}" alt="Logo institucional" width="40" height="40" loading="lazy" decoding="async" class="h-10 w-10 rounded-lg border border-white/20 bg-white/95 p-1 object-contain">
                 <div>
                     <p class="text-[11px] font-semibold tracking-wide text-brand-50 uppercase">Inventario</p>
                     <p class="text-[10px] text-brand-100/80">Bienes</p>
@@ -279,13 +279,13 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[11px] font-medium text-slate-700 mb-1">Nombre de usuario</label>
-                        <input type="text" name="name" value="{{ old('name') }}"
+                        <label class="block text-[11px] font-medium text-slate-700 mb-1">Nombre de usuario <span class="text-slate-500">(Máx. 30 caracteres)</span></label>
+                        <input type="text" name="name" value="{{ old('name') }}" minlength="3" maxlength="30"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-medium text-slate-700 mb-1">Correo electrónico</label>
-                        <input type="email" name="email" value="{{ old('email') }}"
+                        <label class="block text-[11px] font-medium text-slate-700 mb-1">Correo electrónico <span class="text-slate-500">(Máx. 60 caracteres)</span></label>
+                        <input type="email" name="email" value="{{ old('email') }}" maxlength="60"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
                 </div>
@@ -293,7 +293,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-medium text-slate-700 mb-1">Rol</label>
-                        <select name="role"
+                        <select name="role" id="create-user-role"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                             <option value="user" {{ old('role') === 'user' ? 'selected' : '' }}>Usuario</option>
                             <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Administrador</option>
@@ -301,10 +301,50 @@
                     </div>
                 </div>
 
+                <div class="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-700">Permisos del usuario</p>
+                        <span id="permissions-admin-hint" class="hidden text-[10px] text-emerald-700 font-medium">
+                            Administrador: acceso completo automático
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2" id="create-user-permissions-box">
+                        @php
+                            $selectedPermissions = old('permissions', \App\Models\User::defaultOperadorPermissions());
+                            $permissionLabels = [
+                                'bienes.ver' => 'Ver bienes',
+                                'bienes.crear' => 'Crear bienes',
+                                'bienes.editar' => 'Editar bienes',
+                                'bienes.eliminar' => 'Eliminar bienes',
+                                'categorias.ver' => 'Ver categorías',
+                                'categorias.gestionar' => 'Gestionar categorías',
+                                'reportes.exportar' => 'Exportar reportes',
+                            ];
+                        @endphp
+
+                        @foreach (\App\Models\User::availablePermissions() as $permission)
+                            <label class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] text-slate-700">
+                                <input
+                                    type="checkbox"
+                                    name="permissions[]"
+                                    value="{{ $permission }}"
+                                    class="rounded border-slate-300 text-slate-900 focus:ring-slate-600"
+                                    {{ in_array($permission, $selectedPermissions, true) ? 'checked' : '' }}
+                                    data-permission-checkbox
+                                >
+                                <span>{{ $permissionLabels[$permission] ?? $permission }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    <p class="text-[10px] text-slate-500">
+                        Sugerencia: para operador asigna solo lo necesario según sus tareas.
+                    </p>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="relative">
-                        <label class="block text-[11px] font-medium text-slate-700 mb-1">Contraseña <span class="text-red-600">(mínimo 16 caracteres)</span></label>
-                        <input type="password" name="password" id="create-user-password"
+                        <label class="block text-[11px] font-medium text-slate-700 mb-1">Contraseña <span class="text-red-600">(mín. 16, máx. 25 caracteres)</span></label>
+                        <input type="password" name="password" id="create-user-password" minlength="16" maxlength="25"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 pr-8 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                         <button type="button" onclick="togglePassword('password', this)" tabindex="-1"
                             class="absolute right-2 top-7 text-slate-500 hover:text-slate-700 focus:outline-none">
@@ -315,8 +355,8 @@
                         </button>
                     </div>
                     <div class="relative">
-                        <label class="block text-[11px] font-medium text-slate-700 mb-1">Confirmar contraseña</label>
-                        <input type="password" name="password_confirmation" id="create-user-password-confirm"
+                        <label class="block text-[11px] font-medium text-slate-700 mb-1">Confirmar contraseña <span class="text-slate-500">(Máx. 25 caracteres)</span></label>
+                        <input type="password" name="password_confirmation" id="create-user-password-confirm" minlength="16" maxlength="25"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 pr-8 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                         <button type="button" onclick="togglePassword('password_confirmation', this)" tabindex="-1"
                             class="absolute right-2 top-7 text-slate-500 hover:text-slate-700 focus:outline-none">
@@ -331,13 +371,84 @@
                     document.addEventListener('DOMContentLoaded', function () {
                         const form = document.getElementById('create-user-form');
                         if (!form) return;
+                        const roleSelect = document.getElementById('create-user-role');
+                        const permissionChecks = Array.from(document.querySelectorAll('[data-permission-checkbox]'));
+                        const adminHint = document.getElementById('permissions-admin-hint');
+                        const nameInput = form.querySelector('input[name="name"]');
+                        const emailInput = form.querySelector('input[name="email"]');
+                        const colorInput = form.querySelector('input[name="security_color_answer"]');
+                        const animalInput = form.querySelector('input[name="security_animal_answer"]');
+                        const padreInput = form.querySelector('input[name="security_padre_answer"]');
+
+                        function refreshPermissionUI() {
+                            const isAdmin = roleSelect?.value === 'admin';
+
+                            permissionChecks.forEach((check) => {
+                                check.disabled = isAdmin;
+                                if (isAdmin) {
+                                    check.checked = true;
+                                }
+                            });
+
+                            adminHint?.classList.toggle('hidden', !isAdmin);
+                        }
+
+                        roleSelect?.addEventListener('change', refreshPermissionUI);
+                        refreshPermissionUI();
+
+                        function normalizeSpaces(value) {
+                            return value.replace(/\s+/g, ' ').trim();
+                        }
+
+                        function clearFieldErrorStyles() {
+                            [nameInput, emailInput, colorInput, animalInput, padreInput].forEach((el) => {
+                                el?.classList.remove('border-red-500');
+                            });
+                        }
+
                         form.addEventListener('submit', function (e) {
                             const password = document.getElementById('create-user-password');
                             const passwordConfirm = document.getElementById('create-user-password-confirm');
                             const errorBox = document.getElementById('create-user-errors');
+                            const usernameRegex = /^(?=.{3,30}$)(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9._\- ]+$/u;
+                            const answerRegex = /^(?=.{2,30}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-]+$/u;
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                             let errors = [];
+
+                            if (nameInput) nameInput.value = normalizeSpaces(nameInput.value);
+                            if (emailInput) emailInput.value = normalizeSpaces(emailInput.value).toLowerCase();
+                            if (colorInput) colorInput.value = normalizeSpaces(colorInput.value);
+                            if (animalInput) animalInput.value = normalizeSpaces(animalInput.value);
+                            if (padreInput) padreInput.value = normalizeSpaces(padreInput.value);
+
+                            clearFieldErrorStyles();
+
+                            if (!nameInput?.value || !usernameRegex.test(nameInput.value)) {
+                                errors.push('El nombre de usuario debe tener 3 a 30 caracteres y usar solo letras, números o . _ -');
+                                nameInput?.classList.add('border-red-500');
+                            }
+
+                            if (!emailInput?.value || emailInput.value.length > 60 || !emailRegex.test(emailInput.value)) {
+                                errors.push('El correo electrónico no tiene un formato válido o supera 60 caracteres.');
+                                emailInput?.classList.add('border-red-500');
+                            }
+
+                            [
+                                { input: colorInput, label: 'La respuesta de color favorito' },
+                                { input: animalInput, label: 'La respuesta de animal favorito' },
+                                { input: padreInput, label: 'La respuesta del nombre de tu padre' },
+                            ].forEach(({ input, label }) => {
+                                if (!input?.value || !answerRegex.test(input.value)) {
+                                    errors.push(`${label} debe tener entre 2 y 30 caracteres válidos.`);
+                                    input?.classList.add('border-red-500');
+                                }
+                            });
+
                             if (password.value.length < 16) {
                                 errors.push('La contraseña debe tener al menos 16 caracteres.');
+                            }
+                            if (password.value.length > 25) {
+                                errors.push('La contraseña no puede superar los 25 caracteres.');
                             }
                             if (password.value !== passwordConfirm.value) {
                                 errors.push('La confirmación de la contraseña no coincide.');
@@ -360,18 +471,18 @@
 
                 <div class="space-y-2">
                     <div>
-                        <label class="block text-[11px] font-medium text-slate-700 mb-1">¿Cuál es tu color favorito?</label>
-                        <input type="text" name="security_color_answer" value="{{ old('security_color_answer') }}"
+                        <label class="block text-[11px] font-medium text-slate-700 mb-1">¿Cuál es tu color favorito? <span class="text-slate-500">(Máx. 30 caracteres)</span></label>
+                        <input type="text" name="security_color_answer" value="{{ old('security_color_answer') }}" minlength="2" maxlength="30"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-medium text-slate-700 mb-1">¿Cuál es tu animal favorito?</label>
-                        <input type="text" name="security_animal_answer" value="{{ old('security_animal_answer') }}"
+                        <label class="block text-[11px] font-medium text-slate-700 mb-1">¿Cuál es tu animal favorito? <span class="text-slate-500">(Máx. 30 caracteres)</span></label>
+                        <input type="text" name="security_animal_answer" value="{{ old('security_animal_answer') }}" minlength="2" maxlength="30"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-medium text-slate-700 mb-1">¿Cuál es el nombre de tu padre?</label>
-                        <input type="text" name="security_padre_answer" value="{{ old('security_padre_answer') }}"
+                        <label class="block text-[11px] font-medium text-slate-700 mb-1">¿Cuál es el nombre de tu padre? <span class="text-slate-500">(Máx. 30 caracteres)</span></label>
+                        <input type="text" name="security_padre_answer" value="{{ old('security_padre_answer') }}" minlength="2" maxlength="30"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
                 </div>
@@ -429,7 +540,7 @@
                 <button type="button" data-modal-unlock-cancel class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-700 hover:bg-slate-100 cursor-pointer">
                     Cancelar
                 </button>
-                <button type="button" data-modal-unlock-confirm class="inline-flex items-center rounded-md bg-emerald-600 px-3 py-1.5 text-white hover:bg-emerald-500 cursor-pointer">
+                <button type="button" data-modal-unlock-confirm class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-brand-900/30 transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 cursor-pointer">
                     Desbloquear
                 </button>
             </div>

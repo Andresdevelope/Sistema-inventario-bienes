@@ -57,6 +57,50 @@
                     </div>
                 </div>
 
+                <div class="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    @php
+                        $selectedPermissions = old('permissions', $user->resolvedPermissions());
+                        $permissionLabels = [
+                            'bienes.ver' => 'Ver bienes',
+                            'bienes.crear' => 'Crear bienes',
+                            'bienes.editar' => 'Editar bienes',
+                            'bienes.eliminar' => 'Eliminar bienes',
+                            'categorias.ver' => 'Ver categorías',
+                            'categorias.gestionar' => 'Gestionar categorías',
+                            'reportes.exportar' => 'Exportar reportes',
+                        ];
+                    @endphp
+
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-700">Permisos del usuario</p>
+                        <span id="edit-permissions-admin-hint" class="hidden text-[10px] text-emerald-700 font-medium">
+                            Administrador: acceso completo automático
+                        </span>
+                    </div>
+
+                    <input type="hidden" name="permissions_present" value="1">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2" id="edit-user-permissions-box">
+                        @foreach (\App\Models\User::availablePermissions() as $permission)
+                            <label class="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] text-slate-700">
+                                <input
+                                    type="checkbox"
+                                    name="permissions[]"
+                                    value="{{ $permission }}"
+                                    class="rounded border-slate-300 text-slate-900 focus:ring-slate-600"
+                                    {{ in_array($permission, $selectedPermissions, true) ? 'checked' : '' }}
+                                    data-edit-permission-checkbox
+                                >
+                                <span>{{ $permissionLabels[$permission] ?? $permission }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+
+                    <p class="text-[10px] text-slate-500">
+                        Ajusta aquí los permisos operativos del usuario.
+                    </p>
+                </div>
+
                 <div class="grid gap-4 md:grid-cols-3">
                     <div class="space-y-1 md:col-span-1">
                         <label class="block text-xs font-medium text-slate-700" for="security_color_answer">Color favorito</label>
@@ -101,5 +145,27 @@
             icon.innerHTML = "<path stroke-linecap='round' stroke-linejoin='round' d='M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z'/><path stroke-linecap='round' stroke-linejoin='round' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'/>";
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const roleSelect = document.getElementById('role');
+        const permissionChecks = Array.from(document.querySelectorAll('[data-edit-permission-checkbox]'));
+        const adminHint = document.getElementById('edit-permissions-admin-hint');
+
+        function refreshPermissionUI() {
+            const isAdmin = roleSelect?.value === 'admin';
+
+            permissionChecks.forEach((check) => {
+                check.disabled = isAdmin;
+                if (isAdmin) {
+                    check.checked = true;
+                }
+            });
+
+            adminHint?.classList.toggle('hidden', !isAdmin);
+        }
+
+        roleSelect?.addEventListener('change', refreshPermissionUI);
+        refreshPermissionUI();
+    });
 </script>
 @endpush

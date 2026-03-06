@@ -10,13 +10,7 @@
         <div>
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-sm font-semibold text-slate-900">Últimos bienes</h3>
-                <a href="{{ route('bienes.create') }}" class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-accent-400 to-accent-500 px-3.5 py-1.5 text-[11px] font-semibold text-brand-900 shadow-lg shadow-accent-900/15 transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3.5 w-3.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
-                    </svg>
-                    Registrar bien
-                    <span class="inline-flex items-center rounded-full border border-brand-900/10 bg-brand-50/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-900">Nuevo</span>
-                </a>
+             
             </div>
             <ul class="relative">
                 {{-- Línea de tiempo --}}
@@ -24,8 +18,22 @@
                 @forelse($ultimosBienes as $bien)
                     <li class="pl-6 py-2">
                         <span class="absolute left-0 mt-1.5 h-3 w-3 rounded-full bg-blue-600 ring-2 ring-blue-200"></span>
+                        @php($estado = strtolower(trim((string) $bien->estado)))
+                        @php($estadoLabel = $estado === 'de_baja' ? 'Dado de baja' : ucfirst($estado))
                         <p class="text-xs font-medium text-slate-900">{{ $bien->nombre }} <span class="text-[11px] text-slate-500">({{ $bien->codigo }})</span></p>
-                        <p class="text-[11px] text-slate-500">{{ $bien->categoria }} • Estado: <span class="font-medium text-slate-700">{{ $bien->estado }}</span></p>
+                        <p class="text-[11px] text-slate-500">
+                            {{ $bien->categoria }} • Estado:
+                            <span @class([
+                                'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold',
+                                'border-emerald-400/60 text-emerald-700 bg-emerald-50' => $estado === 'bueno',
+                                'border-amber-400/60 text-amber-700 bg-amber-50' => $estado === 'regular',
+                                'border-red-400/60 text-red-700 bg-red-50' => $estado === 'malo',
+                                'border-slate-400/70 text-slate-700 bg-slate-200/70' => $estado === 'de_baja',
+                                'border-slate-300 text-slate-700 bg-slate-100' => !in_array($estado, ['bueno', 'regular', 'malo', 'de_baja']),
+                            ])>
+                                {{ $estadoLabel }}
+                            </span>
+                        </p>
                         <p class="text-[10px] text-slate-400">{{ optional($bien->created_at)->diffForHumans() }}</p>
                     </li>
                 @empty

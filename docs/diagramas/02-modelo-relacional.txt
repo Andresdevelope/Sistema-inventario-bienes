@@ -1,106 +1,115 @@
 MODELO RELACIONAL
 Sistema: Inventario de Bienes
+Fecha de actualización: 2026-03-06
 
-1. Tabla USERS (USUARIOS)
-   USERS (
-       id                BIGINT UNSIGNED PK AUTO_INCREMENT,
-       name              VARCHAR(255)        NOT NULL,
-       email             VARCHAR(255)        NOT NULL UNIQUE,
-       email_verified_at TIMESTAMP           NULL,
-       password          VARCHAR(255)        NOT NULL,
-       role              VARCHAR(255)        NOT NULL,
-       security_color_answer  VARCHAR(255)   NOT NULL,
-       security_animal_answer VARCHAR(255)   NOT NULL,
-       security_padre_answer  VARCHAR(255)   NOT NULL,
-       login_attempts    INT                 NOT NULL DEFAULT 0,
-       locked_until      TIMESTAMP           NULL,
-       remember_token    VARCHAR(100)        NULL,
-       created_at        TIMESTAMP           NULL,
-       updated_at        TIMESTAMP           NULL
-   );
+1. Tabla USERS (usuarios)
+  USERS (
+     id                     BIGINT UNSIGNED PK AUTO_INCREMENT,
+     name                   VARCHAR(255)      NOT NULL,
+     email                  VARCHAR(255)      NOT NULL UNIQUE,
+     email_verified_at      TIMESTAMP         NULL,
+     password               VARCHAR(255)      NOT NULL,
+     role                   VARCHAR(255)      NOT NULL,
+     permissions            JSON              NULL,
+     security_color_answer  VARCHAR(255)      NOT NULL,
+     security_animal_answer VARCHAR(255)      NOT NULL,
+     security_padre_answer  VARCHAR(255)      NOT NULL,
+     login_attempts         INT               NOT NULL DEFAULT 0,
+     locked_until           TIMESTAMP         NULL,
+     remember_token         VARCHAR(100)      NULL,
+     created_at             TIMESTAMP         NULL,
+     updated_at             TIMESTAMP         NULL
+  );
 
 2. Tabla BIENES
-   BIENES (
-       id                BIGINT UNSIGNED PK AUTO_INCREMENT,
-       nombre            VARCHAR(255)        NOT NULL,
-       codigo            VARCHAR(255)        NOT NULL UNIQUE,
-       descripcion       VARCHAR(255)        NOT NULL,
-       categoria         VARCHAR(100)        NULL,
-       ubicacion         VARCHAR(255)        NULL,
-       estado            VARCHAR(255)        NOT NULL DEFAULT 'bueno',
-       fecha_adquisicion DATE                NULL,
-       valor             DECIMAL(12,2)       NULL,
-       created_at        TIMESTAMP           NULL,
-       updated_at        TIMESTAMP           NULL
-   );
+  BIENES (
+     id                BIGINT UNSIGNED PK AUTO_INCREMENT,
+     nombre            VARCHAR(255)      NOT NULL,
+     codigo            VARCHAR(255)      NOT NULL UNIQUE,
+     descripcion       VARCHAR(255)      NOT NULL,
+     categoria         VARCHAR(100)      NULL,
+     ubicacion         VARCHAR(255)      NULL,
+     estado            VARCHAR(255)      NOT NULL DEFAULT 'bueno',
+     fecha_adquisicion DATE              NULL,
+     created_at        TIMESTAMP         NULL,
+     updated_at        TIMESTAMP         NULL
+  );
+  Nota: el campo valor fue eliminado (migración 2026_02_28_000001).
 
-3. Tabla BITACORAS
-   BITACORAS (
-       id                BIGINT UNSIGNED PK AUTO_INCREMENT,
-       user_id           BIGINT UNSIGNED     NULL,
-       modulo            VARCHAR(50)         NOT NULL,
-       entidad_id        BIGINT UNSIGNED     NULL,
-       accion            VARCHAR(100)        NOT NULL,
-       resultado         VARCHAR(20)         NOT NULL DEFAULT 'exito',
-       descripcion       TEXT                NULL,
-       created_at        TIMESTAMP           NULL,
-       updated_at        TIMESTAMP           NULL,
+3. Tabla CATEGORIAS
+  CATEGORIAS (
+     id          BIGINT UNSIGNED PK AUTO_INCREMENT,
+     nombre      VARCHAR(30)       NOT NULL UNIQUE,
+     estado      VARCHAR(10)       NOT NULL DEFAULT 'activo',
+     created_at  TIMESTAMP         NULL,
+     updated_at  TIMESTAMP         NULL
+  );
 
-       CONSTRAINT fk_bitacoras_user
-           FOREIGN KEY (user_id)
-           REFERENCES users(id)
-           ON DELETE SET NULL
-   );
+4. Tabla BITACORAS
+  BITACORAS (
+     id          BIGINT UNSIGNED PK AUTO_INCREMENT,
+     user_id     BIGINT UNSIGNED     NULL,
+     modulo      VARCHAR(50)         NOT NULL,
+     entidad_id  BIGINT UNSIGNED     NULL,
+     accion      VARCHAR(100)        NOT NULL,
+     resultado   VARCHAR(20)         NOT NULL DEFAULT 'exito',
+     descripcion TEXT                NULL,
+     created_at  TIMESTAMP           NULL,
+     updated_at  TIMESTAMP           NULL,
 
-4. Tabla PASSWORD_RESET_TOKENS (soporte de recuperación de contraseña)
-   PASSWORD_RESET_TOKENS (
-       email        VARCHAR(255)  PRIMARY KEY,
-       token        VARCHAR(255)  NOT NULL,
-       created_at   TIMESTAMP     NULL
-   );
+     CONSTRAINT fk_bitacoras_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE SET NULL
+  );
 
-5. Tabla SESSIONS (sesiones de usuario)
-   SESSIONS (
-       id           VARCHAR(255)  PRIMARY KEY,
-       user_id      BIGINT UNSIGNED NULL,
-       ip_address   VARCHAR(45)   NULL,
-       user_agent   TEXT          NULL,
-       payload      LONGTEXT      NOT NULL,
-       last_activity INT          NOT NULL,
+5. Tabla PASSWORD_RESET_TOKENS
+  PASSWORD_RESET_TOKENS (
+     email      VARCHAR(255) PRIMARY KEY,
+     token      VARCHAR(255) NOT NULL,
+     created_at TIMESTAMP    NULL
+  );
 
-       INDEX sessions_user_id_index (user_id),
-       INDEX sessions_last_activity_index (last_activity)
-   );
+6. Tabla SESSIONS
+  SESSIONS (
+     id            VARCHAR(255)    PRIMARY KEY,
+     user_id       BIGINT UNSIGNED NULL,
+     ip_address    VARCHAR(45)     NULL,
+     user_agent    TEXT            NULL,
+     payload       LONGTEXT        NOT NULL,
+     last_activity INT             NOT NULL,
 
-6. Otras restricciones y consideraciones
+     INDEX sessions_user_id_index (user_id),
+     INDEX sessions_last_activity_index (last_activity)
+  );
 
-   - Índices y unicidad
-     * users.email es UNIQUE.
-     * bienes.codigo es UNIQUE.
+7. Restricciones funcionales (lógica de aplicación)
 
-   - Integridad referencial
-     * fk_bitacoras_user: BITACORAS.user_id -> USERS.id (ON DELETE SET NULL).
-     * SESSIONS.user_id normalmente referencia USERS.id (sin FK explícita en la migración base).
+  - Roles:
+    * admin = control total.
+    * user (operador) = acceso según permissions.
 
-   - Relación BITACORAS.entidad_id
-     * No existe una FK directa en la base de datos; se usa como referencia
-       genérica al registro afectado según el valor de modulo.
-     * Ejemplo: si modulo = 'bienes', entidad_id apunta a BIENES.id.
+  - Permisos granulares (users.permissions):
+    * bienes.ver
+    * bienes.crear
+    * bienes.editar
+    * bienes.eliminar
+    * categorias.ver
+    * categorias.gestionar
+    * reportes.exportar
 
-7. Observaciones
+  - Reglas de seguridad sobre administradores:
+    * Solo admin puede asignar rol admin.
+    * No se permite eliminar o degradar al último admin.
 
-   - Este modelo relacional está basado en las migraciones actuales del
-     proyecto Laravel. Se ha agregado el campo "categoria" (VARCHAR(100),
-     NULL) en la tabla BIENES mediante migración adicional.
+8. Reglas de validación actuales en alta de usuario (backend/frontend)
 
-   - En USERS, el campo "locked_until" (TIMESTAMP NULL) fue incorporado
-     mediante migración adicional para soportar el bloqueo por intentos.
+  - name: min 3 / max 30
+  - email: max 60
+  - password: min 16 / max 25
+  - security_color_answer: min 2 / max 30
+  - security_animal_answer: min 2 / max 30
+  - security_padre_answer: min 2 / max 30
 
-   - La tabla BITACORAS está diseñada para ser reutilizable por diferentes
-     módulos gracias a la combinación (modulo, entidad_id).
-
-   - PASSWORD_RESET_TOKENS y SESSIONS son tablas de soporte para
-     sesiones; puedes omitirlas en el documento si tu enfoque es solo funcional
-     en lugar de técnico. La recuperación de contraseña en esta implementación
-     se realiza mediante preguntas de seguridad, por lo que la tabla
-     PASSWORD_RESET_TOKENS no es utilizada.
+  Además: sanitización anti HTML (strip_tags), normalización de espacios,
+  regex de formato y validación de permisos permitidos.

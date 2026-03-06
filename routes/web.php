@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BienController;
 use App\Http\Controllers\BitacoraController;
+use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken as VerifyCsrfTokenMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -38,15 +39,48 @@ Route::middleware('auth')->group(function () {
     // - Solo accesible para usuarios autenticados con rol admin u operador (user).
     // - Permite registrar, consultar, editar y eliminar bienes.
     Route::middleware('role:admin,user')->group(function () {
-        Route::get('/bienes', [BienController::class, 'index'])->name('bienes.index');
-        Route::get('/bienes/crear', [BienController::class, 'create'])->name('bienes.create');
-        Route::post('/bienes', [BienController::class, 'store'])->name('bienes.store');
+        Route::get('/bienes', [BienController::class, 'index'])
+            ->middleware('permission:bienes.ver')
+            ->name('bienes.index');
+        Route::get('/bienes/reportes/pdf', [BienController::class, 'exportPdf'])
+            ->middleware('permission:reportes.exportar')
+            ->name('bienes.reportes.pdf');
+
+        Route::get('/bienes/categorias', [CategoriaController::class, 'index'])
+            ->middleware('permission:categorias.ver')
+            ->name('bienes.categorias.index');
+        Route::post('/bienes/categorias', [CategoriaController::class, 'store'])
+            ->middleware('permission:categorias.gestionar')
+            ->name('bienes.categorias.store');
+        Route::put('/bienes/categorias/{categoria}', [CategoriaController::class, 'update'])
+            ->middleware('permission:categorias.gestionar')
+            ->name('bienes.categorias.update');
+        Route::patch('/bienes/categorias/{categoria}/toggle', [CategoriaController::class, 'toggle'])
+            ->middleware('permission:categorias.gestionar')
+            ->name('bienes.categorias.toggle');
+
+        Route::get('/bienes/crear', [BienController::class, 'create'])
+            ->middleware('permission:bienes.crear')
+            ->name('bienes.create');
+        Route::post('/bienes', [BienController::class, 'store'])
+            ->middleware('permission:bienes.crear')
+            ->name('bienes.store');
         
-        Route::get('/bienes', [BienController::class, 'index'])->name('bienes.index');
-        Route::get('/bienes/{bien}', [BienController::class, 'show'])->name('bienes.show');
-        Route::get('/bienes/{bien}/editar', [BienController::class, 'edit'])->name('bienes.edit');
-        Route::put('/bienes/{bien}', [BienController::class, 'update'])->name('bienes.update');
-        Route::delete('/bienes/{bien}', [BienController::class, 'destroy'])->name('bienes.destroy');
+        Route::get('/bienes', [BienController::class, 'index'])
+            ->middleware('permission:bienes.ver')
+            ->name('bienes.index');
+        Route::get('/bienes/{bien}', [BienController::class, 'show'])
+            ->middleware('permission:bienes.ver')
+            ->name('bienes.show');
+        Route::get('/bienes/{bien}/editar', [BienController::class, 'edit'])
+            ->middleware('permission:bienes.editar')
+            ->name('bienes.edit');
+        Route::put('/bienes/{bien}', [BienController::class, 'update'])
+            ->middleware('permission:bienes.editar')
+            ->name('bienes.update');
+        Route::delete('/bienes/{bien}', [BienController::class, 'destroy'])
+            ->middleware('permission:bienes.eliminar')
+            ->name('bienes.destroy');
     });
 });
 

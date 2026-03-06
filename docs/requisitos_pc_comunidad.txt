@@ -1,0 +1,153 @@
+SISTEMA INVENTARIO DE BIENES - REQUISITOS PARA IMPLEMENTAR EN LA PC DE LA COMUNIDAD
+Fecha de referencia: 06/03/2026
+Proyecto: Laravel 12 (PHP + Node/Vite)
+
+==================================================
+1) PROGRAMAS BASE A INSTALAR
+==================================================
+Obligatorios:
+- PHP 8.2.x (mínimo requerido por composer.json: ^8.2)
+- Composer 2.x
+- Node.js 22.x (LTS recomendado)
+- npm 10.x
+- Git 2.x
+
+Verificado en este entorno de desarrollo:
+- PHP: 8.2.12
+- Composer: 2.8.6
+- Node.js: v22.13.0
+- npm: 10.9.2
+- Git: 2.52.0.windows.1
+
+Recomendación práctica para Windows:
+- Instalar XAMPP (Apache + MySQL + PHP) y luego ajustar versión de PHP a 8.2.x si aplica.
+- Instalar Composer oficial para Windows.
+- Instalar Node.js LTS oficial.
+- Instalar Git for Windows.
+
+==================================================
+2) EXTENSIONES PHP REQUERIDAS (PLATAFORMA/DEPENDENCIAS)
+==================================================
+Requeridas por dependencias verificadas con Composer:
+- ctype
+- dom
+- fileinfo
+- filter
+- hash
+- iconv
+- json
+- libxml
+- openssl
+- pcre
+- phar
+- session
+- tokenizer
+- xml
+- xmlwriter
+- mbstring (en este entorno está activa; Composer también puede cubrirla por polyfill)
+
+==================================================
+3) EXTENSIONES PHP ACTIVAS EN ESTE SISTEMA (REFERENCIA)
+==================================================
+Actualmente activas (php -m):
+- bcmath
+- bz2
+- calendar
+- ctype
+- curl
+- dom
+- exif
+- fileinfo
+- filter
+- ftp
+- gd
+- gettext
+- hash
+- iconv
+- json
+- libxml
+- mbstring
+- mysqli
+- mysqlnd
+- openssl
+- pcre
+- PDO
+- pdo_mysql
+- pdo_sqlite
+- Phar
+- readline
+- session
+- SimpleXML
+- tokenizer
+- xml
+- xmlreader
+- xmlwriter
+- zip
+- zlib
+
+Nota: para este sistema conviene mantener habilitadas como mínimo también:
+- PDO
+- pdo_mysql (si usarán MySQL/MariaDB)
+- mysqli
+- mbstring
+- openssl
+- curl
+- zip
+
+==================================================
+4) BASE DE DATOS Y SERVIDOR WEB
+==================================================
+- Base de datos recomendada para comunidad: MySQL 8.x o MariaDB 10.6+
+- Servidor web: Apache (XAMPP) o Nginx
+- Confirmar que en .env queden correctamente:
+  - DB_CONNECTION
+  - DB_HOST
+  - DB_PORT
+  - DB_DATABASE
+  - DB_USERNAME
+  - DB_PASSWORD
+
+==================================================
+5) DEPENDENCIAS FRONTEND (NODE)
+==================================================
+Este proyecto usa (package.json):
+- vite
+- laravel-vite-plugin
+- tailwindcss
+- postcss
+- autoprefixer
+- axios
+- concurrently
+
+Por eso se requiere Node.js + npm para compilar assets (build/dev).
+
+==================================================
+6) CHECKLIST DE VALIDACIÓN EN LA PC DE LA COMUNIDAD
+==================================================
+Antes de instalar el sistema:
+[ ] PHP 8.2.x instalado
+[ ] Composer 2.x instalado
+[ ] Node.js 22.x y npm instalados
+[ ] Git instalado
+[ ] Apache/Nginx operativo
+[ ] MySQL/MariaDB operativo
+[ ] Extensiones PHP listadas habilitadas
+
+Después de copiar el proyecto:
+[ ] composer install
+[ ] npm install
+[ ] Copiar .env (desde .env.example) y configurar DB/APP_URL
+[ ] php artisan key:generate
+[ ] php artisan migrate --force
+[ ] npm run build
+
+==================================================
+7) EXTENSIONES DE VS CODE RECOMENDADAS (OPCIONAL PARA SOPORTE)
+==================================================
+No son necesarias para ejecutar en producción, pero sí útiles para mantenimiento:
+- PHP Intelephense
+- Laravel Extension Pack (o Laravel Blade Snippets)
+- DotENV
+- EditorConfig
+
+Fin del documento.

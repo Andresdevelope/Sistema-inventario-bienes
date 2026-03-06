@@ -14,7 +14,7 @@
     <header class="sticky top-0 z-30 w-full backdrop-blur bg-slate-950/60 border-b border-brand-500/30">
         <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img src="{{ asset('logo-institucion.jpg') }}" alt="Logo institucional" class="h-10 w-10 rounded-xl border border-white/20 bg-white/90 p-1 object-contain shadow-lg shadow-brand-900/40">
+                <img src="{{ asset('logo-institucion.jpg') }}" alt="Logo institucional" width="40" height="40" fetchpriority="high" decoding="async" class="h-10 w-10 rounded-xl border border-white/20 bg-white/90 p-1 object-contain shadow-lg shadow-brand-900/40">
                 <div>
                     <h1 class="text-sm font-semibold tracking-wide text-brand-50">Sistema Inventario de Bienes</h1>
                     <p class="text-[11px] text-brand-100/80">Gestión segura y eficiente</p>

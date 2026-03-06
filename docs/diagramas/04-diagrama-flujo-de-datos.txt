@@ -1,108 +1,99 @@
 DIAGRAMA DE FLUJO DE DATOS (DFD)
 Sistema: Inventario de Bienes
+Fecha de actualización: 2026-03-06
 
-1. Nivel 0 (Diagrama de contexto)
+1. Nivel 0 (Contexto)
 
    Entidades externas:
-   - Usuario (Administrador / Operador)
+   - Usuario administrador
+   - Usuario operador
+   - Servicio externo reCAPTCHA (Google)
 
    Proceso principal:
    - P0: Sistema de Inventario de Bienes
 
-   Almacenes de datos (vista global):
-   - D1: BD_Usuarios (tabla USERS)
-   - D2: BD_Bienes (tabla BIENES)
-   - D3: BD_Bitácora (tabla BITACORAS)
-  - D4: BD_Sesiones (tabla SESSIONS)
+   Almacenes de datos:
+   - D1: BD_Usuarios (users)
+   - D2: BD_Bienes (bienes)
+   - D3: BD_Categorías (categorias)
+   - D4: BD_Bitácora (bitacoras)
+   - D5: BD_Sesiones (sessions)
 
-  Flujos de datos principales:
-   - E1: Credenciales de acceso (email, contraseña) -> P0
-   - S1: Respuesta de autenticación / acceso concedido -> Usuario
-    Servicios externos:
-    - X1: Google reCAPTCHA (verificación de tokens)
-   - E2: Solicitudes de gestión de bienes (altas, bajas, modificaciones) -> P0
-   - S2: Listados y detalles de bienes -> Usuario
-   - E3: Solicitudes de gestión de usuarios (solo Administrador) -> P0
-   - S3: Listados y detalles de usuarios -> Usuario
+   Flujos principales:
+   - E1: Credenciales y token reCAPTCHA -> P0
+   - S1: Resultado de autenticación -> Usuario
+   - E2: Solicitudes bienes/categorías/reportes -> P0
+   - S2: Respuestas de inventario -> Usuario
+   - E3: Solicitudes gestión de usuarios/permisos (solo admin) -> P0
+   - S3: Respuesta gestión de usuarios/permisos -> Usuario admin
    - E4: Consultas de bitácora -> P0
-   - S4: Reportes / listados de bitácora -> Usuario
+   - S4: Resultados de auditoría -> Usuario admin
 
-2. Nivel 1 (Descomposición del sistema)
+2. Nivel 1 (Descomposición)
 
-   Procesos principales:
-
-   P1: Autenticación de usuarios
+   P1: Autenticación y control de acceso
        Entradas:
-       - E1: Credenciales (usuario, contraseña) desde Usuario.
-       - X1: Token reCAPTCHA desde Usuario / verificación con servicio externo.
+       - Usuario + contraseña
+       - Token reCAPTCHA
        Salidas:
-       - S1: Resultado de autenticación (éxito / error) hacia Usuario.
+       - Acceso concedido/denegado
+       - Mensaje de bloqueo si corresponde
        Acceso a datos:
-       - Lee D1: BD_Usuarios para validar credenciales.
-       - Escribe en D3: BD_Bitácora (registro de inicio de sesión exitoso o fallido).
-       - Escribe en D4: BD_Sesiones (aplica si SESSION_DRIVER=database).
+       - Lee D1 (validar usuario/rol/locked_until)
+       - Escribe D4 (eventos login/logout/bloqueo)
+       - Escribe D5 (sesiones)
 
-   P2: Gestión de bienes
+   P2: Gestión de bienes y categorías
        Entradas:
-       - E2: Solicitudes de alta, baja, modificación, consulta de bienes desde Usuario.
+       - Alta/edición/baja/consulta de bienes
+       - Gestión de categorías
        Salidas:
-       - S2: Confirmación de registro/actualización/baja.
-       - Listado y detalles de bienes.
+       - Confirmación de operación
+       - Listados y reportes
        Acceso a datos:
-       - Lee y escribe D2: BD_Bienes.
-       - Escribe en D3: BD_Bitácora (acciones sobre bienes, usando modulo = "bienes").
+       - Lee/escribe D2 (bienes)
+       - Lee/escribe D3 (categorías)
+       - Escribe D4 (traza de acciones)
 
-   P3: Gestión de usuarios
+   P3: Gestión de usuarios y permisos
        Entradas:
-       - E3: Solicitudes del Administrador para crear/editar usuarios.
+       - Crear/editar/eliminar/desbloquear usuarios
+       - Asignación de rol y permisos
        Salidas:
-       - S3: Confirmación de operación sobre usuarios.
-       - Listado y detalles de usuarios.
+       - Confirmación/errores de validación
        Acceso a datos:
-       - Lee y escribe D1: BD_Usuarios.
-       - Escribe en D3: BD_Bitácora (acciones sobre usuarios, modulo = "usuarios").
-      - Bloqueo/desbloqueo: actualiza campos login_attempts y locked_until en D1.
+       - Lee/escribe D1 (incluye users.permissions)
+       - Escribe D4 (acciones sobre usuarios)
+       Reglas clave:
+       - Solo admin asigna rol admin.
+       - No se elimina/degrada el último admin.
 
-   P4: Consulta de bitácora
+   P4: Auditoría (bitácora)
        Entradas:
-       - E4: Criterios de búsqueda de registros de bitácora.
+       - Filtros de consulta de bitácora
        Salidas:
-       - S4: Listado de registros de bitácora y detalles.
+       - Listado de eventos
        Acceso a datos:
-       - Lee D3: BD_Bitácora.
+       - Lee D4
 
-3. Detalle de almacenes de datos
+3. Flujo específico nuevo: alta de usuario con permisos
 
-   D1: BD_Usuarios (USERS)
-       - Contiene información de identificación, autenticación y rol de los users.
-       - Es leído por P1 y P4 (indirectamente, si se muestran nombres de usuario).
-       - Es escrito por P3.
+   1) Admin abre modal de crear usuario.
+   2) Frontend aplica límites y sanitización básica:
+      - name max 30
+      - email max 60
+      - password max 25
+      - respuestas de seguridad max 30
+   3) Backend sanitiza y valida con reglas robustas (regex + anti HTML).
+   4) Si role=admin, el sistema asigna permisos completos automáticos.
+   5) Si role=user, guarda permisos seleccionados en users.permissions.
+   6) Registra evento en bitácora y retorna respuesta al admin.
 
-   D2: BD_Bienes (BIENES)
-        - Contiene el inventario de bienes (nombre, código, descripción,
-         categoría, ubicación, estado, valor, etc.).
-       - Es leído y escrito por P2.
+4. Notas para diagrama gráfico
 
-   D3: BD_Bitácora (BITACORAS)
-       - Contiene registros de acciones: user_id, modulo, entidad_id, accion,
-         resultado, descripcion, timestamps.
-       - Es escrito por P1, P2 y P3.
-       - Es leído por P4.
-
-4. Notas para el diagrama gráfico
-
-   - En la herramienta gráfica (por ejemplo, draw.io, Lucidchart, etc.) puedes
-     representar:
-       * Al Usuario como entidad externa única con diferentes roles.
-       * Los procesos P1, P2, P3 y P4 como círculos o rectángulos redondeados.
-       * Los almacenes de datos D1, D2 y D3 como "almacenes" típicos de DFD.
-       * Flechas de flujo con los nombres E1, S1, E2, S2, etc., o con nombres
-         más descriptivos ("Solicitud de alta de bien", "Listado de bienes", etc.).
-       * Representar X1 (Google reCAPTCHA) como entidad externa con flujo hacia P1.
-
-   - Si tu trabajo lo requiere, puedes descomponer aún más P2 (Gestionar bienes)
-     en subprocesos como "Registrar bien", "Editar bien", "Dar de baja bien".
-
-   - Considerar en el diagrama las protecciones a nivel de middleware:
-     * CSRF (VerifyCsrfToken) para formularios.
-     * CORS (HandleCors) para accesos cross-origin.
+   - Mostrar P3 con una subcaja de "Control de permisos".
+   - Agregar D3 (categorías) y D1.permissions como dato explícito.
+   - Indicar controles transversales:
+     * auth + role middleware
+     * permission middleware
+     * CSRF / CORS / throttling

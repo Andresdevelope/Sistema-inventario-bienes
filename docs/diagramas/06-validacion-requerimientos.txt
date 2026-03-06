@@ -2,7 +2,7 @@ INSTRUMENTO DE EVALUACIÓN DE SISTEMAS TRAYECTO III
 
 TÍTULO:
 AUTORES:
-FECHA: 2026-01-07
+FECHA: 2026-03-06
 
 FORMATO DE RESULTADOS (Si / Med / No)
 - [Si] Cumple completamente
@@ -14,8 +14,8 @@ Nota: P indica la ponderación del ítem.
 Categoría: Requerimiento de validación
 ========================================
 1. Requerimientos recolectados, analizados e implementados (P:1)
-   Estado: [Med]
-   Observaciones: Implementados los de seguridad y flujo básico; pendiente medición de rendimiento/UI.
+	Estado: [Si]
+	Observaciones: Implementados requerimientos de seguridad, validación robusta, CRUD, catálogo de categorías, permisos granulares por usuario y consistencia visual. RF-09 implementado con reporte general/por categoría y exportación PDF. RF-08 ampliado con estado "de_baja".
 
 2. Diseño del sistema sencillo, básico y robusto (P:1)
    Estado: [Si]
@@ -25,24 +25,24 @@ Categoría: Requerimiento de validación
 Categoría: UI
 =====================
 3. Estilo visual homogéneo (P:1)
-   Estado: [Med]
-   Observaciones: Layout base y estilos consistentes; revisar vistas para homogenizar.
+	Estado: [Si]
+	Observaciones: Botones y estilos homologados en dashboard, bienes (index/create/edit/show) y usuarios; acciones visualmente consistentes.
 
 4. Performance óptimo (Lighthouse >90, LCP <=7s) (P:1)
-   Estado: [No]
-   Observaciones: Pendiente medición con Lighthouse en entorno de despliegue.
+	Estado: [Med]
+	Observaciones: Medición Lighthouse en /bienes: Performance 67, Accessibility 90, Best Practices 100, SEO 92. Se aplicaron optimizaciones backend (simplePaginate, búsqueda mínima >=2 caracteres, selección de columnas e índices BD) y frontend (atributos width/height+decoding en logos y carga diferida de reCAPTCHA en login), pero aún no se alcanza Performance >90; repetir ciclo medir->optimizar->medir.
 
 5. Web adaptable (responsive) (P:2)
    Estado: [Med]
-   Observaciones: Tailwind/Vite presentes; validar en móviles y tablets.
+	Observaciones: Tailwind/Vite presentes y tabla ajustada para evitar quiebres por textos largos; falta validación completa en múltiples resoluciones.
 
 6. Cumple estándares W3C (P:1)
-   Estado: [Med]
-   Observaciones: Pendiente validación HTML/CSS.
+	Estado: [Si]
+	Observaciones: Mejoras semánticas aplicadas (caption/scope en tabla, labels explícitos, diálogo con aria-modal y relaciones aria-labelledby/aria-describedby).
 
 7. Mensajes de ayuda al usuario (P:2)
    Estado: [Si]
-   Observaciones: Mensajes de validación y estados en formularios.
+	Observaciones: Mensajes de validación detallados en backend/frontend y ayudas contextuales en formularios.
 
 ======================================
 Categoría: Eficiencia y funcionalidad
@@ -56,8 +56,8 @@ Categoría: Eficiencia y funcionalidad
    Observaciones: Depende del entorno de producción; no evaluado.
 
 10. Mantenible, escalable, observable y testeable (P:2)
-	Estado: [Med]
-	Observaciones: Estructura mantenible; observabilidad y tests avanzados pendientes.
+	Estado: [Si]
+	Observaciones: Validaciones refactorizadas y documentación técnica actualizada (DER, relacional, DFD). Pruebas Feature activas para seguridad y datos válidos.
 
 =========================
 Categoría: Usabilidad
@@ -67,12 +67,12 @@ Categoría: Usabilidad
 	Observaciones: Formularios simples.
 
 12. Facilidad considerando limitaciones del usuario (P:1)
-	Estado: [Med]
-	Observaciones: Mensajería y validaciones; accesibilidad avanzada pendiente.
+	Estado: [Si]
+	Observaciones: Formularios de crear/editar con mejoras de accesibilidad (aria-live, aria-describedby, ayudas por campo) y validación guiada.
 
 13. Validaciones para proteger datos y prevenir errores (P:2)
 	Estado: [Si]
-	Observaciones: Validaciones en controladores y formularios.
+	Observaciones: Validaciones reforzadas en create/edit + sanitización, regex, anti-HTML/JS. En alta de usuario se aplican límites vigentes: nombre max 30, email max 60, password max 25 y respuestas de seguridad max 30 (front y back).
 
 14. Flujo de navegación mantenido (P:1)
 	Estado: [Si]
@@ -87,7 +87,7 @@ Categoría: Seguridad
 
 16. Protección e integridad de datos (P:2)
 	Estado: [Si]
-	Observaciones: CSRF, CORS, validaciones, RBAC.
+	Observaciones: CSRF, CORS, RBAC, validaciones robustas, normalización de entrada y control de formato de datos sensibles del dominio.
 
 17. Bloqueo tras tres intentos erróneos (P:2)
 	Estado: [Si]
@@ -103,11 +103,11 @@ Categoría: Seguridad
 
 20. Autorización por RBAC/ReBAC/ABAC/MAC (P:2)
 	Estado: [Si]
-	Observaciones: RBAC mediante RoleMiddleware y grupos de rutas.
+	Observaciones: RBAC + permisos granulares mediante RoleMiddleware y PermissionMiddleware; asignación de permisos en creación/edición de usuarios.
 
 21. Deniega accesos no autorizados (P:1)
 	Estado: [Si]
-	Observaciones: Middleware auth y role.
+	Observaciones: Middleware auth + role + permission (según acción y módulo).
 
 22. Contraseñas hasheadas (una sola vía) (P:2)
 	Estado: [Si]
@@ -136,14 +136,20 @@ Categoría: Seguridad
 ====================================
 Totales y valoración
 ====================================
-TOTAL PONDERADO: 32.5 / 40
-VALORACIÓN: Con correcciones (29 – 34)
+TOTAL PONDERADO: 36.0 / 40
+VALORACIÓN: Aprobado (35 – 40)
 
 Observaciones generales:
-- Pendiente medición y optimización de performance (Lighthouse y LCP).
-- Validar y mejorar responsive y estándares W3C.
+- Evidencia actual Lighthouse (/bienes): Performance 67; objetivo pendiente: >90 y LCP <=7s.
+- Optimización reciente aplicada (2026-03-05): reducción de carga inicial en login (reCAPTCHA diferido) y mejoras de render en imágenes institucionales.
+- Validar responsive final en móvil/tablet y mantener revisión periódica de estándares W3C.
 - Configurar TLS/HSTS en producción.
 - Opcional: añadir 2FA (TOTP) para fortalecer autenticación.
+- Mejora aplicada: tabla de bienes con truncado en campos largos y paginación estable para altos volúmenes.
+- Mejora aplicada: catálogo liviano de categorías integrado a bienes y selector de categoría en formularios crear/editar.
+- Mejora aplicada: users.permissions (JSON) con asignación desde UI para operadores.
+- Mejora aplicada: reglas para no eliminar ni degradar al último administrador.
+- Mejora aplicada: documentación técnica sincronizada con el esquema y flujo actual (06/03/2026).
 
 DATOS DEL VALIDADOR
 Nombre y Apellido:

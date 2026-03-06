@@ -131,8 +131,7 @@
         </form>
 
         @if (config('services.recaptcha.enabled'))
-            {{-- Script reCAPTCHA --}}
-            <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+            {{-- reCAPTCHA se carga de forma diferida desde JS para no impactar el render inicial --}}
         @endif
     </div>
 
@@ -140,7 +139,7 @@
         <div class="spinner-backdrop absolute inset-0"></div>
         <div class="spinner-shell relative z-10">
             <div class="spinner-core">
-                <img src="{{ asset('logo-institucion.jpg') }}" alt="Logo institucional" class="spinner-logo">
+                <img src="{{ asset('logo-institucion.jpg') }}" alt="Logo institucional" width="50" height="50" loading="lazy" decoding="async" class="spinner-logo">
                 <div class="spinner-ring"></div>
 
                 <svg viewBox="0 0 24 24" class="spinner-icon icon-1" aria-hidden="true">
@@ -343,8 +342,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('no-freeze-spinner');
     const recaptchaClientError = document.getElementById('recaptcha-client-error');
     const recaptchaEnabled = @json((bool) config('services.recaptcha.enabled'));
+    let recaptchaScriptRequested = false;
+
+    const requestRecaptchaScript = () => {
+        if (!recaptchaEnabled || recaptchaScriptRequested || typeof grecaptcha !== 'undefined') {
+            return;
+        }
+
+        recaptchaScriptRequested = true;
+        const script = document.createElement('script');
+        script.src = 'https://www.google.com/recaptcha/api.js';
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+    };
 
     if (!form || !overlay) return;
+
+    if (recaptchaEnabled) {
+        // Difiere carga de tercero para priorizar LCP/FCP del login.
+        window.addEventListener('load', () => {
+            window.setTimeout(requestRecaptchaScript, 1200);
+        }, { once: true });
+
+        form.addEventListener('focusin', requestRecaptchaScript, { once: true });
+        form.addEventListener('pointerenter', requestRecaptchaScript, { once: true });
+    }
 
     form.addEventListener('submit', (event) => {
         if (recaptchaClientError) {
@@ -354,8 +377,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (recaptchaEnabled) {
             if (typeof grecaptcha === 'undefined') {
                 event.preventDefault();
+                requestRecaptchaScript();
                 if (recaptchaClientError) {
-                    recaptchaClientError.textContent = 'No se pudo cargar reCAPTCHA. Verifica tu conexión e inténtalo de nuevo.';
+                    recaptchaClientError.textContent = 'Estamos cargando reCAPTCHA. Espera un momento y vuelve a intentarlo.';
                     recaptchaClientError.classList.remove('hidden');
                 }
                 return;

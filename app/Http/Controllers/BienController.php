@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Bien;
 use App\Models\Bitacora;
+use App\Models\Categoria;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /**
@@ -25,10 +29,15 @@ class BienController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = Bien::query();
+        $perPage = max(10, min((int) $request->integer('per_page', 15), 100));
+        $search = trim((string) $request->input('search', ''));
+
+        $query = Bien::query()
+            ->select(['id', 'nombre', 'codigo', 'descripcion', 'categoria', 'ubicacion', 'estado'])
+            ->latest('id');
+
         // Filtro por búsqueda general (nombre, código, descripción)
-        if ($request->filled('search')) {
-            $search = $request->search;
+        if ($search !== '' && mb_strlen($search, 'UTF-8') >= 2) {
             $query->where(function($q) use ($search) {
                 $q->where('nombre', 'like', "%$search%")
                   ->orWhere('codigo', 'like', "%$search%")
@@ -36,7 +45,7 @@ class BienController extends Controller
             });
         }
         // Filtro por estado
-        if ($request->filled('estado') && in_array($request->estado, ['bueno', 'regular', 'malo'])) {
+        if ($request->filled('estado') && in_array($request->estado, ['bueno', 'regular', 'malo', 'de_baja'])) {
             $query->where('estado', $request->estado);
         }
         // Filtro por ubicación
@@ -44,12 +53,16 @@ class BienController extends Controller
             $query->where('ubicacion', 'like', "%{$request->ubicacion}%");
         }
 
-        $bienes = $query->paginate(15)->appends($request->except('page'));
+        $bienes = $query->simplePaginate($perPage)->appends($request->except('page'));
 
         if ($request->ajax()) {
             return view('bienes.partials.tabla', compact('bienes'));
         }
-        return view('bienes.index', compact('bienes'));
+
+        $categoriasActivas = $this->activeCategoryNames();
+        $resumenCategorias = $this->categorySummary();
+
+        return view('bienes.index', compact('bienes', 'categoriasActivas', 'resumenCategorias'));
     }
 
     /**
@@ -57,7 +70,9 @@ class BienController extends Controller
      */
     public function create(): View
     {
-        return view('bienes.create');
+        $categoriasActivas = $this->activeCategoryNames();
+
+        return view('bienes.create', compact('categoriasActivas'));
     }
 
     /**
@@ -65,32 +80,15 @@ class BienController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'nombre' => ['required', 'string', 'max:150'],
-            'codigo' => ['required', 'string', 'max:50', 'unique:bienes,codigo'],
-            'descripcion' => ['required', 'string', 'max:255'],
-            'categoria' => ['nullable', 'string', 'max:100'],
-            'ubicacion' => ['nullable', 'string', 'max:150'],
-            'estado' => ['required', 'in:bueno,regular,malo'],
-            'fecha_adquisicion' => ['nullable', 'date'],
-        ], [
-            'nombre.required' => 'El nombre del bien es obligatorio.',
-            'codigo.required' => 'El código del bien es obligatorio.',
-            'codigo.unique' => 'Ya existe un bien con este código.',
-            'codigo.max' => 'El código del bien no puede superar los 50 caracteres.',
+        $this->sanitizeBienInput($request);
 
-            'descripcion.required' => 'La descripción del bien es obligatoria.',
-            'descripcion.max' => 'La descripción no puede superar los 255 caracteres.',
+        $validated = $request->validate(
+            $this->bienValidationRules(),
+            $this->bienValidationMessages()
+        );
 
-            'categoria.max' => 'La categoría no puede superar los 100 caracteres.',
-
-            'ubicacion.max' => 'La ubicación no puede superar los 150 caracteres.',
-
-            'estado.required' => 'El estado del bien es obligatorio.',
-            'estado.in' => 'El estado seleccionado no es válido.',
-
-            'fecha_adquisicion.date' => 'La fecha de adquisición no tiene un formato válido.',
-        ]);
+        $this->validateTextQuality($validated);
+        $this->syncCategoryCatalog($validated['categoria'] ?? null);
 
         $bien = Bien::create($validated);
 
@@ -117,7 +115,73 @@ class BienController extends Controller
      */
     public function edit(Bien $bien): View
     {
-        return view('bienes.edit', compact('bien'));
+        $categoriasActivas = $this->activeCategoryNames();
+
+        return view('bienes.edit', compact('bien', 'categoriasActivas'));
+    }
+
+    /**
+     * Exporta reporte PDF general o filtrado por categoría.
+     */
+    public function exportPdf(Request $request)
+    {
+        $request->validate([
+            'categoria' => ['nullable', 'string', Rule::exists('categorias', 'nombre')],
+        ]);
+
+        $categoriaFiltro = $request->input('categoria');
+
+        $query = Bien::query()
+            ->select(['nombre', 'codigo', 'categoria', 'estado', 'ubicacion'])
+            ->latest('id');
+
+        if (is_string($categoriaFiltro) && trim($categoriaFiltro) !== '') {
+            $query->where('categoria', trim($categoriaFiltro));
+            $categoriaFiltro = trim($categoriaFiltro);
+        } else {
+            $categoriaFiltro = null;
+        }
+
+        $bienes = $query->get();
+
+        $resumenCategorias = Bien::query()
+            ->selectRaw("COALESCE(NULLIF(TRIM(categoria), ''), 'Sin categoría') as categoria_nombre, COUNT(*) as total")
+            ->when($categoriaFiltro, function ($q) use ($categoriaFiltro) {
+                $q->where('categoria', $categoriaFiltro);
+            })
+            ->groupBy('categoria_nombre')
+            ->orderBy('categoria_nombre')
+            ->get();
+
+        $titulo = $categoriaFiltro
+            ? 'Reporte de bienes por categoría'
+            : 'Reporte general de bienes';
+
+        $viewData = [
+            'titulo' => $titulo,
+            'fechaGeneracion' => now()->format('d/m/Y H:i'),
+            'filtroCategoria' => $categoriaFiltro,
+            'totalBienes' => $bienes->count(),
+            'resumenCategorias' => $resumenCategorias,
+            'bienes' => $bienes,
+        ];
+
+        $suffix = $categoriaFiltro
+            ? 'categoria-' . preg_replace('/[^A-Za-z0-9\-]+/', '-', mb_strtolower($categoriaFiltro, 'UTF-8'))
+            : 'general';
+
+        $pdfFacade = '\\Barryvdh\\DomPDF\\Facade\\Pdf';
+
+        if (class_exists($pdfFacade)) {
+            return $pdfFacade::loadView('bienes.reportes.pdf', $viewData)
+                ->setPaper('a4', 'portrait')
+                ->download('reporte-bienes-' . $suffix . '.pdf');
+        }
+
+        $html = view('bienes.reportes.pdf', $viewData)->render();
+
+        return response($html)
+            ->header('Content-Type', 'text/html; charset=UTF-8');
     }
 
     /**
@@ -125,32 +189,15 @@ class BienController extends Controller
      */
     public function update(Request $request, Bien $bien): RedirectResponse
     {
-        $validated = $request->validate([
-            'nombre' => ['required', 'string', 'max:150'],
-            'codigo' => ['required', 'string', 'max:50', 'unique:bienes,codigo,' . $bien->id],
-            'descripcion' => ['required', 'string', 'max:255'],
-            'categoria' => ['nullable', 'string', 'max:100'],
-            'ubicacion' => ['nullable', 'string', 'max:150'],
-            'estado' => ['required', 'in:bueno,regular,malo'],
-            'fecha_adquisicion' => ['nullable', 'date'],
-        ], [
-            'nombre.required' => 'El nombre del bien es obligatorio.',
-            'codigo.required' => 'El código del bien es obligatorio.',
-            'codigo.unique' => 'Ya existe un bien con este código.',
-            'codigo.max' => 'El código del bien no puede superar los 50 caracteres.',
+        $this->sanitizeBienInput($request);
 
-            'descripcion.required' => 'La descripción del bien es obligatoria.',
-            'descripcion.max' => 'La descripción no puede superar los 255 caracteres.',
+        $rules = $this->bienValidationRules();
+        $rules['codigo'] = ['required', 'string', 'min:3', 'max:20', 'regex:/^(?=.{3,20}$)(?=.*\d)(?!.*[-\/]{2})[A-Za-z0-9]+(?:[-\/][A-Za-z0-9]+)*$/', 'not_regex:/<[^>]*>/', 'unique:bienes,codigo,' . $bien->id];
 
-            'categoria.max' => 'La categoría no puede superar los 100 caracteres.',
+        $validated = $request->validate($rules, $this->bienValidationMessages());
 
-            'ubicacion.max' => 'La ubicación no puede superar los 150 caracteres.',
-
-            'estado.required' => 'El estado del bien es obligatorio.',
-            'estado.in' => 'El estado seleccionado no es válido.',
-
-            'fecha_adquisicion.date' => 'La fecha de adquisición no tiene un formato válido.',
-        ]);
+        $this->validateTextQuality($validated);
+        $this->syncCategoryCatalog($validated['categoria'] ?? null);
 
         $bien->update($validated);
 
@@ -183,6 +230,234 @@ class BienController extends Controller
         );
 
         return redirect()->route('bienes.index')->with('status', 'Bien eliminado correctamente.');
+    }
+
+    /**
+     * Normaliza entradas de texto para reducir ruido y prevenir payloads HTML.
+     */
+    private function sanitizeBienInput(Request $request): void
+    {
+        $nombre = is_string($request->input('nombre'))
+            ? $this->toTitleCase($this->normalizeSpaces(strip_tags($request->input('nombre'))))
+            : $request->input('nombre');
+
+        $codigo = is_string($request->input('codigo'))
+            ? $this->normalizeSpaces(strip_tags($request->input('codigo')))
+            : $request->input('codigo');
+
+        if (is_string($codigo) && preg_match('/^[\p{L}]+$/u', $codigo)) {
+            $codigo = mb_strtoupper($codigo, 'UTF-8');
+        }
+
+        $descripcion = is_string($request->input('descripcion'))
+            ? $this->capitalizeFirstLetter($this->normalizeSpaces(strip_tags($request->input('descripcion'))))
+            : $request->input('descripcion');
+
+        $categoria = is_string($request->input('categoria'))
+            ? $this->toTitleCase($this->normalizeSpaces(strip_tags($request->input('categoria'))))
+            : $request->input('categoria');
+
+        $ubicacion = is_string($request->input('ubicacion'))
+            ? $this->capitalizeFirstLetter($this->normalizeSpaces(strip_tags($request->input('ubicacion'))))
+            : $request->input('ubicacion');
+
+        $request->merge([
+            'nombre' => $nombre,
+            'codigo' => $codigo,
+            'descripcion' => $descripcion,
+            'categoria' => $categoria,
+            'ubicacion' => $ubicacion,
+        ]);
+    }
+
+    /**
+     * Normaliza múltiples espacios internos a uno y recorta extremos.
+     */
+    private function normalizeSpaces(string $value): string
+    {
+        return preg_replace('/\s+/u', ' ', trim($value)) ?? trim($value);
+    }
+
+    /**
+     * Convierte una cadena a formato título (iniciales en mayúscula).
+     */
+    private function toTitleCase(string $value): string
+    {
+        return mb_convert_case($value, MB_CASE_TITLE, 'UTF-8');
+    }
+
+    /**
+     * Convierte la primera letra a mayúscula manteniendo el resto del texto.
+     */
+    private function capitalizeFirstLetter(string $value): string
+    {
+        if ($value === '') {
+            return $value;
+        }
+
+        $first = mb_substr($value, 0, 1, 'UTF-8');
+        $rest = mb_substr($value, 1, null, 'UTF-8');
+
+        return mb_strtoupper($first, 'UTF-8') . $rest;
+    }
+
+    /**
+     * Reglas de validación robustas para bienes.
+     */
+    private function bienValidationRules(): array
+    {
+        return [
+            'nombre' => ['required', 'string', 'min:3', 'max:40', 'regex:/^(?=.{3,40}$)(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,;:()\-\/]+$/u', 'not_regex:/<[^>]*>/'],
+            'codigo' => ['required', 'string', 'min:3', 'max:20', 'regex:/^(?=.{3,20}$)(?=.*\d)(?!.*[-\/]{2})[A-Za-z0-9]+(?:[-\/][A-Za-z0-9]+)*$/', 'not_regex:/<[^>]*>/', 'unique:bienes,codigo'],
+            'descripcion' => ['required', 'string', 'min:10', 'max:70', 'regex:/^(?=.{10,70}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,;:()\-\/]+$/u', 'not_regex:/<[^>]*>/'],
+            'categoria' => ['required', 'string', 'min:3', 'max:30', 'regex:/^(?=.{3,30}$)(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .\-]+$/u', 'not_regex:/<[^>]*>/'],
+            'ubicacion' => ['nullable', 'string', 'min:3', 'max:50', 'regex:/^(?=.{3,50}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$/u', 'not_regex:/<[^>]*>/'],
+            'estado' => ['required', 'in:bueno,regular,malo,de_baja'],
+            'fecha_adquisicion' => ['nullable', 'date'],
+        ];
+    }
+
+    /**
+     * Mensajes de error amigables para formulario de bienes.
+     */
+    private function bienValidationMessages(): array
+    {
+        return [
+            'nombre.required' => 'El nombre del bien es obligatorio.',
+            'nombre.min' => 'El nombre debe tener al menos 3 caracteres.',
+            'nombre.max' => 'El nombre no puede superar los 40 caracteres.',
+            'nombre.regex' => 'El nombre debe estar bien formulado (letras y texto válido).',
+            'nombre.not_regex' => 'El nombre no puede contener etiquetas HTML o código.',
+
+            'codigo.required' => 'El código del bien es obligatorio.',
+            'codigo.min' => 'El código debe tener al menos 3 caracteres.',
+            'codigo.max' => 'El código no puede superar los 20 caracteres.',
+            'codigo.regex' => 'El código debe ser organizado y contener al menos un número (ej: BIEN-001 o INV/2026/01).',
+            'codigo.unique' => 'Ya existe un bien con este código.',
+            'codigo.not_regex' => 'El código no puede contener etiquetas HTML o código.',
+
+            'descripcion.null' => 'La descripción del bien es obligatoria.',
+            'descripcion.min' => 'La descripción debe tener al menos 5 caracteres.',
+            'descripcion.max' => 'La descripción no puede superar los 70 caracteres.',
+            'descripcion.regex' => 'La descripción contiene caracteres no permitidos.',
+            'descripcion.not_regex' => 'La descripción no puede contener etiquetas HTML o código.',
+
+            'categoria.required' => 'La categoría es obligatoria.',
+            'categoria.min' => 'La categoría debe tener al menos 3 caracteres.',
+            'categoria.max' => 'La categoría no puede superar los 30 caracteres.',
+            'categoria.regex' => 'La categoría debe estar bien escrita (solo texto válido).',
+            'categoria.not_regex' => 'La categoría no puede contener etiquetas HTML o código.',
+
+            'ubicacion.min' => 'La ubicación debe tener al menos 3 caracteres.',
+            'ubicacion.max' => 'La ubicación no puede superar los 50 caracteres.',
+            'ubicacion.regex' => 'La ubicación debe estar bien formulada (ej: Oficina 1, Depósito).',
+            'ubicacion.not_regex' => 'La ubicación no puede contener etiquetas HTML o código.',
+
+            'estado.required' => 'El estado del bien es obligatorio.',
+            'estado.in' => 'El estado seleccionado no es válido. Debe ser bueno, regular, malo o dado de baja.',
+
+            'fecha_adquisicion.date' => 'La fecha de adquisición no tiene un formato válido.',
+        ];
+    }
+
+    /**
+     * Validación heurística para bloquear entradas "a lo loco".
+     */
+    private function validateTextQuality(array $validated): void
+    {
+        $errors = [];
+
+        if (isset($validated['nombre']) && $this->looksLikeGibberish($validated['nombre'], 16, 4)) {
+            $errors['nombre'] = 'El nombre no parece adecuado para el bien. Evita texto aleatorio.';
+        }
+
+        if (!empty($validated['categoria']) && $this->looksLikeGibberish($validated['categoria'], 16, 3)) {
+            $errors['categoria'] = 'La categoría no parece estar bien formulada. Usa palabras claras.';
+        }
+
+        if (isset($validated['descripcion']) && $this->looksLikeGibberish($validated['descripcion'], 20, 6)) {
+            $errors['descripcion'] = 'La descripción parece texto aleatorio. Escribe una descripción coherente.';
+        }
+
+        if (!empty($validated['ubicacion']) && $this->looksLikeGibberish($validated['ubicacion'], 14, 4)) {
+            $errors['ubicacion'] = 'La ubicación no parece válida. Usa una ubicación bien formulada (ej: Oficina 2, Depósito A).';
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages($errors);
+        }
+    }
+
+    /**
+     * Detecta posibles cadenas sin sentido (heurística).
+     */
+    private function looksLikeGibberish(string $text, int $maxWordLength, int $maxConsonantCluster): bool
+    {
+        $clean = $this->normalizeSpaces($text);
+
+        if ($clean === '') {
+            return false;
+        }
+
+        if (preg_match('/(.)\1{3,}/u', $clean)) {
+            return true;
+        }
+
+        if (preg_match('/[bcdfghjklmnñpqrstvwxyz]{' . $maxConsonantCluster . ',}/iu', $clean)) {
+            return true;
+        }
+
+        $words = preg_split('/[\s,.;:()\-\/#]+/u', $clean, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        foreach ($words as $word) {
+            $len = mb_strlen($word, 'UTF-8');
+            if ($len > $maxWordLength) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Nombres de categorías activas para formularios/selectores.
+     */
+    private function activeCategoryNames(): Collection
+    {
+        return Categoria::query()
+            ->where('estado', 'activo')
+            ->orderBy('nombre')
+            ->pluck('nombre');
+    }
+
+    /**
+     * Resumen por categoría para visualización/soporte de reportes.
+     */
+    private function categorySummary(): Collection
+    {
+        return Bien::query()
+            ->selectRaw("COALESCE(NULLIF(TRIM(categoria), ''), 'Sin categoría') as categoria_nombre, COUNT(*) as total")
+            ->groupBy('categoria_nombre')
+            ->orderByDesc('total')
+            ->orderBy('categoria_nombre')
+            ->get();
+    }
+
+    /**
+     * Mantiene sincronizado el catálogo de categorías según datos guardados en bienes.
+     */
+    private function syncCategoryCatalog(?string $categoria): void
+    {
+        $nombre = is_string($categoria) ? trim($categoria) : '';
+
+        if ($nombre === '') {
+            return;
+        }
+
+        Categoria::query()->updateOrCreate(
+            ['nombre' => $nombre],
+            ['estado' => 'activo']
+        );
     }
 
 }
