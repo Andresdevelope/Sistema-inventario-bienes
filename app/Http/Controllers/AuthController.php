@@ -9,10 +9,41 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    /**
+     * Sanitiza cadenas de texto comunes de entrada.
+     */
+    protected function sanitizeText(?string $value, bool $collapseSpaces = true): string
+    {
+        $clean = strip_tags((string) $value);
+        $clean = preg_replace('/[\x00-\x1F\x7F]/u', '', $clean) ?? '';
+        if ($collapseSpaces) {
+            $clean = preg_replace('/\s+/u', ' ', $clean) ?? '';
+        }
+
+        return trim($clean);
+    }
+
+    /**
+     * Sanitiza nombre de usuario para login/registro.
+     */
+    protected function sanitizeUsername(?string $value): string
+    {
+        return $this->sanitizeText($value, true);
+    }
+
+    /**
+     * Sanitiza correo electrónico para login/registro.
+     */
+    protected function sanitizeEmail(?string $value): string
+    {
+        return mb_strtolower($this->sanitizeText($value, true));
+    }
+
     /**
      * Genera un CAPTCHA simple (suma) y lo guarda en sesión para el contexto dado.
      * Contextos soportados: 'login', 'recover1', 'recover2'.
@@ -64,36 +95,92 @@ class AuthController extends Controller
      */
     public function register(Request $request): RedirectResponse
     {
+        $request->merge([
+            'name' => $this->sanitizeUsername($request->input('name')),
+            'email' => $this->sanitizeEmail($request->input('email')),
+            'security_color_answer' => $this->sanitizeText($request->input('security_color_answer')),
+            'security_animal_answer' => $this->sanitizeText($request->input('security_animal_answer')),
+            'security_padre_answer' => $this->sanitizeText($request->input('security_padre_answer')),
+        ]);
+
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:users,name'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:16', 'confirmed'],
-            'security_color_answer' => ['required', 'string', 'max:255'],
-            'security_animal_answer' => ['required', 'string', 'max:255'],
-            'security_padre_answer' => ['required', 'string', 'max:255'],
+            'name' => [
+                'required',
+                'string',
+                'min:3',
+                'max:30',
+                'regex:/^(?=.{3,30}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9._\- ]+$/u',
+                'not_regex:/<[^>]*>/',
+                'unique:users,name',
+            ],
+            'email' => ['required', 'string', 'email', 'max:80', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:16', 'max:40', 'confirmed'],
+            'security_color_answer' => [
+                'required',
+                'string',
+                'min:2',
+                'max:40',
+                'regex:/^(?=.{2,40}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .,\-]+$/u',
+                'not_regex:/\d/',
+                'not_regex:/<[^>]*>/',
+            ],
+            'security_animal_answer' => [
+                'required',
+                'string',
+                'min:2',
+                'max:40',
+                'regex:/^(?=.{2,40}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .,\-]+$/u',
+                'not_regex:/\d/',
+                'not_regex:/<[^>]*>/',
+            ],
+            'security_padre_answer' => [
+                'required',
+                'string',
+                'min:2',
+                'max:40',
+                'regex:/^(?=.{2,40}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .,\-]+$/u',
+                'not_regex:/\d/',
+                'not_regex:/<[^>]*>/',
+            ],
         ], [
             'name.required' => 'El nombre de usuario es obligatorio.',
+            'name.min' => 'El nombre de usuario debe tener al menos 3 caracteres.',
             'name.unique' => 'El nombre de usuario ya está registrado.',
-            'name.max' => 'El nombre de usuario no puede superar los 255 caracteres.',
+            'name.max' => 'El nombre de usuario no puede superar los 30 caracteres.',
+            'name.regex' => 'El nombre de usuario debe contener letras y solo usar caracteres válidos.',
+            'name.not_regex' => 'El nombre de usuario no puede contener etiquetas HTML o código.',
 
             'email.required' => 'El correo electrónico es obligatorio.',
             'email.email' => 'El correo electrónico no tiene un formato válido.',
             'email.unique' => 'El correo electrónico ya está registrado.',
-            'email.max' => 'El correo electrónico no puede superar los 255 caracteres.',
+            'email.max' => 'El correo electrónico no puede superar los 80 caracteres.',
 
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos 16 caracteres.',
+            'password.max' => 'La contraseña no puede superar los 40 caracteres.',
             'password.confirmed' => 'La confirmación de la contraseña no coincide.',
 
             'security_color_answer.required' => 'La respuesta de color favorito es obligatoria.',
-            'security_color_answer.max' => 'La respuesta de color favorito no puede superar los 255 caracteres.',
+            'security_color_answer.min' => 'La respuesta de color favorito debe tener al menos 2 caracteres.',
+            'security_color_answer.max' => 'La respuesta de color favorito no puede superar los 40 caracteres.',
+            'security_color_answer.regex' => 'La respuesta de color favorito solo debe contener letras y texto válido.',
+            'security_color_answer.not_regex' => 'La respuesta de color favorito no debe contener números ni etiquetas HTML.',
 
             'security_animal_answer.required' => 'La respuesta de animal favorito es obligatoria.',
-            'security_animal_answer.max' => 'La respuesta de animal favorito no puede superar los 255 caracteres.',
+            'security_animal_answer.min' => 'La respuesta de animal favorito debe tener al menos 2 caracteres.',
+            'security_animal_answer.max' => 'La respuesta de animal favorito no puede superar los 40 caracteres.',
+            'security_animal_answer.regex' => 'La respuesta de animal favorito solo debe contener letras y texto válido.',
+            'security_animal_answer.not_regex' => 'La respuesta de animal favorito no debe contener números ni etiquetas HTML.',
 
             'security_padre_answer.required' => 'La respuesta del nombre de tu padre es obligatoria.',
-            'security_padre_answer.max' => 'La respuesta del nombre de tu padre no puede superar los 255 caracteres.',
+            'security_padre_answer.min' => 'La respuesta del nombre de tu padre debe tener al menos 2 caracteres.',
+            'security_padre_answer.max' => 'La respuesta del nombre de tu padre no puede superar los 40 caracteres.',
+            'security_padre_answer.regex' => 'La respuesta del nombre de tu padre solo debe contener letras y texto válido.',
+            'security_padre_answer.not_regex' => 'La respuesta del nombre de tu padre no debe contener números ni etiquetas HTML.',
         ]);
+
+        $this->ensureRegistrationTextQuality($validated);
+        $this->ensurePasswordQuality((string) ($validated['password'] ?? ''));
 
         // Si es el primer usuario del sistema, lo marcamos como administrador.
         // A partir del segundo, serán usuarios operadores (rol "user").
@@ -127,13 +214,21 @@ class AuthController extends Controller
      */
     public function login(Request $request): RedirectResponse
     {
+        $request->merge([
+            'name' => $this->sanitizeUsername($request->input('name')),
+        ]);
+
         $credentials = $request->validate([
             // Usamos "name" como nombre de usuario
-            'name' => ['required', 'string'],
-            'password' => ['required', 'string'],
+            'name' => ['required', 'string', 'min:3', 'max:30'],
+            'password' => ['required', 'string', 'min:16', 'max:40'],
         ], [
             'name.required' => 'El nombre de usuario es obligatorio.',
+            'name.min' => 'El nombre de usuario debe tener al menos 3 caracteres.',
+            'name.max' => 'El nombre de usuario no puede superar los 30 caracteres.',
             'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe tener al menos 16 caracteres.',
+            'password.max' => 'La contraseña no puede superar los 40 caracteres.',
         ]);
         // Buscar usuario por nombre de usuario
         $user = User::where('name', $credentials['name'])->first();
@@ -357,12 +452,15 @@ class AuthController extends Controller
         // Paso 3: cambio de contraseña
         if ($step === 3) {
             $validated = $request->validate([
-                'password' => ['required', 'string', 'min:16', 'confirmed'],
+                'password' => ['required', 'string', 'min:16', 'max:40', 'confirmed'],
             ], [
                 'password.required' => 'La nueva contraseña es obligatoria.',
                 'password.min' => 'La nueva contraseña debe tener al menos 16 caracteres.',
+                'password.max' => 'La nueva contraseña no puede superar los 40 caracteres.',
                 'password.confirmed' => 'La confirmación de la contraseña no coincide.',
             ]);
+
+            $this->ensurePasswordQuality((string) ($validated['password'] ?? ''));
 
             $userId = $request->session()->get('password_reset_user_id');
             if (! $userId) {
@@ -439,5 +537,120 @@ class AuthController extends Controller
             Log::error('reCAPTCHA verify exception: ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Reglas heurísticas para bloquear texto basura en registro.
+     */
+    protected function ensureRegistrationTextQuality(array $validated): void
+    {
+        $username = (string) ($validated['name'] ?? '');
+        if ($this->looksLikeGibberish($username, 18, 4) || preg_match('/^\d+$/u', $username)) {
+            throw ValidationException::withMessages([
+                'name' => 'El nombre de usuario no parece válido. Evita texto repetitivo o bloques numéricos.',
+            ]);
+        }
+
+        $email = (string) ($validated['email'] ?? '');
+        if ($this->hasSuspiciousEmailLocalPart($email)) {
+            throw ValidationException::withMessages([
+                'email' => 'El correo electrónico no parece válido. Usa un identificador real antes de @.',
+            ]);
+        }
+
+        foreach (['security_color_answer', 'security_animal_answer', 'security_padre_answer'] as $field) {
+            $value = (string) ($validated[$field] ?? '');
+
+            if (preg_match('/\d/u', $value)) {
+                throw ValidationException::withMessages([
+                    $field => 'Las respuestas de seguridad no deben contener números.',
+                ]);
+            }
+
+            if ($this->looksLikeGibberish($value, 18, 4)) {
+                throw ValidationException::withMessages([
+                    $field => 'La respuesta no parece válida. Evita texto aleatorio o repetitivo.',
+                ]);
+            }
+        }
+    }
+
+    protected function ensurePasswordQuality(string $password): void
+    {
+        $password = trim($password);
+
+        if ($password === '') {
+            return;
+        }
+
+        if (preg_match('/^\d+$/u', $password)) {
+            throw ValidationException::withMessages([
+                'password' => 'La contraseña no puede estar compuesta solo por números.',
+            ]);
+        }
+
+        if (preg_match('/^(.)\1{5,}$/u', $password)) {
+            throw ValidationException::withMessages([
+                'password' => 'La contraseña no puede ser una repetición del mismo carácter.',
+            ]);
+        }
+
+        if ($this->looksLikeGibberish($password, 30, 7)) {
+            throw ValidationException::withMessages([
+                'password' => 'La contraseña no parece segura. Evita texto aleatorio o secuencias repetitivas.',
+            ]);
+        }
+    }
+
+    protected function hasSuspiciousEmailLocalPart(string $email): bool
+    {
+        $email = trim($email);
+        $parts = explode('@', $email, 2);
+        $local = $parts[0] ?? '';
+
+        if ($local === '') {
+            return true;
+        }
+
+        if (preg_match('/^\d+$/u', $local)) {
+            return true;
+        }
+
+        if (preg_match('/^(.)\1{5,}$/u', $local)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function looksLikeGibberish(string $text, int $maxWordLength, int $maxConsonantCluster): bool
+    {
+        $clean = $this->sanitizeText($text, true);
+
+        if ($clean === '') {
+            return false;
+        }
+
+        if (preg_match('/(.)\1{3,}/u', $clean)) {
+            return true;
+        }
+
+        if (preg_match('/[bcdfghjklmnñpqrstvwxyz]{' . $maxConsonantCluster . ',}/iu', $clean)) {
+            return true;
+        }
+
+        if (preg_match('/[\p{L}\d]{25,}/u', $clean)) {
+            return true;
+        }
+
+        $words = preg_split('/[\s,.;:()\-\/#]+/u', $clean, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        foreach ($words as $word) {
+            if (mb_strlen($word, 'UTF-8') > $maxWordLength) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

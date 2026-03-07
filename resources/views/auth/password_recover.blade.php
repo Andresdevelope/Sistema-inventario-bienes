@@ -58,9 +58,17 @@
                 </div>
 
                 <div class="pt-2 flex items-center justify-between text-xs">
-                    <a href="{{ route('login') }}" class="text-slate-700 hover:text-slate-900 underline underline-offset-2">Volver al login</a>
+                    <a href="{{ route('login') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-4 py-2 font-semibold text-brand-700 shadow-inner shadow-brand-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-brand-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                        Volver al login
+                    </a>
                     <button type="submit"
-                        class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-slate-800 transition">
+                        class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-brand-900/30 transition duration-300 hover:-translate-y-0.5 hover:shadow-brand-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h18M6 12h12m-9 7.5h6" />
+                        </svg>
                         Continuar
                     </button>
                 </div>
@@ -102,22 +110,30 @@
                 </div>
 
                 <div class="pt-2 flex items-center justify-between text-xs">
-                    <a href="{{ route('login') }}" class="text-slate-700 hover:text-slate-900 underline underline-offset-2">Cancelar</a>
+                    <a href="{{ route('login') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-4 py-2 font-semibold text-brand-700 shadow-inner shadow-brand-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-brand-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                        Cancelar
+                    </a>
                     <button type="submit"
-                        class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-slate-800 transition">
+                        class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-brand-900/30 transition duration-300 hover:-translate-y-0.5 hover:shadow-brand-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5m-10.5 0L10.5 12 3 4.5" />
+                        </svg>
                         Verificar y continuar
                     </button>
                 </div>
             </form>
         @else
             {{-- Paso 3: nueva contraseña --}}
-            <form method="POST" action="{{ route('password.recover.handle') }}" class="space-y-4">
+            <form id="recover-reset-form" method="POST" action="{{ route('password.recover.handle') }}" class="space-y-4">
                 @csrf
                 <input type="hidden" name="step" value="3">
 
                 <div class="space-y-1 relative">
                     <label class="block text-xs font-medium text-slate-700" for="password">Nueva contraseña</label>
-                    <input id="password" name="password" type="password" required
+                    <input id="password" name="password" type="password" required minlength="16" maxlength="40" autocomplete="new-password"
                         class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600 pr-10">
                     <button type="button" onclick="togglePassword('password', this)" tabindex="-1"
                         class="absolute right-2 top-8 text-slate-500 hover:text-slate-700 focus:outline-none">
@@ -131,7 +147,7 @@
 
                 <div class="space-y-1 relative">
                     <label class="block text-xs font-medium text-slate-700" for="password_confirmation">Confirmar contraseña</label>
-                    <input id="password_confirmation" name="password_confirmation" type="password" required
+                    <input id="password_confirmation" name="password_confirmation" type="password" required minlength="16" maxlength="40" autocomplete="new-password"
                         class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600 pr-10">
                     <button type="button" onclick="togglePassword('password_confirmation', this)" tabindex="-1"
                         class="absolute right-2 top-8 text-slate-500 hover:text-slate-700 focus:outline-none">
@@ -142,10 +158,35 @@
                     </button>
                 </div>
 
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+                    <div class="flex items-center justify-between text-[11px]">
+                        <span class="font-semibold text-slate-700">Seguridad de contraseña</span>
+                        <span id="password-strength-label" class="font-semibold text-slate-500">—</span>
+                    </div>
+                    <div class="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                        <div id="password-strength-bar" class="h-full w-0 bg-slate-400 transition-all duration-300"></div>
+                    </div>
+                    <ul class="space-y-1 text-[11px] text-slate-600">
+                        <li id="pwd-check-length">• Entre 16 y 40 caracteres.</li>
+                        <li id="pwd-check-numeric">• No puede ser solo números.</li>
+                        <li id="pwd-check-repeat">• No puede repetir el mismo carácter muchas veces.</li>
+                        <li id="pwd-check-gibberish">• Evita texto aleatorio o secuencias débiles.</li>
+                        <li id="pwd-check-match">• Debe coincidir con la confirmación.</li>
+                    </ul>
+                </div>
+
                 <div class="pt-2 flex items-center justify-between text-xs">
-                    <a href="{{ route('login') }}" class="text-slate-700 hover:text-slate-900 underline underline-offset-2">Cancelar</a>
+                    <a href="{{ route('login') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-4 py-2 font-semibold text-brand-700 shadow-inner shadow-brand-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-brand-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                        Cancelar
+                    </a>
                     <button type="submit"
-                        class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-slate-800 transition">
+                        class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-brand-900/30 transition duration-300 hover:-translate-y-0.5 hover:shadow-brand-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17.25v1.5A2.25 2.25 0 0 1 12.75 21h-7.5A2.25 2.25 0 0 1 3 18.75v-7.5A2.25 2.25 0 0 1 5.25 9h1.5m4.5-6H18a3 3 0 0 1 3 3v6.75m-9-3 9-9" />
+                        </svg>
                         Guardar contraseña
                     </button>
                 </div>
@@ -169,6 +210,123 @@ function togglePassword(_, btn) {
         icon.innerHTML = `<path stroke-linecap='round' stroke-linejoin='round' d='M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z'/><path stroke-linecap='round' stroke-linejoin='round' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'/>`;
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('recover-reset-form');
+    if (!form) return;
+
+    const passwordInput = document.getElementById('password');
+    const passwordConfirmationInput = document.getElementById('password_confirmation');
+    const strengthBar = document.getElementById('password-strength-bar');
+    const strengthLabel = document.getElementById('password-strength-label');
+
+    const checks = {
+        length: document.getElementById('pwd-check-length'),
+        numeric: document.getElementById('pwd-check-numeric'),
+        repeat: document.getElementById('pwd-check-repeat'),
+        gibberish: document.getElementById('pwd-check-gibberish'),
+        match: document.getElementById('pwd-check-match'),
+    };
+
+    const looksLikeGibberish = (text, maxWordLength = 30, maxConsonantCluster = 7) => {
+        const clean = String(text ?? '').trim();
+        if (!clean) return false;
+
+        if (/(.)\1{3,}/u.test(clean)) return true;
+        if (new RegExp(`[bcdfghjklmnñpqrstvwxyz]{${maxConsonantCluster},}`, 'iu').test(clean)) return true;
+        if (/[\p{L}\d]{25,}/u.test(clean)) return true;
+
+        const words = clean.split(/[\s,.;:()\-/#]+/u).filter(Boolean);
+        return words.some(word => [...word].length > maxWordLength);
+    };
+
+    const paintCheck = (el, ok) => {
+        if (!el) return;
+        el.classList.toggle('text-emerald-700', !!ok);
+        el.classList.toggle('font-semibold', !!ok);
+        el.classList.toggle('text-slate-600', !ok);
+    };
+
+    const updateStrength = () => {
+        if (!passwordInput || !passwordConfirmationInput) return;
+
+        const pwd = String(passwordInput.value ?? '').trim();
+        const conf = String(passwordConfirmationInput.value ?? '').trim();
+        const hasPassword = pwd.length > 0;
+        const hasConfirmation = conf.length > 0;
+
+        const checksState = {
+            length: hasPassword && pwd.length >= 16 && pwd.length <= 40,
+            numeric: hasPassword && !/^\d+$/u.test(pwd),
+            repeat: hasPassword && !/^(.)\1{5,}$/u.test(pwd),
+            gibberish: hasPassword && !looksLikeGibberish(pwd, 30, 7),
+            match: hasPassword && hasConfirmation && conf === pwd,
+        };
+
+        paintCheck(checks.length, checksState.length);
+        paintCheck(checks.numeric, checksState.numeric);
+        paintCheck(checks.repeat, checksState.repeat);
+        paintCheck(checks.gibberish, checksState.gibberish);
+        paintCheck(checks.match, checksState.match);
+
+        const score = Object.values(checksState).filter(Boolean).length;
+
+        if (strengthBar && strengthLabel) {
+            const widths = ['0%', '20%', '40%', '60%', '80%', '100%'];
+            const colors = ['bg-slate-400', 'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-lime-500', 'bg-emerald-500'];
+            const labels = ['—', 'Muy débil', 'Débil', 'Media', 'Buena', 'Fuerte'];
+
+            const uiScore = hasPassword ? score : 0;
+
+            strengthBar.classList.remove('bg-slate-400', 'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-lime-500', 'bg-emerald-500');
+            strengthBar.classList.add(colors[uiScore]);
+            strengthBar.style.width = widths[uiScore];
+            strengthLabel.textContent = labels[uiScore];
+            strengthLabel.className = uiScore >= 4
+                ? 'font-semibold text-emerald-700'
+                : uiScore >= 3
+                    ? 'font-semibold text-amber-700'
+                    : uiScore === 0
+                        ? 'font-semibold text-slate-500'
+                        : 'font-semibold text-red-600';
+        }
+
+        passwordInput.setCustomValidity('');
+        passwordConfirmationInput.setCustomValidity('');
+
+        if (!hasPassword) {
+            return;
+        }
+
+        if (!checksState.length) {
+            passwordInput.setCustomValidity('La contraseña debe tener entre 16 y 40 caracteres.');
+        } else if (!checksState.numeric) {
+            passwordInput.setCustomValidity('La contraseña no puede estar compuesta solo por números.');
+        } else if (!checksState.repeat) {
+            passwordInput.setCustomValidity('La contraseña no puede ser una repetición del mismo carácter.');
+        } else if (!checksState.gibberish) {
+            passwordInput.setCustomValidity('La contraseña no parece segura. Evita texto aleatorio o secuencias repetitivas.');
+        }
+
+        if (conf && !checksState.match) {
+            passwordConfirmationInput.setCustomValidity('La confirmación de la contraseña no coincide.');
+        }
+    };
+
+    passwordInput?.addEventListener('input', updateStrength);
+    passwordConfirmationInput?.addEventListener('input', updateStrength);
+
+    form.addEventListener('submit', (event) => {
+        updateStrength();
+        const firstInvalid = [passwordInput, passwordConfirmationInput].find((input) => input && !input.checkValidity());
+        if (firstInvalid) {
+            event.preventDefault();
+            firstInvalid.reportValidity();
+        }
+    });
+
+    updateStrength();
+});
 </script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 @endpush

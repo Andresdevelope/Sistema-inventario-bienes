@@ -41,8 +41,16 @@
         </div>
 
         @if (session('status'))
-            <div class="mb-4 text-xs text-emerald-300 border border-emerald-500/40 bg-emerald-900/30 rounded px-3 py-2">
-                {{ session('status') }}
+            <div class="mb-4 flex items-start gap-3 rounded-2xl border border-brand-300/60 bg-gradient-to-r from-brand-50 to-accent-50 px-3.5 py-3 text-xs text-slate-700 shadow-sm" role="status" aria-live="polite">
+                <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5">
+                        <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-2.544a.75.75 0 00-1.06 1.06l1.5 1.5a.75.75 0 001.06 0l3-3a.75.75 0 10-1.06-1.06l-2.47 2.47-0.97-.97z" clip-rule="evenodd" />
+                    </svg>
+                </span>
+                <div class="leading-relaxed">
+                    <p class="font-semibold text-brand-700">Operación completada</p>
+                    <p>{{ session('status') }}</p>
+                </div>
             </div>
         @endif
 
@@ -71,14 +79,14 @@
 
             <div class="space-y-1">
                 <label class="block text-xs font-medium text-slate-700" for="name">Nombre de usuario</label>
-                <input id="name" name="name" type="text" value="{{ old('name') }}" required
+                <input id="name" name="name" type="text" value="{{ old('name') }}" required minlength="3" maxlength="30" autocomplete="username" data-sanitize="username"
                     class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
             </div>
 
 
             <div class="space-y-1 relative">
                 <label class="block text-xs font-medium text-slate-700" for="password">Contraseña</label>
-                <input id="password" name="password" type="password" required
+                <input id="password" name="password" type="password" required minlength="16" maxlength="40" autocomplete="current-password"
                     class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600 pr-10">
                 <button type="button" onclick="togglePassword('password', this)" tabindex="-1"
                     class="absolute right-2 top-8 text-slate-500 hover:text-slate-700 focus:outline-none">
@@ -344,6 +352,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const recaptchaEnabled = @json((bool) config('services.recaptcha.enabled'));
     let recaptchaScriptRequested = false;
 
+    const sanitizeText = (value, collapseSpaces = true) => {
+        let clean = String(value ?? '').replace(/<[^>]*>/g, '');
+        clean = clean.replace(/[\u0000-\u001F\u007F]/g, '');
+        if (collapseSpaces) {
+            clean = clean.replace(/\s+/g, ' ');
+        }
+        return clean.trim();
+    };
+
     const requestRecaptchaScript = () => {
         if (!recaptchaEnabled || recaptchaScriptRequested || typeof grecaptcha !== 'undefined') {
             return;
@@ -359,6 +376,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!form || !overlay) return;
 
+    const usernameInput = form.querySelector('input[data-sanitize="username"]');
+    usernameInput?.addEventListener('input', () => {
+        usernameInput.value = sanitizeText(usernameInput.value, true);
+    });
+
     if (recaptchaEnabled) {
         // Difiere carga de tercero para priorizar LCP/FCP del login.
         window.addEventListener('load', () => {
@@ -370,6 +392,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     form.addEventListener('submit', (event) => {
+        if (usernameInput) {
+            usernameInput.value = sanitizeText(usernameInput.value, true);
+        }
+
         if (recaptchaClientError) {
             recaptchaClientError.classList.add('hidden');
         }
