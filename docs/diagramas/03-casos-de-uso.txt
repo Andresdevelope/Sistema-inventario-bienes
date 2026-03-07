@@ -1,5 +1,6 @@
 CASOS DE USO
 Sistema: Inventario de Bienes
+Fecha de actualización: 2026-03-07
 
 Formato sugerido por caso de uso:
 --------------------------------------------------
@@ -70,8 +71,10 @@ Reglas de negocio:
    1. El usuario accede al módulo "Bienes".
    2. El usuario selecciona la opción "Registrar bien".
    3. El usuario llena el formulario con: nombre, codigo, descripcion,
-      categoria, ubicacion, estado, fecha_adquisicion, valor (opcional).
+      categoria, ubicacion, estado y fecha_adquisicion.
+   3.1. La ubicación se selecciona desde el catálogo de ubicaciones activas.
    4. El sistema valida que el campo codigo no esté repetido.
+   4.1. El sistema valida que la ubicación seleccionada exista y esté activa.
    5. El sistema guarda el registro en la tabla BIENES.
    6. El sistema registra en BITÁCORA la creación del bien:
       - modulo = "bienes"
@@ -84,13 +87,22 @@ Reglas de negocio:
    1. El usuario busca un bien existente.
    2. El usuario selecciona la opción "Editar".
    3. El usuario modifica la información necesaria.
+      3.1. Si el bien tiene una ubicación inactiva, el sistema la muestra para conservar el histórico.
    4. El sistema valida los datos (incluyendo unicidad de codigo si se cambia).
    5. El sistema actualiza el registro en BIENES.
    6. El sistema registra en BITÁCORA la actualización del bien.
 
+      Flujo principal (consulta y filtrado de bienes):
+      1. El usuario accede al listado de bienes.
+      2. Define filtros por búsqueda general, estado, categoría y ubicación.
+      3. El sistema consulta BIENES y, cuando corresponde, UBICACIONES.
+      4. El sistema muestra solo los bienes que cumplen los filtros seleccionados.
+
    Flujos alternos:
    A1. Código de bien duplicado:
        - El sistema no guarda los cambios y muestra mensaje de error.
+      A2. Ubicación inactiva o inexistente en alta/edición:
+         - El sistema no guarda los cambios y muestra mensaje de error.
 
    Postcondiciones:
    - El inventario de bienes queda actualizado.
@@ -98,6 +110,43 @@ Reglas de negocio:
    Reglas de negocio:
    - El codigo del bien es único.
    - Solo usuarios con rol adecuado pueden crear/editar bienes.
+      - La ubicación del bien debe pertenecer al catálogo de ubicaciones activas.
+      - El filtrado por ubicación debe operar sobre el catálogo y no sobre texto libre.
+
+   --------------------------------------------------
+
+   2.1. CU-02A Gestionar catálogos de bienes
+      Actores:
+      - Administrador
+      - Operador con permisos de catálogo
+
+      Descripción breve:
+      - Permite administrar categorías y ubicaciones desde un módulo unificado de catálogos.
+
+      Precondiciones:
+      - El usuario tiene sesión iniciada.
+      - El usuario posee permisos de visualización o gestión para categorías/ubicaciones.
+
+      Flujo principal:
+      1. El usuario accede al módulo "Gestión de catálogos".
+      2. El sistema muestra pestañas para categorías y ubicaciones según los permisos del usuario.
+      3. El usuario crea, renombra, activa o inactiva un registro de catálogo.
+      4. El sistema valida unicidad, formato y normalización del nombre.
+      5. El sistema guarda los cambios y mantiene consistencia con los bienes relacionados.
+
+      Flujos alternos:
+      A1. Nombre duplicado:
+         - El sistema rechaza la operación y muestra un error de unicidad.
+      A2. Ubicación en uso:
+         - Se recomienda inactivar en lugar de eliminar para preservar histórico.
+
+      Postcondiciones:
+      - Los catálogos de categorías y ubicaciones quedan actualizados.
+
+      Reglas de negocio:
+      - Las categorías y ubicaciones deben tener nombres normalizados.
+      - Las ubicaciones inactivas no se ofrecen en nuevos registros de bienes.
+      - La gestión de ubicaciones requiere permisos ubicaciones.ver / ubicaciones.gestionar.
 
 --------------------------------------------------
 

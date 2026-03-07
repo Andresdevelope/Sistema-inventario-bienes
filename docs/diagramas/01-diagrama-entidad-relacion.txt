@@ -1,10 +1,11 @@
 DIAGRAMA ENTIDAD-RELACIÓN (DER)
 Sistema: Inventario de Bienes
-Fecha de actualización: 2026-03-06
+Fecha de actualización: 2026-03-07
 
 1. Objetivo del diagrama
    - Representar entidades, atributos y relaciones según el estado actual
-     del sistema (incluyendo permisos por usuario y catálogo de categorías).
+     del sistema, incluyendo permisos por usuario, catálogo de categorías
+     y nuevo catálogo de ubicaciones.
 
 2. Entidades
 
@@ -30,8 +31,9 @@ Fecha de actualización: 2026-03-06
         - nombre
         - codigo (ÚNICO)
         - descripcion
-        - categoria (texto, nullable)
-        - ubicacion (nullable)
+        - categoria (texto, nullable; compatibilidad actual)
+        - ubicacion (texto, nullable; compatibilidad/histórico)
+        - ubicacion_id (FK a ubicaciones.id, nullable)
         - estado (bueno/regular/malo/de_baja)
         - fecha_adquisicion (nullable)
         - created_at
@@ -45,7 +47,14 @@ Fecha de actualización: 2026-03-06
         - created_at
         - updated_at
 
-   2.4. Entidad BITÁCORA (bitacoras)
+   2.4. Entidad UBICACION (ubicaciones)
+        - id (PK)
+        - nombre (ÚNICO, longitud 50)
+        - estado (activo/inactivo)
+        - created_at
+        - updated_at
+
+   2.5. Entidad BITÁCORA (bitacoras)
         - id (PK)
         - user_id (FK a users, nullable)
         - modulo
@@ -56,12 +65,12 @@ Fecha de actualización: 2026-03-06
         - created_at
         - updated_at
 
-   2.5. Entidad PASSWORD_RESET_TOKEN (password_reset_tokens)
+   2.6. Entidad PASSWORD_RESET_TOKEN (password_reset_tokens)
         - email (PK)
         - token
         - created_at
 
-   2.6. Entidad SESSION (sessions)
+   2.7. Entidad SESSION (sessions)
         - id (PK)
         - user_id (nullable)
         - ip_address
@@ -83,11 +92,17 @@ Fecha de actualización: 2026-03-06
    3.3. BIEN — CATEGORIA
         - Tipo: N a 1 (lógica de catálogo)
         - bienes.categoria guarda el nombre; categorias.nombre mantiene catálogo.
-        - No hay FK estricta entre ambas tablas (sincronización por aplicación).
+        - No hay FK estricta todavía entre ambas tablas; la sincronización es por aplicación.
 
-   3.4. BITÁCORA — ENTIDAD AFECTADA (relación polimórfica lógica)
+   3.4. BIEN — UBICACION
+        - Tipo: N a 1 (física + lógica de catálogo)
+        - bienes.ubicacion_id referencia a ubicaciones.id.
+        - bienes.ubicacion conserva el nombre normalizado como respaldo histórico/compatibilidad.
+        - Si se elimina una ubicación, bienes.ubicacion_id queda en NULL (nullOnDelete).
+
+   3.5. BITÁCORA — ENTIDAD AFECTADA (relación polimórfica lógica)
         - bitacoras.modulo + bitacoras.entidad_id identifican el registro afectado
-          (ej.: bienes, usuarios, auth, categorías).
+          (ej.: bienes, usuarios, auth, categorías, ubicaciones).
 
 4. Notas de diseño vigentes
 
@@ -95,6 +110,11 @@ Fecha de actualización: 2026-03-06
      * Se almacenan en users.permissions (JSON).
      * Si role=admin, el sistema concede acceso completo automáticamente.
      * Si role=user, se aplican permisos seleccionados en creación/edición.
+     * Permisos actuales: bienes.*, categorias.*, ubicaciones.*, reportes.exportar.
+
+   - Catálogos de inventario:
+     * Categorías y ubicaciones se administran desde un módulo unificado de catálogos.
+     * Las ubicaciones pueden activarse/inactivarse; se prioriza inactivar antes que eliminar.
 
    - Reglas de seguridad de cuentas:
      * Bloqueo tras intentos fallidos (login_attempts, locked_until).

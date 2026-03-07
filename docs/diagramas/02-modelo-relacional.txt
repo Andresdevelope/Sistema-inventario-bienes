@@ -1,6 +1,6 @@
 MODELO RELACIONAL
 Sistema: Inventario de Bienes
-Fecha de actualización: 2026-03-06
+Fecha de actualización: 2026-03-07
 
 1. Tabla USERS (usuarios)
   USERS (
@@ -29,10 +29,18 @@ Fecha de actualización: 2026-03-06
      descripcion       VARCHAR(255)      NOT NULL,
      categoria         VARCHAR(100)      NULL,
      ubicacion         VARCHAR(255)      NULL,
+    ubicacion_id      BIGINT UNSIGNED   NULL,
      estado            VARCHAR(255)      NOT NULL DEFAULT 'bueno',
      fecha_adquisicion DATE              NULL,
      created_at        TIMESTAMP         NULL,
-     updated_at        TIMESTAMP         NULL
+    updated_at        TIMESTAMP         NULL,
+
+    CONSTRAINT fk_bienes_ubicacion
+      FOREIGN KEY (ubicacion_id)
+      REFERENCES ubicaciones(id)
+      ON DELETE SET NULL,
+
+    INDEX bienes_ubicacion_id_idx (ubicacion_id)
   );
   Nota: el campo valor fue eliminado (migración 2026_02_28_000001).
 
@@ -63,14 +71,23 @@ Fecha de actualización: 2026-03-06
         ON DELETE SET NULL
   );
 
-5. Tabla PASSWORD_RESET_TOKENS
+5. Tabla UBICACIONES
+  UBICACIONES (
+     id          BIGINT UNSIGNED PK AUTO_INCREMENT,
+     nombre      VARCHAR(50)       NOT NULL UNIQUE,
+     estado      VARCHAR(10)       NOT NULL DEFAULT 'activo',
+     created_at  TIMESTAMP         NULL,
+     updated_at  TIMESTAMP         NULL
+  );
+
+6. Tabla PASSWORD_RESET_TOKENS
   PASSWORD_RESET_TOKENS (
      email      VARCHAR(255) PRIMARY KEY,
      token      VARCHAR(255) NOT NULL,
      created_at TIMESTAMP    NULL
   );
 
-6. Tabla SESSIONS
+7. Tabla SESSIONS
   SESSIONS (
      id            VARCHAR(255)    PRIMARY KEY,
      user_id       BIGINT UNSIGNED NULL,
@@ -83,7 +100,7 @@ Fecha de actualización: 2026-03-06
      INDEX sessions_last_activity_index (last_activity)
   );
 
-7. Restricciones funcionales (lógica de aplicación)
+8. Restricciones funcionales (lógica de aplicación)
 
   - Roles:
     * admin = control total.
@@ -96,13 +113,34 @@ Fecha de actualización: 2026-03-06
     * bienes.eliminar
     * categorias.ver
     * categorias.gestionar
+    * ubicaciones.ver
+    * ubicaciones.gestionar
     * reportes.exportar
+
+  - Catálogos:
+    * categorias.nombre se sincroniza desde la gestión de catálogos y desde bienes.
+    * ubicaciones.nombre se normaliza y se enlaza con bienes mediante ubicacion_id.
+    * Las ubicaciones inactivas no deben aparecer en formularios nuevos, pero sí pueden permanecer asociadas a bienes existentes.
 
   - Reglas de seguridad sobre administradores:
     * Solo admin puede asignar rol admin.
     * No se permite eliminar o degradar al último admin.
 
-8. Reglas de validación actuales en alta de usuario (backend/frontend)
+9. Reglas de validación y consulta actuales relevantes
+
+  - Bienes:
+    * nombre: min 3 / max 40
+    * codigo: min 3 / max 20 / único
+    * descripcion: min 10 / max 70
+    * categoria: min 3 / max 30
+    * ubicacion_id: debe existir en ubicaciones activas
+    * estado: bueno / regular / malo / de_baja
+
+  - Filtrado en listado de bienes:
+    * búsqueda general por nombre, código, descripción, categoría y ubicación
+    * filtro por estado
+    * filtro por categoría
+    * filtro por ubicación
 
   - name: min 3 / max 30
   - email: max 60

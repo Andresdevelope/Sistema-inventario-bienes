@@ -46,18 +46,35 @@ Route::middleware('auth')->group(function () {
             ->middleware('permission:reportes.exportar')
             ->name('bienes.reportes.pdf');
 
-        Route::get('/bienes/categorias', [CategoriaController::class, 'index'])
-            ->middleware('permission:categorias.ver')
+        Route::get('/bienes/categorias', function () {
+            return redirect()->route('bienes.categorias.index', request()->query());
+        })->name('bienes.categorias.legacy');
+
+        Route::get('/bienes/gestion', function () {
+            return redirect()->route('bienes.categorias.index', request()->query());
+        })->name('bienes.gestion.legacy');
+
+        Route::get('/bienes/catalogo', [CategoriaController::class, 'index'])
+            ->middleware('permission:categorias.ver,ubicaciones.ver')
             ->name('bienes.categorias.index');
-        Route::post('/bienes/categorias', [CategoriaController::class, 'store'])
+        Route::post('/bienes/catalogo/categorias', [CategoriaController::class, 'store'])
             ->middleware('permission:categorias.gestionar')
             ->name('bienes.categorias.store');
-        Route::put('/bienes/categorias/{categoria}', [CategoriaController::class, 'update'])
+        Route::put('/bienes/catalogo/categorias/{categoria}', [CategoriaController::class, 'update'])
             ->middleware('permission:categorias.gestionar')
             ->name('bienes.categorias.update');
-        Route::patch('/bienes/categorias/{categoria}/toggle', [CategoriaController::class, 'toggle'])
+        Route::patch('/bienes/catalogo/categorias/{categoria}/toggle', [CategoriaController::class, 'toggle'])
             ->middleware('permission:categorias.gestionar')
             ->name('bienes.categorias.toggle');
+        Route::post('/bienes/catalogo/ubicaciones', [CategoriaController::class, 'storeUbicacion'])
+            ->middleware('permission:ubicaciones.gestionar')
+            ->name('bienes.ubicaciones.store');
+        Route::put('/bienes/catalogo/ubicaciones/{ubicacion}', [CategoriaController::class, 'updateUbicacion'])
+            ->middleware('permission:ubicaciones.gestionar')
+            ->name('bienes.ubicaciones.update');
+        Route::patch('/bienes/catalogo/ubicaciones/{ubicacion}/toggle', [CategoriaController::class, 'toggleUbicacion'])
+            ->middleware('permission:ubicaciones.gestionar')
+            ->name('bienes.ubicaciones.toggle');
 
         Route::get('/bienes/crear', [BienController::class, 'create'])
             ->middleware('permission:bienes.crear')

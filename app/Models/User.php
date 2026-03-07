@@ -28,6 +28,8 @@ class User extends Authenticatable
         'bienes.eliminar',
         'categorias.ver',
         'categorias.gestionar',
+        'ubicaciones.ver',
+        'ubicaciones.gestionar',
         'reportes.exportar',
     ];
 
@@ -41,6 +43,8 @@ class User extends Authenticatable
         'bienes.eliminar',
         'categorias.ver',
         'categorias.gestionar',
+        'ubicaciones.ver',
+        'ubicaciones.gestionar',
         'reportes.exportar',
     ];
 

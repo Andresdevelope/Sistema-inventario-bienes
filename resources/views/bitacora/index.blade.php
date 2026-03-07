@@ -45,9 +45,24 @@
                 </div>
 
                 <div class="flex items-center gap-2 ml-auto">
-                    <button type="button" id="toggle-advanced" class="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 cursor-pointer">Avanzado</button>
-                    <button type="submit" class="inline-flex items-center justify-center rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-slate-800 cursor-pointer">Filtrar</button>
-                    <a href="{{ route('bitacora.index') }}" class="inline-flex items-center justify-center rounded-md bg-white border  border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow hover:bg-slate-100 cursor-pointer">Limpiar</a>
+                    <button type="button" id="toggle-advanced" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5m-13.5 5.25h10.5m-7.5 5.25h4.5" />
+                        </svg>
+                        Avanzado
+                    </button>
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-brand-900/30 transition hover:-translate-y-0.5 hover:shadow-brand-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h18M6 12h12m-9 7.5h6" />
+                        </svg>
+                        Filtrar
+                    </button>
+                    <a href="{{ route('bitacora.index') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-[12px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99m0 0H16.96" />
+                        </svg>
+                        Limpiar
+                    </a>
                 </div>
             </div>
 
@@ -123,9 +138,9 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/70 shadow-xl">
+        <div class="overflow-x-auto rounded-2xl border border-slate-800/90 bg-slate-900/75 shadow-xl ring-1 ring-slate-700/40">
             <table class="w-full table-auto text-sm">
-                <thead class="bg-slate-900/80 border-b border-slate-800 text-slate-400">
+                <thead class="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 text-slate-300 sticky top-0 z-10">
                     <tr>
                         <th class="px-4 py-2.5 text-left font-medium">Fecha y hora</th>
                         <th class="px-4 py-2.5 text-left font-medium">Usuario</th>
@@ -137,7 +152,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-800/80">
                     @forelse ($registros as $registro)
-                        <tr class="hover:bg-slate-900/80">
+                        <tr class="odd:bg-slate-900/30 even:bg-slate-900/55 hover:bg-slate-800/80 transition-colors duration-200">
                             <td class="px-4 py-2.5 align-middle text-slate-100">
                                 {{ $registro->created_at?->format('d/m/Y H:i') ?? '—' }}
                             </td>
@@ -161,7 +176,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-4 text-center text-slate-500 text-sm">Aún no hay registros en la bitácora.</td>
+                            <td colspan="6" class="px-4 py-6 text-center text-slate-400 text-sm">Aún no hay registros en la bitácora.</td>
                         </tr>
                     @endforelse
                 </tbody>

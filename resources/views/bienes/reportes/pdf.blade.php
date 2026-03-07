@@ -15,9 +15,13 @@
         .meta { color: #475569; margin-bottom: 16px; }
         .resume { margin-bottom: 14px; }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
-        th { background: #e2e8f0; }
+        th, td { border: 1px solid #cbd5e1; padding: 7px 9px; text-align: left; }
+        th { background: #0f172a; color: #f8fafc; font-weight: 700; }
+        tbody tr:nth-child(odd) { background: #f8fafc; }
+        tbody tr:nth-child(even) { background: #eef2ff; }
+        tbody tr td { color: #1e293b; }
         .text-right { text-align: right; }
+        .empty { text-align: center; color: #475569; font-style: italic; }
     </style>
 </head>
 <body>
@@ -73,7 +77,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="2">No hay datos para mostrar.</td>
+                    <td colspan="2" class="empty">No hay datos para mostrar.</td>
                 </tr>
             @endforelse
         </tbody>
@@ -99,11 +103,11 @@
                     <td>{{ $bien->codigo }}</td>
                     <td>{{ $bien->categoria ?? 'Sin categoría' }}</td>
                     <td>{{ $estadoLabel }}</td>
-                    <td>{{ $bien->ubicacion ?? '—' }}</td>
+                    <td>{{ $bien->ubicacion_nombre ?? '—' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5">No hay bienes para exportar.</td>
+                    <td colspan="5" class="empty">No hay bienes para exportar.</td>
                 </tr>
             @endforelse
         </tbody>

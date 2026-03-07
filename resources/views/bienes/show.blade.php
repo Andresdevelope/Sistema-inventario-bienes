@@ -45,7 +45,7 @@
                 </div>
                 <div class="space-y-1">
                     <p class="text-[11px] font-medium text-slate-700">Ubicación</p>
-                    <p class="text-sm">{{ $bien->ubicacion ?? '—' }}</p>
+                    <p class="text-sm">{{ $bien->ubicacion_nombre ?? '—' }}</p>
                 </div>
 
                 <div class="space-y-1">

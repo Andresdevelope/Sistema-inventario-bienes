@@ -318,6 +318,8 @@
                                 'bienes.eliminar' => 'Eliminar bienes',
                                 'categorias.ver' => 'Ver categorías',
                                 'categorias.gestionar' => 'Gestionar categorías',
+                                'ubicaciones.ver' => 'Ver ubicaciones',
+                                'ubicaciones.gestionar' => 'Gestionar ubicaciones',
                                 'reportes.exportar' => 'Exportar reportes',
                             ];
                         @endphp

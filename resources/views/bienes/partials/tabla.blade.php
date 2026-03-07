@@ -1,13 +1,15 @@
-<div class="space-y-3">
-    <div class="md:hidden space-y-2">
+<div class="space-y-4">
+    <div class="md:hidden space-y-3">
         @forelse ($bienes as $bien)
             @php($estado = strtolower(trim((string) $bien->estado)))
             @php($estadoLabel = $estado === 'de_baja' ? 'Dado de baja' : ucfirst($estado))
-            <article class="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 shadow" data-bien-nombre="{{ $bien->nombre }}">
+            <article class="rounded-2xl border border-slate-800/80 bg-gradient-to-br from-slate-900/95 to-slate-800/90 p-3.5 shadow-lg shadow-slate-950/40 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl" data-bien-nombre="{{ $bien->nombre }}">
                 <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold text-slate-100 truncate" title="{{ $bien->nombre }}">{{ \Illuminate\Support\Str::limit($bien->nombre, 24, '...') }}</p>
-                        <p class="text-[11px] text-slate-400 truncate" title="{{ $bien->codigo }}">Código: {{ \Illuminate\Support\Str::limit($bien->codigo, 18, '...') }}</p>
+                        <p class="text-sm font-semibold text-white truncate" title="{{ $bien->nombre }}">{{ \Illuminate\Support\Str::limit($bien->nombre, 24, '...') }}</p>
+                        <p class="mt-0.5 inline-flex items-center rounded-full border border-slate-700 bg-slate-900/70 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-slate-300 truncate" title="{{ $bien->codigo }}">
+                            {{ \Illuminate\Support\Str::limit($bien->codigo, 20, '...') }}
+                        </p>
                     </div>
                     <span @class([
                         'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap',
@@ -22,12 +24,20 @@
                 <p class="mt-2 text-[12px] text-slate-300 truncate" title="{{ $bien->descripcion }}">
                     {{ \Illuminate\Support\Str::limit($bien->descripcion, 48, '...') }}
                 </p>
-                <p class="mt-1 text-[11px] text-slate-400 truncate" title="{{ $bien->categoria ?? '—' }}">Categoría: {{ \Illuminate\Support\Str::limit($bien->categoria ?? '—', 20, '...') }}</p>
-                <p class="text-[11px] text-slate-400 truncate" title="{{ $bien->ubicacion ?? '—' }}">Ubicación: {{ \Illuminate\Support\Str::limit($bien->ubicacion ?? '—', 20, '...') }}</p>
+                <div class="mt-2 grid grid-cols-2 gap-2">
+                    <p class="inline-flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-900/50 px-2 py-1 text-[11px] text-slate-300 truncate" title="{{ $bien->categoria ?? '—' }}">
+                        <span class="text-slate-400">Cat.</span>
+                        <span class="truncate">{{ \Illuminate\Support\Str::limit($bien->categoria ?? '—', 14, '...') }}</span>
+                    </p>
+                    <p class="inline-flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-900/50 px-2 py-1 text-[11px] text-slate-300 truncate" title="{{ $bien->ubicacion_nombre ?? '—' }}">
+                        <span class="text-slate-400">Ub.</span>
+                        <span class="truncate">{{ \Illuminate\Support\Str::limit($bien->ubicacion_nombre ?? '—', 14, '...') }}</span>
+                    </p>
+                </div>
 
                 <div class="mt-3 inline-flex items-center gap-1.5 w-full justify-end">
-                    <a href="{{ route('bienes.show', $bien) }}" class="inline-flex items-center gap-1 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-2.5 py-1 text-[11px] font-semibold text-brand-700 shadow-inner shadow-brand-200/60">Ver</a>
-                    <a href="{{ route('bienes.edit', $bien) }}" class="inline-flex items-center gap-1 rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-2.5 py-1 text-[11px] font-semibold text-white shadow">Editar</a>
+                    <a href="{{ route('bienes.show', $bien) }}" class="inline-flex items-center gap-1 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-2.5 py-1 text-[11px] font-semibold text-brand-700 shadow-inner shadow-brand-200/60 transition hover:-translate-y-0.5">Ver</a>
+                    <a href="{{ route('bienes.edit', $bien) }}" class="inline-flex items-center gap-1 rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-2.5 py-1 text-[11px] font-semibold text-white shadow transition hover:-translate-y-0.5">Editar</a>
                     <form method="POST" action="{{ route('bienes.destroy', $bien) }}" class="inline" data-delete-form>
                         @csrf
                         @method('DELETE')
@@ -36,14 +46,14 @@
                 </div>
             </article>
         @empty
-            <div class="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-4 text-center text-slate-500 text-sm">No hay bienes registrados.</div>
+            <div class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/60 px-4 py-5 text-center text-slate-400 text-sm">No hay bienes registrados.</div>
         @endforelse
     </div>
 
-    <div class="hidden md:block overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 shadow-xl">
+    <div class="hidden md:block overflow-hidden rounded-2xl border border-slate-800/90 bg-slate-900/75 shadow-xl ring-1 ring-slate-700/40">
     <table class="w-full table-fixed text-sm">
         <caption class="sr-only">Listado de bienes registrados con nombre, código, descripción, categoría, ubicación, estado y acciones.</caption>
-        <thead class="bg-slate-900/80 border-b border-slate-800 text-slate-400">
+        <thead class="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 text-slate-300 sticky top-0 z-10">
             <tr>
                 <th scope="col" class="px-4 py-2.5 text-left font-medium w-[14%]">Nombre</th>
                 <th scope="col" class="px-4 py-2.5 text-left font-medium w-[10%]">Código</th>
@@ -56,12 +66,12 @@
         </thead>
         <tbody class="divide-y divide-slate-800/80">
             @forelse ($bienes as $bien)
-                <tr class="hover:bg-slate-900/80" data-bien-nombre="{{ $bien->nombre }}">
+                <tr class="odd:bg-slate-900/30 even:bg-slate-900/55 hover:bg-slate-800/80 transition-colors duration-200" data-bien-nombre="{{ $bien->nombre }}">
                     <td class="px-4 py-2.5 align-middle text-slate-100">
                         <span class="block w-full truncate" title="{{ $bien->nombre }}">{{ \Illuminate\Support\Str::limit($bien->nombre, 18, '...') }}</span>
                     </td>
                     <td class="px-4 py-2.5 align-middle text-slate-100">
-                        <span class="block w-full truncate" title="{{ $bien->codigo }}">{{ \Illuminate\Support\Str::limit($bien->codigo, 12, '...') }}</span>
+                        <span class="inline-flex max-w-full items-center rounded-full border border-slate-700 bg-slate-950/70 px-2 py-0.5 text-[11px] font-semibold text-slate-200 truncate" title="{{ $bien->codigo }}">{{ \Illuminate\Support\Str::limit($bien->codigo, 12, '...') }}</span>
                     </td>
                     <td class="px-4 py-2.5 align-middle text-slate-300">
                         <span class="block w-full truncate" title="{{ $bien->descripcion }}">{{ \Illuminate\Support\Str::limit($bien->descripcion, 24, '...') }}</span>
@@ -70,7 +80,7 @@
                         <span class="block w-full truncate" title="{{ $bien->categoria ?? '—' }}">{{ \Illuminate\Support\Str::limit($bien->categoria ?? '—', 14, '...') }}</span>
                     </td>
                     <td class="px-4 py-2.5 align-middle text-slate-400 hidden md:table-cell">
-                        <span class="block w-full truncate" title="{{ $bien->ubicacion ?? '—' }}">{{ \Illuminate\Support\Str::limit($bien->ubicacion ?? '—', 14, '...') }}</span>
+                        <span class="block w-full truncate" title="{{ $bien->ubicacion_nombre ?? '—' }}">{{ \Illuminate\Support\Str::limit($bien->ubicacion_nombre ?? '—', 14, '...') }}</span>
                     </td>
                     <td class="px-4 py-2.5 align-middle">
                         @php($estado = strtolower(trim((string) $bien->estado)))
@@ -116,7 +126,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="px-4 py-4 text-center text-slate-500 text-sm">No hay bienes registrados.</td>
+                    <td colspan="7" class="px-4 py-6 text-center text-slate-400 text-sm">No hay bienes registrados.</td>
                 </tr>
             @endforelse
         </tbody>

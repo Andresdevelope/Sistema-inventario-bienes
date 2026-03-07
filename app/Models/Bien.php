@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Modelo Eloquent que representa un bien del inventario institucional.
@@ -27,6 +28,7 @@ class Bien extends Model
         'descripcion',
         'categoria',
         'ubicacion',
+        'ubicacion_id',
         'estado',
         'fecha_adquisicion',
     ];
@@ -37,4 +39,26 @@ class Bien extends Model
     protected $casts = [
         'fecha_adquisicion' => 'date',
     ];
+
+    public function ubicacionCatalogo(): BelongsTo
+    {
+        return $this->belongsTo(Ubicacion::class, 'ubicacion_id');
+    }
+
+    public function getUbicacionNombreAttribute(): ?string
+    {
+        $nombreCatalogo = $this->relationLoaded('ubicacionCatalogo')
+            ? $this->ubicacionCatalogo?->nombre
+            : $this->ubicacionCatalogo()->value('nombre');
+
+        if (is_string($nombreCatalogo) && trim($nombreCatalogo) !== '') {
+            return $nombreCatalogo;
+        }
+
+        $ubicacion = $this->attributes['ubicacion'] ?? null;
+
+        return is_string($ubicacion) && trim($ubicacion) !== ''
+            ? $ubicacion
+            : null;
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bien;
 use App\Models\Bitacora;
 use App\Models\Categoria;
+use App\Models\Ubicacion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -38,14 +39,22 @@ class BienController extends Controller
         $search = trim((string) $request->input('search', ''));
         $estado = trim((string) $request->input('estado', ''));
         $categoria = trim((string) $request->input('categoria', ''));
+        $ubicacionId = $request->input('ubicacion');
         $estadosDisponibles = ['bueno', 'regular', 'malo', 'de_baja'];
+
+        if (is_string($ubicacionId)) {
+            $ubicacionId = trim($ubicacionId);
+        }
+
+        $ubicacionId = is_numeric($ubicacionId) ? (int) $ubicacionId : null;
 
         if (!in_array($estado, $estadosDisponibles, true)) {
             $estado = '';
         }
 
         $query = Bien::query()
-            ->select(['id', 'nombre', 'codigo', 'descripcion', 'categoria', 'ubicacion', 'estado'])
+            ->with('ubicacionCatalogo:id,nombre,estado')
+            ->select(['id', 'nombre', 'codigo', 'descripcion', 'categoria', 'ubicacion', 'ubicacion_id', 'estado'])
             ->latest('id');
 
         // Filtro por búsqueda general (nombre, código, descripción, categoría, ubicación)
@@ -55,7 +64,10 @@ class BienController extends Controller
                   ->orWhere('codigo', 'like', "%$search%")
                   ->orWhere('descripcion', 'like', "%$search%")
                   ->orWhere('categoria', 'like', "%$search%")
-                  ->orWhere('ubicacion', 'like', "%$search%");
+                  ->orWhere('ubicacion', 'like', "%$search%")
+                  ->orWhereHas('ubicacionCatalogo', function ($ubicacionQuery) use ($search) {
+                      $ubicacionQuery->where('nombre', 'like', "%$search%");
+                  });
             });
         }
 
@@ -69,6 +81,11 @@ class BienController extends Controller
             $query->where('categoria', $categoria);
         }
 
+        // Filtro por ubicación
+        if ($ubicacionId !== null && $ubicacionId > 0) {
+            $query->where('ubicacion_id', $ubicacionId);
+        }
+
         $bienes = $query->paginate($perPage)->withQueryString();
 
         if ($request->ajax()) {
@@ -76,15 +93,17 @@ class BienController extends Controller
         }
 
         $categoriasActivas = $this->activeCategoryNames();
+        $ubicacionesActivas = $this->activeLocationOptions($ubicacionId);
         $resumenCategorias = $this->categorySummary();
         $filtros = [
             'search' => $search,
             'estado' => $estado,
             'categoria' => $categoria,
+            'ubicacion' => $ubicacionId,
             'per_page' => $perPage,
         ];
 
-        return view('bienes.index', compact('bienes', 'categoriasActivas', 'resumenCategorias', 'filtros', 'estadosDisponibles', 'allowedPerPage'));
+        return view('bienes.index', compact('bienes', 'categoriasActivas', 'ubicacionesActivas', 'resumenCategorias', 'filtros', 'estadosDisponibles', 'allowedPerPage'));
     }
 
     /**
@@ -93,8 +112,9 @@ class BienController extends Controller
     public function create(): View
     {
         $categoriasActivas = $this->activeCategoryNames();
+        $ubicacionesActivas = $this->activeLocationOptions();
 
-        return view('bienes.create', compact('categoriasActivas'));
+        return view('bienes.create', compact('categoriasActivas', 'ubicacionesActivas'));
     }
 
     /**
@@ -111,6 +131,7 @@ class BienController extends Controller
 
         $this->validateTextQuality($validated);
         $this->syncCategoryCatalog($validated['categoria'] ?? null);
+        $validated = $this->resolveLocationPayload($validated);
 
         $bien = Bien::create($validated);
 
@@ -129,6 +150,8 @@ class BienController extends Controller
      */
     public function show(Bien $bien): View
     {
+        $bien->load('ubicacionCatalogo:id,nombre,estado');
+
         return view('bienes.show', compact('bien'));
     }
 
@@ -138,8 +161,9 @@ class BienController extends Controller
     public function edit(Bien $bien): View
     {
         $categoriasActivas = $this->activeCategoryNames();
+        $ubicacionesActivas = $this->activeLocationOptions($bien->ubicacion_id);
 
-        return view('bienes.edit', compact('bien', 'categoriasActivas'));
+        return view('bienes.edit', compact('bien', 'categoriasActivas', 'ubicacionesActivas'));
     }
 
     /**
@@ -154,7 +178,8 @@ class BienController extends Controller
         $categoriaFiltro = $request->input('categoria');
 
         $query = Bien::query()
-            ->select(['nombre', 'codigo', 'categoria', 'estado', 'ubicacion'])
+            ->with('ubicacionCatalogo:id,nombre')
+            ->select(['id', 'nombre', 'codigo', 'categoria', 'estado', 'ubicacion', 'ubicacion_id'])
             ->latest('id');
 
         if (is_string($categoriaFiltro) && trim($categoriaFiltro) !== '') {
@@ -220,6 +245,7 @@ class BienController extends Controller
 
         $this->validateTextQuality($validated);
         $this->syncCategoryCatalog($validated['categoria'] ?? null);
+        $validated = $this->resolveLocationPayload($validated);
 
         $bien->update($validated);
 
@@ -283,12 +309,20 @@ class BienController extends Controller
             ? $this->capitalizeFirstLetter($this->normalizeSpaces(strip_tags($request->input('ubicacion'))))
             : $request->input('ubicacion');
 
+        $ubicacionId = $request->input('ubicacion_id');
+
+        if (is_string($ubicacionId)) {
+            $ubicacionId = trim($ubicacionId);
+            $ubicacionId = $ubicacionId === '' ? null : $ubicacionId;
+        }
+
         $request->merge([
             'nombre' => $nombre,
             'codigo' => $codigo,
             'descripcion' => $descripcion,
             'categoria' => $categoria,
             'ubicacion' => $ubicacion,
+            'ubicacion_id' => $ubicacionId,
         ]);
     }
 
@@ -333,6 +367,7 @@ class BienController extends Controller
             'codigo' => ['required', 'string', 'min:3', 'max:20', 'regex:/^(?=.{3,20}$)(?=.*\d)(?!.*[-\/]{2})[A-Za-z0-9]+(?:[-\/][A-Za-z0-9]+)*$/', 'not_regex:/<[^>]*>/', 'unique:bienes,codigo'],
             'descripcion' => ['required', 'string', 'min:10', 'max:70', 'regex:/^(?=.{10,70}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,;:()\-\/]+$/u', 'not_regex:/<[^>]*>/'],
             'categoria' => ['required', 'string', 'min:3', 'max:30', 'regex:/^(?=.{3,30}$)(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .\-]+$/u', 'not_regex:/<[^>]*>/'],
+            'ubicacion_id' => ['nullable', 'integer', Rule::exists('ubicaciones', 'id')->where(fn ($query) => $query->where('estado', 'activo'))],
             'ubicacion' => ['nullable', 'string', 'min:3', 'max:50', 'regex:/^(?=.{3,50}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$/u', 'not_regex:/<[^>]*>/'],
             'estado' => ['required', 'in:bueno,regular,malo,de_baja'],
             'fecha_adquisicion' => ['nullable', 'date'],
@@ -369,6 +404,9 @@ class BienController extends Controller
             'categoria.max' => 'La categoría no puede superar los 30 caracteres.',
             'categoria.regex' => 'La categoría debe estar bien escrita (solo texto válido).',
             'categoria.not_regex' => 'La categoría no puede contener etiquetas HTML o código.',
+
+            'ubicacion_id.integer' => 'La ubicación seleccionada no es válida.',
+            'ubicacion_id.exists' => 'La ubicación seleccionada no está disponible en el catálogo activo.',
 
             'ubicacion.min' => 'La ubicación debe tener al menos 3 caracteres.',
             'ubicacion.max' => 'La ubicación no puede superar los 50 caracteres.',
@@ -453,6 +491,24 @@ class BienController extends Controller
     }
 
     /**
+     * Ubicaciones activas para formularios/selectores.
+     */
+    private function activeLocationOptions(?int $selectedId = null): Collection
+    {
+        return Ubicacion::query()
+            ->select(['id', 'nombre', 'estado'])
+            ->where(function ($query) use ($selectedId) {
+                $query->where('estado', 'activo');
+
+                if ($selectedId !== null) {
+                    $query->orWhere('id', $selectedId);
+                }
+            })
+            ->orderBy('nombre')
+            ->get();
+    }
+
+    /**
      * Resumen por categoría para visualización/soporte de reportes.
      */
     private function categorySummary(): Collection
@@ -477,6 +533,62 @@ class BienController extends Controller
         }
 
         Categoria::query()->updateOrCreate(
+            ['nombre' => $nombre],
+            ['estado' => 'activo']
+        );
+    }
+
+    /**
+     * Mantiene sincronizado el catálogo de ubicaciones y alinea el payload con ubicacion_id.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function resolveLocationPayload(array $validated): array
+    {
+        $ubicacionId = isset($validated['ubicacion_id']) && $validated['ubicacion_id'] !== null
+            ? (int) $validated['ubicacion_id']
+            : null;
+
+        if ($ubicacionId) {
+            $ubicacion = Ubicacion::query()->find($ubicacionId);
+
+            if ($ubicacion) {
+                $validated['ubicacion_id'] = $ubicacion->id;
+                $validated['ubicacion'] = $ubicacion->nombre;
+
+                return $validated;
+            }
+        }
+
+        $nombreLegacy = is_string($validated['ubicacion'] ?? null)
+            ? trim($validated['ubicacion'])
+            : '';
+
+        if ($nombreLegacy === '') {
+            $validated['ubicacion_id'] = null;
+            $validated['ubicacion'] = null;
+
+            return $validated;
+        }
+
+        $ubicacion = $this->syncLocationCatalog($nombreLegacy);
+
+        $validated['ubicacion_id'] = $ubicacion?->id;
+        $validated['ubicacion'] = $ubicacion?->nombre;
+
+        return $validated;
+    }
+
+    private function syncLocationCatalog(?string $ubicacion): ?Ubicacion
+    {
+        $nombre = is_string($ubicacion) ? trim($ubicacion) : '';
+
+        if ($nombre === '') {
+            return null;
+        }
+
+        return Ubicacion::query()->updateOrCreate(
             ['nombre' => $nombre],
             ['estado' => 'activo']
         );

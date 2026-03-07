@@ -16,9 +16,9 @@
             </button>
         </div>
 
-        <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/70 shadow-xl">
+        <div class="overflow-x-auto rounded-2xl border border-slate-800/90 bg-slate-900/75 shadow-xl ring-1 ring-slate-700/40">
             <table class="w-full table-auto text-sm">
-                <thead class="bg-slate-900/80 border-b border-slate-800 text-slate-400">
+                <thead class="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 text-slate-300 sticky top-0 z-10">
                     <tr>
                         <th class="px-4 py-2.5 text-left font-medium">ID</th>
                         <th class="px-4 py-2.5 text-left font-medium">Nombre</th>
@@ -30,8 +30,10 @@
                 </thead>
                 <tbody class="divide-y divide-slate-800/80">
                     @forelse ($users as $user)
-                        <tr class="hover:bg-slate-900/80">
-                            <td class="px-4 py-2.5 align-middle text-slate-400">{{ $user->id }}</td>
+                        <tr class="odd:bg-slate-900/30 even:bg-slate-900/55 hover:bg-slate-800/80 transition-colors duration-200">
+                            <td class="px-4 py-2.5 align-middle text-slate-300">
+                                <span class="inline-flex items-center rounded-full border border-slate-700 bg-slate-950/70 px-2 py-0.5 text-[11px] font-semibold text-slate-200">#{{ $user->id }}</span>
+                            </td>
                             <td class="px-4 py-2.5 align-middle text-slate-100">{{ $user->name }}</td>
                             <td class="px-4 py-2.5 align-middle text-slate-300">{{ $user->email }}</td>
                             <td class="px-4 py-2.5 align-middle">
@@ -85,7 +87,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-4 text-center text-slate-500 text-sm">No hay usuarios registrados.</td>
+                            <td colspan="6" class="px-4 py-6 text-center text-slate-400 text-sm">No hay usuarios registrados.</td>
                         </tr>
                     @endforelse
                 </tbody>

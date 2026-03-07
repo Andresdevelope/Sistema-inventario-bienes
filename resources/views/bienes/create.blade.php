@@ -7,7 +7,7 @@
                 <h1 class="text-3xl font-bold tracking-tight mb-1">Registrar nuevo bien</h1>
                 <p class="text-xs text-slate-600">Completa los siguientes campos para agregar un bien al inventario.</p>
                 <a href="{{ route('bienes.categorias.index') }}" class="mt-3 inline-flex items-center gap-2 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-3 py-1.5 text-[11px] font-semibold text-brand-700 shadow-inner shadow-brand-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-brand-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
-                    Gestionar categorías
+                    Gestionar catálogos
                 </a>
             </div>
 
@@ -72,13 +72,16 @@
 
                     <div class="space-y-1 md:col-span-1">
                         <label class="block text-xs font-medium text-slate-700" for="ubicacion">Ubicación</label>
-                        <input id="ubicacion" name="ubicacion" type="text" value="{{ old('ubicacion') }}"
-                            minlength="3" maxlength="50"
-                            pattern="^(?=.{3,50}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$"
-                            aria-describedby="ubicacion-help"
-                            class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600"
-                            placeholder="Ej: Oficina 1, Depósito">
-                        <p id="ubicacion-help" class="text-[11px] text-slate-500">Opcional. Ejemplos: Oficina 1, Depósito A, Laboratorio 2.</p>
+                        <select id="ubicacion" name="ubicacion_id" aria-describedby="ubicacion-help"
+                            class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
+                            <option value="">Seleccione una ubicación</option>
+                            @foreach(($ubicacionesActivas ?? collect()) as $ubicacion)
+                                <option value="{{ $ubicacion->id }}" {{ (string) old('ubicacion_id') === (string) $ubicacion->id ? 'selected' : '' }}>
+                                    {{ $ubicacion->nombre }}{{ $ubicacion->estado !== 'activo' ? ' (inactiva)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p id="ubicacion-help" class="text-[11px] text-slate-500">Opcional. Selecciona una ubicación registrada en el catálogo.</p>
                     </div>
 
                     <div class="space-y-1 md:col-span-1">

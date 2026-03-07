@@ -1,6 +1,6 @@
 DIAGRAMA DE FLUJO DE DATOS (DFD)
 Sistema: Inventario de Bienes
-Fecha de actualización: 2026-03-06
+Fecha de actualización: 2026-03-07
 
 1. Nivel 0 (Contexto)
 
@@ -16,13 +16,14 @@ Fecha de actualización: 2026-03-06
    - D1: BD_Usuarios (users)
    - D2: BD_Bienes (bienes)
    - D3: BD_Categorías (categorias)
-   - D4: BD_Bitácora (bitacoras)
-   - D5: BD_Sesiones (sessions)
+   - D4: BD_Ubicaciones (ubicaciones)
+   - D5: BD_Bitácora (bitacoras)
+   - D6: BD_Sesiones (sessions)
 
    Flujos principales:
    - E1: Credenciales y token reCAPTCHA -> P0
    - S1: Resultado de autenticación -> Usuario
-   - E2: Solicitudes bienes/categorías/reportes -> P0
+   - E2: Solicitudes bienes/catálogos/reportes -> P0
    - S2: Respuestas de inventario -> Usuario
    - E3: Solicitudes gestión de usuarios/permisos (solo admin) -> P0
    - S3: Respuesta gestión de usuarios/permisos -> Usuario admin
@@ -43,17 +44,25 @@ Fecha de actualización: 2026-03-06
        - Escribe D4 (eventos login/logout/bloqueo)
        - Escribe D5 (sesiones)
 
-   P2: Gestión de bienes y categorías
+      P2: Gestión de bienes y catálogos
        Entradas:
-       - Alta/edición/baja/consulta de bienes
-       - Gestión de categorías
+         - Alta/edición/baja/consulta de bienes
+         - Gestión de categorías
+         - Gestión de ubicaciones
+         - Filtros por categoría y ubicación
        Salidas:
        - Confirmación de operación
        - Listados y reportes
        Acceso a datos:
        - Lee/escribe D2 (bienes)
        - Lee/escribe D3 (categorías)
-       - Escribe D4 (traza de acciones)
+         - Lee/escribe D4 (ubicaciones)
+         - Escribe D5 (traza de acciones)
+
+         Subflujos relevantes:
+         - P2.1 Registro/edición de bienes con selección de ubicación activa.
+         - P2.2 Consulta filtrada por búsqueda general, estado, categoría y ubicación.
+         - P2.3 Administración de catálogos (categorías y ubicaciones).
 
    P3: Gestión de usuarios y permisos
        Entradas:
@@ -63,7 +72,7 @@ Fecha de actualización: 2026-03-06
        - Confirmación/errores de validación
        Acceso a datos:
        - Lee/escribe D1 (incluye users.permissions)
-       - Escribe D4 (acciones sobre usuarios)
+      - Escribe D5 (acciones sobre usuarios)
        Reglas clave:
        - Solo admin asigna rol admin.
        - No se elimina/degrada el último admin.
@@ -74,7 +83,7 @@ Fecha de actualización: 2026-03-06
        Salidas:
        - Listado de eventos
        Acceso a datos:
-       - Lee D4
+      - Lee D5
 
 3. Flujo específico nuevo: alta de usuario con permisos
 
@@ -89,10 +98,19 @@ Fecha de actualización: 2026-03-06
    5) Si role=user, guarda permisos seleccionados en users.permissions.
    6) Registra evento en bitácora y retorna respuesta al admin.
 
-4. Notas para diagrama gráfico
+4. Flujo específico nuevo: filtrado de bienes por ubicación
 
-   - Mostrar P3 con una subcaja de "Control de permisos".
-   - Agregar D3 (categorías) y D1.permissions como dato explícito.
+   1) El usuario abre el módulo de bienes.
+   2) El sistema consulta categorías activas y ubicaciones activas para poblar filtros.
+   3) El usuario selecciona una ubicación específica y opcionalmente otros filtros.
+   4) El sistema consulta BIENES y relaciona UBICACIONES mediante ubicacion_id.
+   5) El sistema devuelve únicamente los bienes asociados a la ubicación seleccionada.
+   6) El usuario puede limpiar filtros y volver al listado general.
+
+5. Notas para diagrama gráfico
+
+   - Mostrar P2 con dos subcajas: "Catálogos" y "Filtros de consulta".
+   - Agregar D4 (ubicaciones) y D1.permissions como datos explícitos.
    - Indicar controles transversales:
      * auth + role middleware
      * permission middleware
