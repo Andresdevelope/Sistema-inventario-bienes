@@ -40,8 +40,8 @@
             ? 'Nombre único, entre 3 y 30 caracteres'
             : 'Nombre único, entre 3 y 50 caracteres';
         $nombrePattern = $esTabCategorias
-            ? '^(?=.{3,30}$)(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .\-]+$'
-            : '^(?=.{3,50}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$';
+            ? '^(?=.{3,30}$)(?!(?:.*\d){4,})(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .\-]+$'
+            : '^(?=.{3,50}$)(?!(?:.*\d){4,})(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$';
         $descripcion = $esTabCategorias
             ? 'Administra las categorías para mantener el inventario y reportes más consistentes.'
             : 'Administra las ubicaciones para normalizar la ubicación física de los bienes.';
@@ -145,6 +145,7 @@
                 <div class="md:hidden space-y-2">
                     @forelse($categorias as $categoria)
                         @php($estado = strtolower(trim((string) $categoria->estado)))
+                        @php($bienesCategoria = (int) ($usoCategorias[$categoria->nombre] ?? 0))
                         <article class="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 shadow">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="min-w-0">
@@ -164,7 +165,7 @@
                                         @csrf
                                         @method('PUT')
                                         <input type="text" name="nombre" value="{{ $categoria->nombre }}" required minlength="3" maxlength="30"
-                                            pattern="^(?=.{3,30}$)(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .\-]+$"
+                                            pattern="^(?=.{3,30}$)(?!(?:.*\d){4,})(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .\-]+$"
                                             class="rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-400">
                                         <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-3 py-1.5 text-[11px] font-semibold text-white shadow cursor-pointer">Renombrar</button>
                                     </form>
@@ -174,6 +175,18 @@
                                         @method('PATCH')
                                         <button type="submit" class="inline-flex items-center gap-1 rounded-2xl border border-slate-500/60 bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-100 cursor-pointer">
                                             {{ $categoria->estado === 'activo' ? 'Inactivar' : 'Activar' }}
+                                        </button>
+                                    </form>
+
+                                    <form method="POST" action="{{ route('bienes.categorias.destroy', $categoria) }}" class="flex justify-end js-delete-form">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button"
+                                            class="inline-flex items-center gap-1 rounded-2xl border border-red-400/60 bg-red-500/15 px-2.5 py-1 text-[11px] font-semibold text-red-200 transition hover:bg-red-500/25 cursor-pointer js-delete-trigger"
+                                            data-item-type="categoría"
+                                            data-item-name="{{ $categoria->nombre }}"
+                                            data-can-delete="{{ $bienesCategoria === 0 ? '1' : '0' }}">
+                                            Eliminar
                                         </button>
                                     </form>
                                 </div>
@@ -198,6 +211,7 @@
                         <tbody class="divide-y divide-slate-800/80">
                             @forelse($categorias as $categoria)
                                 @php($estado = strtolower(trim((string) $categoria->estado)))
+                                @php($bienesCategoria = (int) ($usoCategorias[$categoria->nombre] ?? 0))
                                 <tr class="odd:bg-slate-900/30 even:bg-slate-900/55 hover:bg-slate-800/80 transition-colors duration-200">
                                     <td class="px-4 py-2.5 align-middle text-slate-100">
                                         <span class="block w-full truncate" title="{{ $categoria->nombre }}">{{ $categoria->nombre }}</span>
@@ -219,7 +233,7 @@
                                                     @csrf
                                                     @method('PUT')
                                                     <input type="text" name="nombre" value="{{ $categoria->nombre }}" required minlength="3" maxlength="30"
-                                                        pattern="^(?=.{3,30}$)(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .\-]+$"
+                                                        pattern="^(?=.{3,30}$)(?!(?:.*\d){4,})(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .\-]+$"
                                                         class="w-44 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-400">
                                                     <button type="submit" class="inline-flex items-center rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-2.5 py-1 text-[11px] font-semibold text-white shadow-lg shadow-brand-900/20 transition duration-300 hover:-translate-y-0.5 cursor-pointer">Renombrar</button>
                                                 </form>
@@ -229,6 +243,18 @@
                                                     @method('PATCH')
                                                     <button type="submit" class="inline-flex items-center rounded-2xl border border-slate-500/60 bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-100 transition duration-300 hover:-translate-y-0.5 hover:bg-slate-700 cursor-pointer">
                                                         {{ $categoria->estado === 'activo' ? 'Inactivar' : 'Activar' }}
+                                                    </button>
+                                                </form>
+
+                                                <form method="POST" action="{{ route('bienes.categorias.destroy', $categoria) }}" class="inline js-delete-form">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="button"
+                                                        class="inline-flex items-center rounded-2xl border border-red-400/60 bg-red-500/15 px-2.5 py-1 text-[11px] font-semibold text-red-200 transition duration-300 hover:-translate-y-0.5 hover:bg-red-500/25 cursor-pointer js-delete-trigger"
+                                                        data-item-type="categoría"
+                                                        data-item-name="{{ $categoria->nombre }}"
+                                                        data-can-delete="{{ $bienesCategoria === 0 ? '1' : '0' }}">
+                                                        Eliminar
                                                     </button>
                                                 </form>
                                             </div>
@@ -257,6 +283,7 @@
                 <div class="md:hidden space-y-2">
                     @forelse($ubicaciones as $ubicacion)
                         @php($estado = strtolower(trim((string) $ubicacion->estado)))
+                        @php($bienesUbicacion = (int) ($usoUbicaciones[$ubicacion->id] ?? 0))
                         <article class="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 shadow">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="min-w-0">
@@ -276,7 +303,7 @@
                                         @csrf
                                         @method('PUT')
                                         <input type="text" name="nombre" value="{{ $ubicacion->nombre }}" required minlength="3" maxlength="50"
-                                            pattern="^(?=.{3,50}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$"
+                                            pattern="^(?=.{3,50}$)(?!(?:.*\d){4,})(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$"
                                             class="rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-400">
                                         <button type="submit" class="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-3 py-1.5 text-[11px] font-semibold text-white shadow cursor-pointer">Renombrar</button>
                                     </form>
@@ -286,6 +313,18 @@
                                         @method('PATCH')
                                         <button type="submit" class="inline-flex items-center gap-1 rounded-2xl border border-slate-500/60 bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-100 cursor-pointer">
                                             {{ $ubicacion->estado === 'activo' ? 'Inactivar' : 'Activar' }}
+                                        </button>
+                                    </form>
+
+                                    <form method="POST" action="{{ route('bienes.ubicaciones.destroy', $ubicacion) }}" class="flex justify-end js-delete-form">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button"
+                                            class="inline-flex items-center gap-1 rounded-2xl border border-red-400/60 bg-red-500/15 px-2.5 py-1 text-[11px] font-semibold text-red-200 transition hover:bg-red-500/25 cursor-pointer js-delete-trigger"
+                                            data-item-type="ubicación"
+                                            data-item-name="{{ $ubicacion->nombre }}"
+                                            data-can-delete="{{ $bienesUbicacion === 0 ? '1' : '0' }}">
+                                            Eliminar
                                         </button>
                                     </form>
                                 </div>
@@ -310,6 +349,7 @@
                         <tbody class="divide-y divide-slate-800/80">
                             @forelse($ubicaciones as $ubicacion)
                                 @php($estado = strtolower(trim((string) $ubicacion->estado)))
+                                @php($bienesUbicacion = (int) ($usoUbicaciones[$ubicacion->id] ?? 0))
                                 <tr class="odd:bg-slate-900/30 even:bg-slate-900/55 hover:bg-slate-800/80 transition-colors duration-200">
                                     <td class="px-4 py-2.5 align-middle text-slate-100">
                                         <span class="block w-full truncate" title="{{ $ubicacion->nombre }}">{{ $ubicacion->nombre }}</span>
@@ -331,7 +371,7 @@
                                                     @csrf
                                                     @method('PUT')
                                                     <input type="text" name="nombre" value="{{ $ubicacion->nombre }}" required minlength="3" maxlength="50"
-                                                        pattern="^(?=.{3,50}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$"
+                                                        pattern="^(?=.{3,50}$)(?!(?:.*\d){4,})(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$"
                                                         class="w-44 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-400">
                                                     <button type="submit" class="inline-flex items-center rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-2.5 py-1 text-[11px] font-semibold text-white shadow-lg shadow-brand-900/20 transition duration-300 hover:-translate-y-0.5 cursor-pointer">Renombrar</button>
                                                 </form>
@@ -341,6 +381,18 @@
                                                     @method('PATCH')
                                                     <button type="submit" class="inline-flex items-center rounded-2xl border border-slate-500/60 bg-slate-800 px-2.5 py-1 text-[11px] font-semibold text-slate-100 transition duration-300 hover:-translate-y-0.5 hover:bg-slate-700 cursor-pointer">
                                                         {{ $ubicacion->estado === 'activo' ? 'Inactivar' : 'Activar' }}
+                                                    </button>
+                                                </form>
+
+                                                <form method="POST" action="{{ route('bienes.ubicaciones.destroy', $ubicacion) }}" class="inline js-delete-form">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="button"
+                                                        class="inline-flex items-center rounded-2xl border border-red-400/60 bg-red-500/15 px-2.5 py-1 text-[11px] font-semibold text-red-200 transition duration-300 hover:-translate-y-0.5 hover:bg-red-500/25 cursor-pointer js-delete-trigger"
+                                                        data-item-type="ubicación"
+                                                        data-item-name="{{ $ubicacion->nombre }}"
+                                                        data-can-delete="{{ $bienesUbicacion === 0 ? '1' : '0' }}">
+                                                        Eliminar
                                                     </button>
                                                 </form>
                                             </div>
@@ -364,12 +416,35 @@
             @endif
         </section>
     </div>
+
+    <div id="delete-confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/65 p-4" aria-hidden="true">
+        <div class="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl">
+            <div class="p-5">
+                <h3 class="text-sm font-semibold text-slate-100">Confirmar eliminación</h3>
+                <p id="delete-modal-message" class="mt-2 text-sm text-slate-300"></p>
+            </div>
+            <div class="flex items-center justify-end gap-2 border-t border-slate-700 px-5 py-3">
+                <button type="button" id="delete-modal-cancel" class="inline-flex items-center rounded-2xl border border-slate-500/60 bg-slate-800 px-3 py-1.5 text-[12px] font-semibold text-slate-100 transition hover:bg-slate-700 cursor-pointer">
+                    Cancelar
+                </button>
+                <button type="button" id="delete-modal-confirm" class="inline-flex items-center rounded-2xl border border-red-400/70 bg-red-500/20 px-3 py-1.5 text-[12px] font-semibold text-red-100 transition hover:bg-red-500/30 cursor-pointer">
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const forms = Array.from(document.querySelectorAll('form[data-catalog-kind]'));
+        const deleteModal = document.getElementById('delete-confirm-modal');
+        const deleteModalMessage = document.getElementById('delete-modal-message');
+        const deleteModalConfirm = document.getElementById('delete-modal-confirm');
+        const deleteModalCancel = document.getElementById('delete-modal-cancel');
+        const deleteTriggers = Array.from(document.querySelectorAll('.js-delete-trigger'));
+        let pendingDeleteForm = null;
 
         function normalizeSpaces(value) {
             return (value || '').replace(/\s+/g, ' ').trim();
@@ -396,7 +471,102 @@
             }
 
             const words = clean.split(/[\s,.;:()\-/#]+/u).filter(Boolean);
-            return words.some(word => [...word].length > maxWordLength);
+            return words.some((word) => {
+                const length = [...word].length;
+
+                if (length > maxWordLength) {
+                    return true;
+                }
+
+                if (/(\p{L}{2,5})\1{2,}/iu.test(word)) {
+                    return true;
+                }
+
+                if (length >= 14 && /(\p{L}{4,8}).*\1/iu.test(word)) {
+                    return true;
+                }
+
+                return false;
+            });
+        }
+
+        function hasTooManyDigits(text, maxDigits) {
+            const matches = (text || '').match(/\d/gu);
+            return (matches ? matches.length : 0) > maxDigits;
+        }
+
+        function openDeleteModal(message, allowDelete, form) {
+            if (!deleteModal || !deleteModalMessage || !deleteModalConfirm) {
+                return;
+            }
+
+            pendingDeleteForm = allowDelete ? form : null;
+            deleteModalMessage.textContent = message;
+            deleteModalConfirm.disabled = !allowDelete;
+            deleteModalConfirm.classList.toggle('opacity-50', !allowDelete);
+            deleteModalConfirm.classList.toggle('cursor-not-allowed', !allowDelete);
+            deleteModal.classList.remove('hidden');
+            deleteModal.classList.add('flex');
+            deleteModal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeDeleteModal() {
+            if (!deleteModal) {
+                return;
+            }
+
+            pendingDeleteForm = null;
+            deleteModal.classList.add('hidden');
+            deleteModal.classList.remove('flex');
+            deleteModal.setAttribute('aria-hidden', 'true');
+        }
+
+        deleteTriggers.forEach((button) => {
+            button.addEventListener('click', () => {
+                const form = button.closest('form.js-delete-form');
+                const itemType = button.getAttribute('data-item-type') || 'registro';
+                const itemName = button.getAttribute('data-item-name') || '';
+                const canDelete = button.getAttribute('data-can-delete') === '1';
+
+                if (!form) {
+                    return;
+                }
+
+                if (canDelete) {
+                    openDeleteModal(
+                        `¿Eliminar la ${itemType} "${itemName}"? Esta acción no se puede deshacer.`,
+                        true,
+                        form
+                    );
+                    return;
+                }
+
+                openDeleteModal(
+                    `No puedes eliminar la ${itemType} "${itemName}" porque tiene bienes asociados.`,
+                    false,
+                    form
+                );
+            });
+        });
+
+        if (deleteModalCancel) {
+            deleteModalCancel.addEventListener('click', closeDeleteModal);
+        }
+
+        if (deleteModal) {
+            deleteModal.addEventListener('click', (event) => {
+                if (event.target === deleteModal) {
+                    closeDeleteModal();
+                }
+            });
+        }
+
+        if (deleteModalConfirm) {
+            deleteModalConfirm.addEventListener('click', () => {
+                if (pendingDeleteForm) {
+                    pendingDeleteForm.submit();
+                }
+            });
         }
 
         forms.forEach((form) => {
@@ -410,16 +580,20 @@
             const cfg = kind === 'ubicacion'
                 ? {
                     maxLen: 50,
+                                        maxDigits: 3,
                     gibberishWordMax: 24,
                     consonantCluster: 5,
                     emptyMessage: 'El nombre de la ubicación es obligatorio.',
+                                        digitsMessage: 'La ubicación puede contener como máximo 3 números.',
                     gibberishMessage: 'La ubicación no parece válida. Usa un nombre claro (ej: Oficina 2, Depósito A).',
                   }
                 : {
                     maxLen: 30,
+                                        maxDigits: 3,
                     gibberishWordMax: 18,
                     consonantCluster: 4,
                     emptyMessage: 'El nombre de la categoría es obligatorio.',
+                                        digitsMessage: 'La categoría puede contener como máximo 3 números.',
                     gibberishMessage: 'La categoría no parece estar bien formulada. Evita texto aleatorio o sin sentido.',
                   };
 
@@ -436,6 +610,8 @@
                     input.setCustomValidity(cfg.emptyMessage);
                 } else if (normalized.length > cfg.maxLen) {
                     input.setCustomValidity(`No puede superar los ${cfg.maxLen} caracteres.`);
+                } else if (hasTooManyDigits(normalized, cfg.maxDigits)) {
+                    input.setCustomValidity(cfg.digitsMessage);
                 } else if (/<[^>]*>/.test(normalized)) {
                     input.setCustomValidity('No se permiten etiquetas HTML o código.');
                 } else if (looksLikeGibberish(normalized, cfg.gibberishWordMax, cfg.consonantCluster)) {

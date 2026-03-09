@@ -66,6 +66,9 @@ Route::middleware('auth')->group(function () {
         Route::patch('/bienes/catalogo/categorias/{categoria}/toggle', [CategoriaController::class, 'toggle'])
             ->middleware('permission:categorias.gestionar')
             ->name('bienes.categorias.toggle');
+        Route::delete('/bienes/catalogo/categorias/{categoria}', [CategoriaController::class, 'destroy'])
+            ->middleware('permission:categorias.gestionar')
+            ->name('bienes.categorias.destroy');
         Route::post('/bienes/catalogo/ubicaciones', [CategoriaController::class, 'storeUbicacion'])
             ->middleware('permission:ubicaciones.gestionar')
             ->name('bienes.ubicaciones.store');
@@ -75,6 +78,9 @@ Route::middleware('auth')->group(function () {
         Route::patch('/bienes/catalogo/ubicaciones/{ubicacion}/toggle', [CategoriaController::class, 'toggleUbicacion'])
             ->middleware('permission:ubicaciones.gestionar')
             ->name('bienes.ubicaciones.toggle');
+        Route::delete('/bienes/catalogo/ubicaciones/{ubicacion}', [CategoriaController::class, 'destroyUbicacion'])
+            ->middleware('permission:ubicaciones.gestionar')
+            ->name('bienes.ubicaciones.destroy');
 
         Route::get('/bienes/crear', [BienController::class, 'create'])
             ->middleware('permission:bienes.crear')

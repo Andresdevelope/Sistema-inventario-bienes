@@ -55,7 +55,7 @@ class CategoriaController extends Controller
                 'string',
                 'min:3',
                 'max:30',
-                'regex:/^(?=.{3,30}$)(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .\-]+$/u',
+                'regex:/^(?=.{3,30}$)(?!(?:.*\d){4,})(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .\-]+$/u',
                 'not_regex:/<[^>]*>/',
                 Rule::unique('categorias', 'nombre'),
             ],
@@ -63,7 +63,7 @@ class CategoriaController extends Controller
             'nombre.required' => 'El nombre de la categoría es obligatorio.',
             'nombre.min' => 'La categoría debe tener al menos 3 caracteres.',
             'nombre.max' => 'La categoría no puede superar los 30 caracteres.',
-            'nombre.regex' => 'La categoría debe contener solo texto válido.',
+            'nombre.regex' => 'La categoría debe contener texto válido y como máximo 3 números.',
             'nombre.not_regex' => 'La categoría no puede contener etiquetas HTML o código.',
             'nombre.unique' => 'Ya existe una categoría con ese nombre.',
         ]);
@@ -91,7 +91,7 @@ class CategoriaController extends Controller
                 'string',
                 'min:3',
                 'max:30',
-                'regex:/^(?=.{3,30}$)(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ .\-]+$/u',
+                'regex:/^(?=.{3,30}$)(?!(?:.*\d){4,})(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .\-]+$/u',
                 'not_regex:/<[^>]*>/',
                 Rule::unique('categorias', 'nombre')->ignore($categoria->id),
             ],
@@ -99,7 +99,7 @@ class CategoriaController extends Controller
             'nombre.required' => 'El nombre de la categoría es obligatorio.',
             'nombre.min' => 'La categoría debe tener al menos 3 caracteres.',
             'nombre.max' => 'La categoría no puede superar los 30 caracteres.',
-            'nombre.regex' => 'La categoría debe contener solo texto válido.',
+            'nombre.regex' => 'La categoría debe contener texto válido y como máximo 3 números.',
             'nombre.not_regex' => 'La categoría no puede contener etiquetas HTML o código.',
             'nombre.unique' => 'Ya existe una categoría con ese nombre.',
         ]);
@@ -133,6 +133,25 @@ class CategoriaController extends Controller
         return redirect()->route('bienes.categorias.index')->with('status', $mensaje);
     }
 
+    public function destroy(Categoria $categoria): RedirectResponse
+    {
+        $bienesAsociados = Bien::query()
+            ->where('categoria', $categoria->nombre)
+            ->count();
+
+        if ($bienesAsociados > 0) {
+            return redirect()
+                ->route('bienes.categorias.index')
+                ->with('status', 'No se puede eliminar la categoría porque tiene bienes asociados. Puedes inactivarla en su lugar.');
+        }
+
+        $categoria->delete();
+
+        return redirect()
+            ->route('bienes.categorias.index')
+            ->with('status', 'Categoría eliminada correctamente.');
+    }
+
     public function storeUbicacion(Request $request): RedirectResponse
     {
         $this->sanitizeCatalogInput($request);
@@ -143,7 +162,7 @@ class CategoriaController extends Controller
                 'string',
                 'min:3',
                 'max:50',
-                'regex:/^(?=.{3,50}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$/u',
+                'regex:/^(?=.{3,50}$)(?!(?:.*\d){4,})(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$/u',
                 'not_regex:/<[^>]*>/',
                 Rule::unique('ubicaciones', 'nombre'),
             ],
@@ -151,7 +170,7 @@ class CategoriaController extends Controller
             'nombre.required' => 'El nombre de la ubicación es obligatorio.',
             'nombre.min' => 'La ubicación debe tener al menos 3 caracteres.',
             'nombre.max' => 'La ubicación no puede superar los 50 caracteres.',
-            'nombre.regex' => 'La ubicación debe contener solo texto válido.',
+            'nombre.regex' => 'La ubicación debe contener texto válido y como máximo 3 números.',
             'nombre.not_regex' => 'La ubicación no puede contener etiquetas HTML o código.',
             'nombre.unique' => 'Ya existe una ubicación con ese nombre.',
         ]);
@@ -179,7 +198,7 @@ class CategoriaController extends Controller
                 'string',
                 'min:3',
                 'max:50',
-                'regex:/^(?=.{3,50}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$/u',
+                'regex:/^(?=.{3,50}$)(?!(?:.*\d){4,})(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-#°]+$/u',
                 'not_regex:/<[^>]*>/',
                 Rule::unique('ubicaciones', 'nombre')->ignore($ubicacion->id),
             ],
@@ -187,7 +206,7 @@ class CategoriaController extends Controller
             'nombre.required' => 'El nombre de la ubicación es obligatorio.',
             'nombre.min' => 'La ubicación debe tener al menos 3 caracteres.',
             'nombre.max' => 'La ubicación no puede superar los 50 caracteres.',
-            'nombre.regex' => 'La ubicación debe contener solo texto válido.',
+            'nombre.regex' => 'La ubicación debe contener texto válido y como máximo 3 números.',
             'nombre.not_regex' => 'La ubicación no puede contener etiquetas HTML o código.',
             'nombre.unique' => 'Ya existe una ubicación con ese nombre.',
         ]);
@@ -220,6 +239,28 @@ class CategoriaController extends Controller
         return redirect()
             ->route('bienes.categorias.index', ['tab' => 'ubicaciones'])
             ->with('status', $mensaje);
+    }
+
+    public function destroyUbicacion(Ubicacion $ubicacion): RedirectResponse
+    {
+        $bienesAsociados = Bien::query()
+            ->where(function ($query) use ($ubicacion) {
+                $query->where('ubicacion_id', $ubicacion->id)
+                    ->orWhere('ubicacion', $ubicacion->nombre);
+            })
+            ->count();
+
+        if ($bienesAsociados > 0) {
+            return redirect()
+                ->route('bienes.categorias.index', ['tab' => 'ubicaciones'])
+                ->with('status', 'No se puede eliminar la ubicación porque tiene bienes asociados. Puedes inactivarla en su lugar.');
+        }
+
+        $ubicacion->delete();
+
+        return redirect()
+            ->route('bienes.categorias.index', ['tab' => 'ubicaciones'])
+            ->with('status', 'Ubicación eliminada correctamente.');
     }
 
     private function resolveTab(Request $request): string
@@ -267,6 +308,12 @@ class CategoriaController extends Controller
 
     private function ensureCategoryTextQuality(string $value): void
     {
+        if ($this->hasMoreDigitsThanAllowed($value, 3)) {
+            throw ValidationException::withMessages([
+                'nombre' => 'La categoría puede contener como máximo 3 números.',
+            ]);
+        }
+
         if ($this->looksLikeGibberish($value, 18, 4)) {
             throw ValidationException::withMessages([
                 'nombre' => 'La categoría no parece estar bien formulada. Evita texto aleatorio o sin sentido.',
@@ -276,6 +323,12 @@ class CategoriaController extends Controller
 
     private function ensureLocationTextQuality(string $value): void
     {
+        if ($this->hasMoreDigitsThanAllowed($value, 3)) {
+            throw ValidationException::withMessages([
+                'nombre' => 'La ubicación puede contener como máximo 3 números.',
+            ]);
+        }
+
         if ($this->looksLikeGibberish($value, 24, 5)) {
             throw ValidationException::withMessages([
                 'nombre' => 'La ubicación no parece válida. Usa una ubicación clara (ej: Oficina 2, Depósito A).',
@@ -309,8 +362,28 @@ class CategoriaController extends Controller
             if (mb_strlen($word, 'UTF-8') > $maxWordLength) {
                 return true;
             }
+
+            if (preg_match('/(\p{L}{2,5})\1{2,}/iu', $word)) {
+                return true;
+            }
+
+            if (
+                mb_strlen($word, 'UTF-8') >= 14
+                && preg_match('/(\p{L}{4,8}).*\1/iu', $word)
+            ) {
+                return true;
+            }
         }
 
         return false;
+    }
+
+    private function hasMoreDigitsThanAllowed(string $text, int $maxDigits): bool
+    {
+        if ($text === '') {
+            return false;
+        }
+
+        return preg_match_all('/\d/u', $text) > $maxDigits;
     }
 }
