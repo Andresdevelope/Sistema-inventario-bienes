@@ -37,10 +37,23 @@
 
                     <div class="space-y-1 md:col-span-1">
                         <label class="block text-xs font-medium text-slate-700" for="role">Rol</label>
+                        @php
+                            $adminCount = $adminCount ?? \App\Models\User::where('role', \App\Models\User::ROLE_ADMIN)->count();
+                            $canPromoteToAdmin = $user->role === 'admin' || $adminCount < 2;
+                            $isSuperAdmin = $user->id === 1;
+                        @endphp
                         <select id="role" name="role" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                             <option value="user" {{ old('role', $user->role) === 'user' ? 'selected' : '' }}>Usuario</option>
-                            <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Administrador</option>
+                            @if ($canPromoteToAdmin)
+                                <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Administrador</option>
+                            @endif
                         </select>
+                        @if (! $canPromoteToAdmin)
+                            <p class="text-[11px] text-amber-700">Ya existe el máximo de administradores (superadmin y admin).</p>
+                        @endif
+                        @if ($isSuperAdmin)
+                            <p class="text-[11px] text-slate-500">Este usuario es el superadmin principal y no puede cambiar a otro rol.</p>
+                        @endif
                     </div>
                     <div class="space-y-1 md:col-span-1 relative">
                         <label class="block text-xs font-medium text-slate-700" for="password">Nueva contraseña (opcional, mínimo 16 caracteres)</label>
@@ -55,6 +68,13 @@
                             </svg>
                         </button>
                     </div>
+                </div>
+
+                <div id="edit-admin-password-wrap" class="hidden space-y-1">
+                    <label class="block text-xs font-medium text-slate-700" for="edit_admin_password">Contraseña del administrador actual (verificación)</label>
+                    <input id="edit_admin_password" name="admin_password" type="password" minlength="16" maxlength="40" autocomplete="current-password"
+                        class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
+                    <p class="text-[11px] text-slate-500">Se solicita solo cuando se asciende de Usuario a Administrador.</p>
                 </div>
 
                 <div class="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -124,7 +144,7 @@
                 <div class="pt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <a href="{{ route('users.index') }}" class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-4 py-2 text-[12px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300">Volver al listado</a>
                     <button type="submit"
-                        class="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-accent-400 to-accent-500 px-6 py-2 text-[12px] font-semibold text-brand-900 shadow-lg shadow-accent-900/20 transition hover:-translate-y-0.5 hover:shadow-accent-900/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-200">
+                        class="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-accent-400 to-accent-500 px-6 py-2 text-[12px] font-semibold text-brand-900 shadow-lg shadow-accent-900/20 transition hover:-translate-y-0.5 hover:shadow-accent-900/30 focus:outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-accent-200">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                         </svg>
@@ -152,12 +172,18 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        const editForm = document.getElementById('edit-user-form');
+        const errorBox = document.getElementById('edit-user-errors');
         const roleSelect = document.getElementById('role');
+        const oldRole = @json(old('role', $user->role));
         const permissionChecks = Array.from(document.querySelectorAll('[data-edit-permission-checkbox]'));
         const adminHint = document.getElementById('edit-permissions-admin-hint');
+        const editAdminPasswordWrap = document.getElementById('edit-admin-password-wrap');
+        const editAdminPasswordInput = document.getElementById('edit_admin_password');
 
         function refreshPermissionUI() {
             const isAdmin = roleSelect?.value === 'admin';
+            const isPromotion = oldRole !== 'admin' && isAdmin;
 
             permissionChecks.forEach((check) => {
                 check.disabled = isAdmin;
@@ -167,10 +193,52 @@
             });
 
             adminHint?.classList.toggle('hidden', !isAdmin);
+            editAdminPasswordWrap?.classList.toggle('hidden', !isPromotion);
+            if (editAdminPasswordInput) {
+                editAdminPasswordInput.required = isPromotion;
+                if (!isPromotion) {
+                    editAdminPasswordInput.value = '';
+                }
+            }
         }
 
         roleSelect?.addEventListener('change', refreshPermissionUI);
         refreshPermissionUI();
+
+        editForm?.addEventListener('submit', function (e) {
+            const isAdmin = roleSelect?.value === 'admin';
+            const isPromotion = oldRole !== 'admin' && isAdmin;
+            let errors = [];
+
+            if (isPromotion) {
+                const passwordValue = editAdminPasswordInput?.value ?? '';
+
+                if (!passwordValue) {
+                    errors.push('Debes ingresar tu contraseña para confirmar el ascenso a administrador.');
+                    editAdminPasswordInput?.classList.add('border-red-500');
+                } else if (passwordValue.length < 16) {
+                    errors.push('La contraseña de verificación debe tener al menos 16 caracteres.');
+                    editAdminPasswordInput?.classList.add('border-red-500');
+                } else if (passwordValue.length > 40) {
+                    errors.push('La contraseña de verificación no puede superar los 40 caracteres.');
+                    editAdminPasswordInput?.classList.add('border-red-500');
+                } else {
+                    editAdminPasswordInput?.classList.remove('border-red-500');
+                }
+            } else {
+                editAdminPasswordInput?.classList.remove('border-red-500');
+            }
+
+            if (errors.length > 0) {
+                e.preventDefault();
+                if (errorBox) {
+                    errorBox.innerHTML = '<ul><li>' + errors.join('</li><li>') + '</li></ul>';
+                    errorBox.classList.remove('hidden');
+                }
+            } else {
+                errorBox?.classList.add('hidden');
+            }
+        });
     });
 </script>
 @endpush

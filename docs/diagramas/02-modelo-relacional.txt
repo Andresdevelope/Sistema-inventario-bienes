@@ -1,6 +1,6 @@
 MODELO RELACIONAL
 Sistema: Inventario de Bienes
-Fecha de actualización: 2026-03-07
+Fecha de actualización: 2026-03-09
 
 1. Tabla USERS (usuarios)
   USERS (
@@ -124,7 +124,17 @@ Fecha de actualización: 2026-03-07
 
   - Reglas de seguridad sobre administradores:
     * Solo admin puede asignar rol admin.
+    * El ascenso/asignación a admin requiere verificación con current_password del admin autenticado.
+    * Máximo 2 usuarios con role='admin' (superadmin principal + admin secundario).
+    * El superadmin principal (users.id = 1) no puede ser eliminado ni degradado de rol.
     * No se permite eliminar o degradar al último admin.
+
+  - Reglas de visibilidad por rol en dashboard:
+    * admin: visualiza KPIs completos y actividad reciente (incluye bitácora).
+    * user: visualiza información general; sin actividad reciente ni métricas administrativas.
+
+  - Trazabilidad en bitácora:
+    * Se registran eventos de seguridad en gestión de usuarios (ascensos confirmados y rechazos por reglas de seguridad).
 
 9. Reglas de validación y consulta actuales relevantes
 

@@ -2,7 +2,7 @@ INSTRUMENTO DE EVALUACIÓN DE SISTEMAS TRAYECTO III
 
 TÍTULO:
 AUTORES:
-FECHA: 2026-03-06
+FECHA: 2026-03-09
 
 FORMATO DE RESULTADOS (Si / Med / No)
 - [Si] Cumple completamente
@@ -87,7 +87,7 @@ Categoría: Seguridad
 
 16. Protección e integridad de datos (P:2)
 	Estado: [Si]
-	Observaciones: CSRF, CORS, RBAC, validaciones robustas, normalización de entrada y control de formato de datos sensibles del dominio.
+	Observaciones: CSRF, CORS, RBAC, validaciones robustas, normalización de entrada y control de formato de datos sensibles del dominio. Se añadió protección explícita del superadmin (ID 1), límite máximo de administradores y verificación de contraseña para ascensos a admin.
 
 17. Bloqueo tras tres intentos erróneos (P:2)
 	Estado: [Si]
@@ -107,7 +107,7 @@ Categoría: Seguridad
 
 21. Deniega accesos no autorizados (P:1)
 	Estado: [Si]
-	Observaciones: Middleware auth + role + permission (según acción y módulo).
+	Observaciones: Middleware auth + role + permission (según acción y módulo). En dashboard también se restringe por rol la exposición de actividad reciente y métricas administrativas.
 
 22. Contraseñas hasheadas (una sola vía) (P:2)
 	Estado: [Si]
@@ -127,16 +127,16 @@ Categoría: Seguridad
 
 26. Bitácora de acciones/transacciones (P:2)
 	Estado: [Si]
-	Observaciones: Modelo Bitacora y registros en acciones críticas.
+	Observaciones: Modelo Bitacora y registros en acciones críticas. Se ampliaron eventos de seguridad en gestión de usuarios (ascensos a admin, intentos rechazados por límite de admins, protección de superadmin y denegaciones por políticas).
 
 27. Protecciones servidor (CSRF, CORS, TLS, cookies) (P:1)
-	Estado: [Med]
-	Observaciones: CSRF y CORS activos; cookies httpOnly/secure; TLS pendiente de despliegue.
+	Estado: [Si]
+	Observaciones: CSRF y CORS activos; cookies seguras (httpOnly/SameSite/secure por entorno); middleware global de cabeceras de seguridad (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy) y HSTS sobre HTTPS. Se implementó forzado de esquema HTTPS para producción (o bandera FORCE_HTTPS), quedando el despliegue TLS certificado como responsabilidad de infraestructura.
 
 ====================================
 Totales y valoración
 ====================================
-TOTAL PONDERADO: 36.0 / 40
+TOTAL PONDERADO: 36.5 / 40
 VALORACIÓN: Aprobado (35 – 40)
 
 Observaciones generales:
@@ -149,7 +149,58 @@ Observaciones generales:
 - Mejora aplicada: catálogo liviano de categorías integrado a bienes y selector de categoría en formularios crear/editar.
 - Mejora aplicada: users.permissions (JSON) con asignación desde UI para operadores.
 - Mejora aplicada: reglas para no eliminar ni degradar al último administrador.
-- Mejora aplicada: documentación técnica sincronizada con el esquema y flujo actual (06/03/2026).
+- Mejora aplicada: protección del superadmin principal (ID 1) y límite máximo de 2 administradores.
+- Mejora aplicada: ascenso a admin con verificación de contraseña del admin autenticado (front + back).
+- Mejora aplicada: dashboard por rol (usuario operador sin actividad reciente ni métricas administrativas).
+- Mejora aplicada: registro en bitácora de eventos de seguridad en gestión de usuarios.
+- Mejora aplicada: documentación técnica sincronizada con el esquema y flujo actual (09/03/2026).
+
+PUNTOS DE SEGURIDAD INCORPORADOS (RESUMEN)
+- Protección de cuenta crítica (superadmin).
+- Defensa en profundidad para ascensos a admin (validación UI + servidor + current_password).
+- Reducción de superficie de exposición de datos en dashboard para operadores.
+- Trazabilidad ampliada de eventos de seguridad en bitácora.
+
+CHECKLIST DE DESPLIEGUE SEGURO (PRODUCCIÓN)
+1) Entorno y modo de aplicación
+	- APP_ENV=production
+	- APP_DEBUG=false
+	- APP_URL=https://tu-dominio
+
+2) HTTPS/TLS obligatorio
+	- Instalar certificado TLS válido en servidor/reverse proxy (Nginx/Apache/Cloud).
+	- Redirigir todo HTTP -> HTTPS.
+	- Verificar cadenas de certificado y renovación automática.
+
+3) Variables de seguridad de la app (.env)
+	- FORCE_HTTPS=true
+	- SECURITY_HEADERS_ENABLED=true
+	- SECURITY_HSTS_ENABLED=true
+	- SESSION_SECURE_COOKIE=true
+	- SESSION_HTTP_ONLY=true
+	- SESSION_SAME_SITE=lax (o strict según necesidad funcional)
+
+4) Cabeceras de seguridad esperadas en respuestas
+	- X-Content-Type-Options: nosniff
+	- X-Frame-Options: SAMEORIGIN
+	- Referrer-Policy: strict-origin-when-cross-origin
+	- Permissions-Policy: restringida
+	- Strict-Transport-Security (solo en HTTPS)
+
+5) CORS y CSRF
+	- Mantener CORS limitado a orígenes necesarios (no usar comodines en producción).
+	- Confirmar CSRF activo en formularios y rutas con estado.
+
+6) Endurecimiento operativo
+	- Proteger archivo .env y rotar credenciales sensibles antes de publicar.
+	- Ejecutar php artisan config:cache y php artisan route:cache en release.
+	- Mantener logs y monitoreo de intentos anómalos de acceso.
+
+7) Verificación post-despliegue (evidencia)
+	- Probar login/logout bajo HTTPS.
+	- Validar flags de cookies (Secure, HttpOnly, SameSite).
+	- Inspeccionar cabeceras HTTP de seguridad en navegador/escáner.
+	- Confirmar que operador no accede a usuarios/bitácora ni actividad sensible de dashboard.
 
 DATOS DEL VALIDADOR
 Nombre y Apellido:

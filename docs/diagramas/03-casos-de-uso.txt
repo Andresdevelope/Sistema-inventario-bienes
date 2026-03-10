@@ -1,6 +1,6 @@
 CASOS DE USO
 Sistema: Inventario de Bienes
-Fecha de actualización: 2026-03-07
+Fecha de actualización: 2026-03-09
 
 Formato sugerido por caso de uso:
 --------------------------------------------------
@@ -166,6 +166,8 @@ Reglas de negocio:
    2. Selecciona la opción "Crear usuario".
    3. Ingresa: name, email, role, respuestas de seguridad, etc.
    4. El sistema valida que el email no exista.
+   4.1. Si el rol seleccionado es admin, el sistema exige contraseña del admin autenticado para confirmar el ascenso.
+   4.2. El sistema valida que no se supere el máximo de 2 cuentas admin.
    5. El sistema registra el nuevo usuario en USERS.
    6. El sistema registra en BITÁCORA la acción de creación de usuario:
       - modulo = "usuarios"
@@ -176,25 +178,34 @@ Reglas de negocio:
    1. El administrador selecciona un usuario existente.
    2. Modifica la información necesaria (ej. role).
    3. El sistema valida los datos.
+   3.1. Si se asciende de user a admin, solicita contraseña del admin autenticado.
+   3.2. El sistema impide degradar al superadmin principal (ID 1).
+   3.3. El sistema impide ascensos cuando el límite de admins ya está completo.
    4. El sistema actualiza el registro en USERS.
    5. El sistema registra la acción en BITÁCORA.
 
    Flujos alternos:
    A1. Email duplicado:
        - El sistema no guarda los datos y muestra error.
+   A2. Límite de administradores alcanzado:
+      - El sistema rechaza la operación y registra el intento en bitácora.
+   A3. Intento de eliminar/degradar al superadmin principal:
+      - El sistema rechaza la operación y registra el intento en bitácora.
 
    Postcondiciones:
    - La lista de usuarios del sistema queda actualizada.
 
    Reglas de negocio:
    - Solo administradores pueden gestionar usuarios.
+   - El superadmin principal (ID 1) no puede ser eliminado ni degradado.
+   - Máximo 2 cuentas con rol admin.
+   - Todo ascenso a admin requiere verificación de contraseña del admin autenticado.
 
 --------------------------------------------------
 
 4. CU-04 Consultar bitácora de acciones
    Actores:
    - Administrador
-   - (Opcional) Operador con permisos de auditoría
 
    Descripción breve:
    - Permite consultar las acciones registradas en BITÁCORA filtrando por
@@ -215,8 +226,32 @@ Reglas de negocio:
    - El usuario obtiene información de auditoría del sistema.
 
    Reglas de negocio:
-   - La bitácora es de solo lectura para los usuarios; no se permite editar ni
+   - Solo administradores pueden acceder a este módulo.
+   - La bitácora es de solo lectura para los usuarios con acceso; no se permite editar ni
      eliminar registros (salvo tareas de mantenimiento muy controladas).
+
+--------------------------------------------------
+
+7. CU-07 Consultar dashboard por rol
+   Actores:
+   - Administrador
+   - Operador (user)
+
+   Descripción breve:
+   - Muestra el panel principal con información adaptada al rol para evitar exposición de datos sensibles.
+
+   Precondiciones:
+   - El usuario tiene sesión iniciada.
+
+   Flujo principal:
+   1. El usuario accede al dashboard.
+   2. El sistema identifica su rol.
+   3. Si es admin, muestra KPIs completos y actividad reciente (incluye bitácora).
+   4. Si es operador, muestra solo información general de inventario sin actividad sensible.
+
+   Reglas de negocio:
+   - Operador no debe visualizar últimos movimientos de bitácora ni métricas administrativas.
+   - El control se aplica en backend y vista.
 
 --------------------------------------------------
 

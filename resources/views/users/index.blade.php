@@ -39,7 +39,7 @@
                             <td class="px-4 py-2.5 align-middle">
                                 <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs
                                     {{ $user->role === 'admin' ? 'border-amber-400/60 text-amber-200 bg-amber-500/10' : 'border-slate-600/70 text-slate-200 bg-slate-700/30' }}">
-                                    {{ strtoupper($user->role) }}
+                                    {{ $user->id === 1 ? 'SUPERADMIN' : strtoupper($user->role) }}
                                 </span>
                             </td>
                             <td class="px-4 py-2.5 align-middle">
@@ -70,7 +70,7 @@
                                         </form>
                                     @endif
 
-                                    @if(auth()->id() !== $user->id)
+                                    @if(auth()->id() !== $user->id && $user->id !== 1)
                                         <form method="POST" action="{{ route('users.destroy', $user) }}" data-delete-user-form>
                                             @csrf
                                             @method('DELETE')

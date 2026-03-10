@@ -51,6 +51,12 @@ RF-13: Modificar los datos de un usuario, incluyendo su rol.
 
 RF-14: Desactivar o bloquear usuarios sin eliminar su historial.
 
+RF-14A: Proteger al superadmin principal (ID 1), impidiendo su eliminación y degradación de rol.
+
+RF-14B: Limitar la cantidad de cuentas administrador a un máximo de 2 (superadmin + admin).
+
+RF-14C: Exigir contraseña del administrador autenticado para confirmar ascensos/asignaciones al rol admin.
+
 RF-15: Autenticación mediante correo y contraseña.
 
 RF-16: Controlar intentos fallidos de inicio de sesión y bloquear temporalmente la cuenta al superar el umbral.
@@ -71,6 +77,10 @@ RF-21: Visualizar detalle de un registro de bitácora con descripción de la acc
 
 RF-22: Impedir modificación o eliminación manual de registros de bitácora por usuarios finales.
 
+RF-23: Registrar en bitácora eventos de seguridad en gestión de usuarios (intentos rechazados por límite de admins, protección de superadmin y denegación de ascensos no permitidos).
+
+RF-24: Restringir en dashboard la visualización de actividad reciente y métricas de usuarios/bitácora solo para administradores.
+
 
 ======================================================================
 B) REQUERIMIENTOS NO FUNCIONALES
@@ -84,6 +94,8 @@ RNF-02: Contraseñas almacenadas con cifrado/hash seguro (p.ej., "hashed" de Lar
 
 RNF-03: Acceso al módulo de usuarios y configuración solo para administradores (RBAC básico por rol).
 
+RNF-03A: Los enlaces de módulos administrativos pueden permanecer visibles en la interfaz, pero el acceso debe ser denegado por autorización de servidor para usuarios sin rol admin.
+
 RNF-04: Uso de sesiones seguras y cierre de sesión para proteger accesos.
 
 Estado actual de seguridad y 2FA
@@ -93,6 +105,11 @@ Estado actual de seguridad y 2FA
   - reCAPTCHA v2 en formularios de inicio de sesión y recuperación de contraseña.
   - Preguntas de seguridad para recuperación de contraseña.
   - Bitácora de eventos de autenticación (login/logout) y de bloqueo automático.
+        - Protección de superadmin principal (ID 1): no se permite eliminarlo ni degradarlo.
+        - Límite máximo de administradores: 2 cuentas (superadmin + admin).
+        - Verificación de contraseña del admin autenticado para ascensos a admin.
+        - Restricción del dashboard para operadores: sin actividad reciente ni métricas administrativas.
+        - Registro en bitácora de eventos de seguridad asociados a gestión de usuarios.
 • Pendiente (2FA - Autenticación de doble factor):
   - Habilitar 2FA por TOTP (Google Authenticator/FreeOTP) con alta/baja de secreto por usuario.
   - Provisión de secreto vía QR y verificación de código en login (tras password).

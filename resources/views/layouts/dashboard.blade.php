@@ -293,12 +293,35 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-medium text-slate-700 mb-1">Rol</label>
+                        @php
+                            $adminCountForCreate = \App\Models\User::where('role', \App\Models\User::ROLE_ADMIN)->count();
+                            $canAssignAdminInCreate = $adminCountForCreate < 2;
+                        @endphp
                         <select name="role" id="create-user-role"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                             <option value="user" {{ old('role') === 'user' ? 'selected' : '' }}>Usuario</option>
-                            <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Administrador</option>
+                            @if ($canAssignAdminInCreate)
+                                <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Administrador</option>
+                            @endif
                         </select>
+                        @if (! $canAssignAdminInCreate)
+                            <p class="mt-1 text-[10px] text-amber-700">Ya existe el máximo de administradores (superadmin y admin).</p>
+                        @endif
                     </div>
+                </div>
+
+                <div id="create-admin-password-wrap" class="hidden">
+                    <label class="block text-[11px] font-medium text-slate-700 mb-1">Contraseña del administrador actual (verificación)</label>
+                    <input
+                        type="password"
+                        name="admin_password"
+                        id="create-admin-password"
+                        minlength="16"
+                        maxlength="40"
+                        autocomplete="current-password"
+                        class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600"
+                    >
+                    <p class="mt-1 text-[10px] text-slate-500">Se solicita solo cuando asignas el rol Administrador.</p>
                 </div>
 
                 <div class="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -374,6 +397,8 @@
                         const form = document.getElementById('create-user-form');
                         if (!form) return;
                         const roleSelect = document.getElementById('create-user-role');
+                        const createAdminPasswordWrap = document.getElementById('create-admin-password-wrap');
+                        const createAdminPasswordInput = document.getElementById('create-admin-password');
                         const permissionChecks = Array.from(document.querySelectorAll('[data-permission-checkbox]'));
                         const adminHint = document.getElementById('permissions-admin-hint');
                         const nameInput = form.querySelector('input[name="name"]');
@@ -393,6 +418,13 @@
                             });
 
                             adminHint?.classList.toggle('hidden', !isAdmin);
+                            createAdminPasswordWrap?.classList.toggle('hidden', !isAdmin);
+                            if (createAdminPasswordInput) {
+                                createAdminPasswordInput.required = isAdmin;
+                                if (!isAdmin) {
+                                    createAdminPasswordInput.value = '';
+                                }
+                            }
                         }
 
                         roleSelect?.addEventListener('change', refreshPermissionUI);
@@ -411,6 +443,7 @@
                         form.addEventListener('submit', function (e) {
                             const password = document.getElementById('create-user-password');
                             const passwordConfirm = document.getElementById('create-user-password-confirm');
+                            const isAdmin = roleSelect?.value === 'admin';
                             const errorBox = document.getElementById('create-user-errors');
                             const usernameRegex = /^(?=.{3,30}$)(?=(?:.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]){3,})[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9._\- ]+$/u;
                             const answerRegex = /^(?=.{2,30}$)(?=.*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .,\-]+$/u;
@@ -455,6 +488,24 @@
                             if (password.value !== passwordConfirm.value) {
                                 errors.push('La confirmación de la contraseña no coincide.');
                             }
+
+                            if (isAdmin && !createAdminPasswordInput?.value) {
+                                errors.push('Debes ingresar tu contraseña para confirmar el ascenso a administrador.');
+                                createAdminPasswordInput?.classList.add('border-red-500');
+                            } else if (isAdmin && createAdminPasswordInput) {
+                                if (createAdminPasswordInput.value.length < 16) {
+                                    errors.push('La contraseña de verificación debe tener al menos 16 caracteres.');
+                                    createAdminPasswordInput.classList.add('border-red-500');
+                                } else if (createAdminPasswordInput.value.length > 40) {
+                                    errors.push('La contraseña de verificación no puede superar los 40 caracteres.');
+                                    createAdminPasswordInput.classList.add('border-red-500');
+                                } else {
+                                    createAdminPasswordInput.classList.remove('border-red-500');
+                                }
+                            } else {
+                                createAdminPasswordInput?.classList.remove('border-red-500');
+                            }
+
                             if (errors.length > 0) {
                                 e.preventDefault();
                                 errorBox.innerHTML = '<ul><li>' + errors.join('</li><li>') + '</li></ul>';

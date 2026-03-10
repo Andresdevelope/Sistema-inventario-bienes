@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (app()->environment('production') || config('security.force_https', false)) {
+            URL::forceScheme('https');
+        }
+
         // Limitador para intentos de login: 5 por minuto por IP+usuario
         RateLimiter::for('login', function (Request $request) {
             $key = sprintf('login|%s|%s', $request->ip(), (string) $request->input('name'));

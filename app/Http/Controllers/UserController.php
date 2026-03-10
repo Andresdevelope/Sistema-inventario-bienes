@@ -12,6 +12,9 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
+    private const SUPERADMIN_ID = 1;
+    private const MAX_ADMINS = 2;
+
     /**
      * Listado de usuarios.
      */
@@ -20,6 +23,16 @@ class UserController extends Controller
         $users = User::orderBy('id')->get();
 
         return view('users.index', compact('users'));
+    }
+
+    /**
+     * Formulario de edicion de usuario.
+     */
+    public function edit(User $user): View
+    {
+        $adminCount = User::where('role', User::ROLE_ADMIN)->count();
+
+        return view('users.edit', compact('user', 'adminCount'));
     }
 
     /**
@@ -90,9 +103,42 @@ class UserController extends Controller
             $validated['role'] === User::ROLE_ADMIN
             && !($authUser?->isAdmin() ?? false)
         ) {
+            Bitacora::registrar(
+                'usuarios',
+                'rechazar_asignacion_admin',
+                null,
+                sprintf('Se rechazó una asignación de rol administrador para "%s" porque el usuario autenticado no es admin.', $validated['name'])
+            );
+
             return redirect()
                 ->route('users.index')
                 ->with('error', 'Solo un administrador puede asignar el rol administrador.');
+        }
+
+        if ($validated['role'] === User::ROLE_ADMIN) {
+            $adminCount = User::where('role', User::ROLE_ADMIN)->count();
+
+            if ($adminCount >= self::MAX_ADMINS) {
+                Bitacora::registrar(
+                    'usuarios',
+                    'rechazar_asignacion_admin_limite',
+                    null,
+                    sprintf('Se rechazó la creación de usuario "%s" como administrador porque el límite de administradores ya fue alcanzado.', $validated['name'])
+                );
+
+                return redirect()
+                    ->route('users.index')
+                    ->with('error', 'No se pueden asignar más administradores. El límite del sistema es 2 (superadmin y admin).');
+            }
+
+            $request->validate([
+                'admin_password' => ['required', 'string', 'min:16', 'max:40', 'current_password'],
+            ], [
+                'admin_password.required' => 'Debes ingresar tu contraseña para confirmar el ascenso a administrador.',
+                'admin_password.min' => 'La contraseña de verificación debe tener al menos 16 caracteres.',
+                'admin_password.max' => 'La contraseña de verificación no puede superar los 40 caracteres.',
+                'admin_password.current_password' => 'La contraseña ingresada no es correcta.',
+            ]);
         }
 
         $permissions = $validated['role'] === User::ROLE_ADMIN
@@ -119,6 +165,15 @@ class UserController extends Controller
             $user->id,
             sprintf('Creó el usuario "%s" (ID %d, rol %s).', $user->name, $user->id, $user->role)
         );
+
+        if ($user->role === User::ROLE_ADMIN) {
+            Bitacora::registrar(
+                'usuarios',
+                'crear_admin',
+                $user->id,
+                sprintf('Confirmó y creó un nuevo administrador "%s" (ID %d).', $user->name, $user->id)
+            );
+        }
 
         return redirect()->route('users.index')->with('status', 'Usuario creado correctamente.');
     }
@@ -163,14 +218,6 @@ class UserController extends Controller
     private function normalizeSpaces(string $value): string
     {
         return preg_replace('/\s+/u', ' ', trim($value)) ?? trim($value);
-    }
-
-    /**
-     * Formulario de edicion de usuario.
-     */
-    public function edit(User $user): View
-    {
-        return view('users.edit', compact('user'));
     }
 
     /**
@@ -225,6 +272,13 @@ class UserController extends Controller
             $validated['role'] === User::ROLE_ADMIN
             && !($authUser?->isAdmin() ?? false)
         ) {
+            Bitacora::registrar(
+                'usuarios',
+                'rechazar_cambio_rol_admin',
+                $user->id,
+                sprintf('Se rechazó el ascenso a administrador del usuario "%s" (ID %d) porque el usuario autenticado no es admin.', $user->name, $user->id)
+            );
+
             return redirect()
                 ->route('users.index')
                 ->with('error', 'Solo un administrador puede asignar el rol administrador.');
@@ -236,9 +290,59 @@ class UserController extends Controller
             && $validated['role'] !== User::ROLE_ADMIN
             && User::where('role', User::ROLE_ADMIN)->count() <= 1
         ) {
+            Bitacora::registrar(
+                'usuarios',
+                'rechazar_quitar_ultimo_admin',
+                $user->id,
+                sprintf('Se rechazó el cambio de rol del usuario "%s" (ID %d) porque era el último administrador.', $user->name, $user->id)
+            );
+
             return redirect()
                 ->route('users.index')
                 ->with('error', 'No se puede cambiar el rol del último administrador del sistema.');
+        }
+
+        // El superadmin (ID 1) debe mantenerse como administrador principal.
+        if ($user->id === self::SUPERADMIN_ID && $validated['role'] !== User::ROLE_ADMIN) {
+            Bitacora::registrar(
+                'usuarios',
+                'rechazar_cambio_rol_superadmin',
+                $user->id,
+                sprintf('Se rechazó el intento de cambiar el rol del superadmin principal "%s" (ID %d).', $user->name, $user->id)
+            );
+
+            return redirect()
+                ->route('users.index')
+                ->with('error', 'El superadmin principal no puede cambiar a otro rol.');
+        }
+
+        $isPromotingToAdmin = $oldRole !== User::ROLE_ADMIN
+            && $validated['role'] === User::ROLE_ADMIN;
+
+        if ($isPromotingToAdmin) {
+            $adminCount = User::where('role', User::ROLE_ADMIN)->count();
+
+            if ($adminCount >= self::MAX_ADMINS) {
+                Bitacora::registrar(
+                    'usuarios',
+                    'rechazar_ascenso_admin_limite',
+                    $user->id,
+                    sprintf('Se rechazó el ascenso a administrador del usuario "%s" (ID %d) porque el límite de administradores ya fue alcanzado.', $user->name, $user->id)
+                );
+
+                return redirect()
+                    ->route('users.index')
+                    ->with('error', 'No se pueden asignar más administradores. El límite del sistema es 2 (superadmin y admin).');
+            }
+
+            $request->validate([
+                'admin_password' => ['required', 'string', 'min:16', 'max:40', 'current_password'],
+            ], [
+                'admin_password.required' => 'Debes ingresar tu contraseña para confirmar el ascenso a administrador.',
+                'admin_password.min' => 'La contraseña de verificación debe tener al menos 16 caracteres.',
+                'admin_password.max' => 'La contraseña de verificación no puede superar los 40 caracteres.',
+                'admin_password.current_password' => 'La contraseña ingresada no es correcta.',
+            ]);
         }
 
         $permissions = $validated['role'] === User::ROLE_ADMIN
@@ -271,6 +375,15 @@ class UserController extends Controller
                 $user->id,
                 sprintf('Cambió el rol del usuario "%s" (ID %d) de %s a %s.', $user->name, $user->id, $oldRole, $user->role)
             );
+
+            if ($oldRole !== User::ROLE_ADMIN && $user->role === User::ROLE_ADMIN) {
+                Bitacora::registrar(
+                    'usuarios',
+                    'ascenso_admin',
+                    $user->id,
+                    sprintf('Confirmó ascenso a administrador para el usuario "%s" (ID %d).', $user->name, $user->id)
+                );
+            }
         }
 
         Bitacora::registrar(
@@ -288,6 +401,20 @@ class UserController extends Controller
      */
     public function destroy(User $user): RedirectResponse
     {
+        // El superadmin principal no puede ser eliminado por ningún usuario.
+        if ($user->id === self::SUPERADMIN_ID) {
+            Bitacora::registrar(
+                'usuarios',
+                'rechazar_eliminar_superadmin',
+                $user->id,
+                sprintf('Se rechazó el intento de eliminar al superadmin principal "%s" (ID %d).', $user->name, $user->id)
+            );
+
+            return redirect()
+                ->route('users.index')
+                ->with('error', 'El superadmin principal no puede ser eliminado.');
+        }
+
         // Evitar que un usuario elimine su propia cuenta desde aquí
         if (Auth::id() === $user->id) {
             return redirect()

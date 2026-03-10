@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Usar el middleware de CORS nativo de Laravel (compatible con Laravel 7+ y recomendado en Laravel 11/12)
         $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
+        // Cabeceras de seguridad HTTP para todas las respuestas
+        $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
         // Alias de middlewares para las rutas
         $middleware->alias([
             'auth' => Authenticate::class,

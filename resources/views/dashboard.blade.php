@@ -33,13 +33,26 @@
         </div>
 
         {{-- KPIs del sistema --}}
-        @include('partials.kpis', ['counts' => $counts ?? []])
-
-        {{-- Actividad reciente --}}
-        @include('partials.recent-activity', [
-            'ultimosBienes' => $ultimosBienes ?? collect(),
-            'ultimosEventos' => $ultimosEventos ?? collect(),
+        @include('partials.kpis', [
+            'counts' => $counts ?? [],
+            'isAdmin' => $isAdmin ?? false,
         ])
+
+        @if (($isAdmin ?? false) === true)
+            {{-- Actividad reciente (solo administradores) --}}
+            @include('partials.recent-activity', [
+                'ultimosBienes' => $ultimosBienes ?? collect(),
+                'ultimosEventos' => $ultimosEventos ?? collect(),
+            ])
+        @else
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 class="text-sm font-semibold text-slate-900 mb-2">Información general</h3>
+                <p class="text-xs text-slate-600">
+                    Por políticas de seguridad, los movimientos recientes y los datos de usuarios/bitácora
+                    solo están disponibles para administradores.
+                </p>
+            </div>
+        @endif
 
     </div>
 @endsection

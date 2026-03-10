@@ -1,10 +1,10 @@
 SISTEMA INVENTARIO DE BIENES - PRIVILEGIOS POR ROL
-Fecha: 06/03/2026
+Fecha: 09/03/2026
 
 ==================================================
 ROLES ACTUALES
 ==================================================
-- admin: Administrador del sistema
+- admin: Administrador del sistema (incluye superadmin y admin secundario)
 - user: Operador del sistema
 
 Nota técnica:
@@ -16,9 +16,13 @@ REGLAS GENERALES
 1) Solo usuarios autenticados pueden entrar al panel.
 2) Solo rol admin puede acceder al módulo de Usuarios y a Bitácora.
 3) Bienes y Categorías pueden ser usados por admin y operador.
-4) El primer usuario registrado en un sistema vacío queda como admin.
+4) El primer usuario registrado en un sistema vacío queda como admin (superadmin principal, ID 1).
 5) Desde el segundo registro en adelante, se crean como operador (user).
 6) Solo admin puede asignar el rol admin a otro usuario.
+7) Para asignar/ascender a admin se exige verificación con contraseña del admin autenticado.
+8) Máximo permitido de cuentas con rol admin: 2 (superadmin + admin).
+9) El superadmin principal (ID 1) no puede ser eliminado ni degradado de rol.
+10) En dashboard, solo admin visualiza actividad reciente y métricas de usuarios/bitácora.
 7) El sistema no permite dejar la plataforma sin administradores:
    - no permite cambiar el rol del último admin a operador
    - no permite eliminar al último admin
@@ -35,6 +39,7 @@ MATRIZ DE PRIVILEGIOS
 - Usuarios (listar/crear/editar/eliminar): SI
 - Cambiar rol de usuarios: SI
 - Asignar admin a otro usuario: SI
+- Asignar admin a otro usuario (con contraseña de verificación): SI
 - Desbloquear usuarios bloqueados: SI
 - Ver bitácora: SI
 
@@ -49,10 +54,11 @@ MATRIZ DE PRIVILEGIOS
 - Asignar admin: NO
 - Desbloquear usuarios bloqueados: NO
 - Ver bitácora: NO
+- Ver actividad reciente sensible en dashboard: NO
 
 ==================================================
 RECOMENDACIÓN OPERATIVA
 ==================================================
-- Mantener mínimo 2 administradores para contingencia.
+- Mantener máximo 2 administradores (superadmin + admin secundario), según política vigente.
 - Asignar rol operador al personal que solo ejecuta inventario diario.
-- Registrar en bitácora cualquier cambio de rol realizado.
+- Registrar en bitácora cualquier cambio de rol y cualquier intento rechazado por reglas de seguridad.
