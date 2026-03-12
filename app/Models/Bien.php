@@ -26,8 +26,7 @@ class Bien extends Model
         'nombre',
         'codigo',
         'descripcion',
-        'categoria',
-        'ubicacion',
+        'categoria_id',
         'ubicacion_id',
         'estado',
         'fecha_adquisicion',
@@ -45,20 +44,30 @@ class Bien extends Model
         return $this->belongsTo(Ubicacion::class, 'ubicacion_id');
     }
 
+    public function categoriaCatalogo(): BelongsTo
+    {
+        return $this->belongsTo(Categoria::class, 'categoria_id');
+    }
+
+    public function getCategoriaNombreAttribute(): ?string
+    {
+        $nombreCatalogo = $this->relationLoaded('categoriaCatalogo')
+            ? $this->categoriaCatalogo?->nombre
+            : $this->categoriaCatalogo()->value('nombre');
+
+        return is_string($nombreCatalogo) && trim($nombreCatalogo) !== ''
+            ? $nombreCatalogo
+            : null;
+    }
+
     public function getUbicacionNombreAttribute(): ?string
     {
         $nombreCatalogo = $this->relationLoaded('ubicacionCatalogo')
             ? $this->ubicacionCatalogo?->nombre
             : $this->ubicacionCatalogo()->value('nombre');
 
-        if (is_string($nombreCatalogo) && trim($nombreCatalogo) !== '') {
-            return $nombreCatalogo;
-        }
-
-        $ubicacion = $this->attributes['ubicacion'] ?? null;
-
-        return is_string($ubicacion) && trim($ubicacion) !== ''
-            ? $ubicacion
+        return is_string($nombreCatalogo) && trim($nombreCatalogo) !== ''
+            ? $nombreCatalogo
             : null;
     }
 }

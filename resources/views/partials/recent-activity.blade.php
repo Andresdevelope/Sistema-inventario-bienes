@@ -22,7 +22,7 @@
                         @php($estadoLabel = $estado === 'de_baja' ? 'Dado de baja' : ucfirst($estado))
                         <p class="text-xs font-medium text-slate-900">{{ $bien->nombre }} <span class="text-[11px] text-slate-500">({{ $bien->codigo }})</span></p>
                         <p class="text-[11px] text-slate-500">
-                            {{ $bien->categoria }} • Estado:
+                            {{ $bien->categoria_nombre ?? 'Sin categoría' }} • Estado:
                             <span @class([
                                 'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold',
                                 'border-emerald-400/60 text-emerald-700 bg-emerald-50' => $estado === 'bueno',

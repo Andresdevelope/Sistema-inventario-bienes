@@ -25,9 +25,9 @@
                     {{ \Illuminate\Support\Str::limit($bien->descripcion, 48, '...') }}
                 </p>
                 <div class="mt-2 grid grid-cols-2 gap-2">
-                    <p class="inline-flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-900/50 px-2 py-1 text-[11px] text-slate-300 truncate" title="{{ $bien->categoria ?? '—' }}">
+                    <p class="inline-flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-900/50 px-2 py-1 text-[11px] text-slate-300 truncate" title="{{ $bien->categoria_nombre ?? '—' }}">
                         <span class="text-slate-400">Cat.</span>
-                        <span class="truncate">{{ \Illuminate\Support\Str::limit($bien->categoria ?? '—', 14, '...') }}</span>
+                        <span class="truncate">{{ \Illuminate\Support\Str::limit($bien->categoria_nombre ?? '—', 14, '...') }}</span>
                     </p>
                     <p class="inline-flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-900/50 px-2 py-1 text-[11px] text-slate-300 truncate" title="{{ $bien->ubicacion_nombre ?? '—' }}">
                         <span class="text-slate-400">Ub.</span>
@@ -77,7 +77,7 @@
                         <span class="block w-full truncate" title="{{ $bien->descripcion }}">{{ \Illuminate\Support\Str::limit($bien->descripcion, 24, '...') }}</span>
                     </td>
                     <td class="px-4 py-2.5 align-middle text-slate-400 hidden md:table-cell">
-                        <span class="block w-full truncate" title="{{ $bien->categoria ?? '—' }}">{{ \Illuminate\Support\Str::limit($bien->categoria ?? '—', 14, '...') }}</span>
+                        <span class="block w-full truncate" title="{{ $bien->categoria_nombre ?? '—' }}">{{ \Illuminate\Support\Str::limit($bien->categoria_nombre ?? '—', 14, '...') }}</span>
                     </td>
                     <td class="px-4 py-2.5 align-middle text-slate-400 hidden md:table-cell">
                         <span class="block w-full truncate" title="{{ $bien->ubicacion_nombre ?? '—' }}">{{ \Illuminate\Support\Str::limit($bien->ubicacion_nombre ?? '—', 14, '...') }}</span>

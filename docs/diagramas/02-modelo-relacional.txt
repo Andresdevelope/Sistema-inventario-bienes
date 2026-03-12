@@ -27,20 +27,25 @@ Fecha de actualización: 2026-03-09
      nombre            VARCHAR(255)      NOT NULL,
      codigo            VARCHAR(255)      NOT NULL UNIQUE,
      descripcion       VARCHAR(255)      NOT NULL,
-     categoria         VARCHAR(100)      NULL,
-     ubicacion         VARCHAR(255)      NULL,
-    ubicacion_id      BIGINT UNSIGNED   NULL,
+     categoria_id      BIGINT UNSIGNED   NULL,
+     ubicacion_id      BIGINT UNSIGNED   NULL,
      estado            VARCHAR(255)      NOT NULL DEFAULT 'bueno',
      fecha_adquisicion DATE              NULL,
      created_at        TIMESTAMP         NULL,
-    updated_at        TIMESTAMP         NULL,
+     updated_at        TIMESTAMP         NULL,
 
-    CONSTRAINT fk_bienes_ubicacion
-      FOREIGN KEY (ubicacion_id)
-      REFERENCES ubicaciones(id)
-      ON DELETE SET NULL,
+     CONSTRAINT fk_bienes_categoria
+       FOREIGN KEY (categoria_id)
+       REFERENCES categorias(id)
+       ON DELETE SET NULL,
 
-    INDEX bienes_ubicacion_id_idx (ubicacion_id)
+     CONSTRAINT fk_bienes_ubicacion
+       FOREIGN KEY (ubicacion_id)
+       REFERENCES ubicaciones(id)
+       ON DELETE SET NULL,
+
+     INDEX bienes_categoria_id_idx (categoria_id),
+     INDEX bienes_ubicacion_id_idx (ubicacion_id)
   );
   Nota: el campo valor fue eliminado (migración 2026_02_28_000001).
 
@@ -119,6 +124,7 @@ Fecha de actualización: 2026-03-09
 
   - Catálogos:
     * categorias.nombre se sincroniza desde la gestión de catálogos y desde bienes.
+    * bienes se enlaza a categorias mediante categoria_id (FK) para persistencia principal.
     * ubicaciones.nombre se normaliza y se enlaza con bienes mediante ubicacion_id.
     * Las ubicaciones inactivas no deben aparecer en formularios nuevos, pero sí pueden permanecer asociadas a bienes existentes.
 

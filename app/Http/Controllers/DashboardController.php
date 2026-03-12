@@ -38,7 +38,8 @@ class DashboardController extends Controller
         // Cachear últimos bienes (TTL 2 minutos)
         $ultimosBienes = Cache::remember('dashboard:ultimos_bienes', 120, function () {
             return Bien::query()
-                ->select(['id', 'nombre', 'codigo', 'categoria', 'estado', 'created_at'])
+                ->with('categoriaCatalogo:id,nombre')
+                ->select(['id', 'nombre', 'codigo', 'categoria_id', 'estado', 'created_at'])
                 ->latest('created_at')
                 ->take(5)
                 ->get();

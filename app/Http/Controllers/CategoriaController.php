@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bien;
+use App\Models\Bitacora;
 use App\Models\Categoria;
 use App\Models\Ubicacion;
 use Illuminate\Http\RedirectResponse;
@@ -30,11 +31,10 @@ class CategoriaController extends Controller
             ->withQueryString();
 
         $usoCategorias = Bien::query()
-            ->selectRaw('categoria, COUNT(*) as total')
-            ->whereNotNull('categoria')
-            ->whereRaw("TRIM(categoria) <> ''")
-            ->groupBy('categoria')
-            ->pluck('total', 'categoria');
+            ->leftJoin('categorias', 'bienes.categoria_id', '=', 'categorias.id')
+            ->selectRaw("COALESCE(categorias.nombre, 'Sin categoría') as categoria_nombre, COUNT(*) as total")
+            ->groupBy('categoria_nombre')
+            ->pluck('total', 'categoria_nombre');
 
         $usoUbicaciones = Bien::query()
             ->selectRaw('ubicacion_id, COUNT(*) as total')
@@ -71,10 +71,17 @@ class CategoriaController extends Controller
         $nombre = $this->normalizeCategoryName($validated['nombre']);
         $this->ensureCategoryTextQuality($nombre);
 
-        Categoria::create([
+        $categoriaCreada = Categoria::create([
             'nombre' => $nombre,
             'estado' => 'activo',
         ]);
+
+        Bitacora::registrar(
+            'categorias',
+            'crear',
+            $categoriaCreada?->id,
+            sprintf('Creó la categoría "%s".', $nombre)
+        );
 
         return redirect()
             ->route('bienes.categorias.index')
@@ -105,16 +112,17 @@ class CategoriaController extends Controller
         ]);
 
         $nuevoNombre = $this->normalizeCategoryName($validated['nombre']);
-        $this->ensureCategoryTextQuality($nuevoNombre);
         $nombreAnterior = $categoria->nombre;
+        $this->ensureCategoryTextQuality($nuevoNombre);
 
         $categoria->update(['nombre' => $nuevoNombre]);
 
-        if ($nombreAnterior !== $nuevoNombre) {
-            Bien::query()
-                ->where('categoria', $nombreAnterior)
-                ->update(['categoria' => $nuevoNombre]);
-        }
+        Bitacora::registrar(
+            'categorias',
+            'actualizar',
+            $categoria->id,
+            sprintf('Actualizó la categoría de "%s" a "%s".', $nombreAnterior, $nuevoNombre)
+        );
 
         return redirect()
             ->route('bienes.categorias.index')
@@ -126,6 +134,13 @@ class CategoriaController extends Controller
         $nuevoEstado = $categoria->estado === 'activo' ? 'inactivo' : 'activo';
         $categoria->update(['estado' => $nuevoEstado]);
 
+        Bitacora::registrar(
+            'categorias',
+            $nuevoEstado === 'activo' ? 'activar' : 'inactivar',
+            $categoria->id,
+            sprintf('%s la categoría "%s".', $nuevoEstado === 'activo' ? 'Activó' : 'Inactivó', $categoria->nombre)
+        );
+
         $mensaje = $nuevoEstado === 'activo'
             ? 'Categoría activada correctamente.'
             : 'Categoría inactivada correctamente.';
@@ -136,7 +151,7 @@ class CategoriaController extends Controller
     public function destroy(Categoria $categoria): RedirectResponse
     {
         $bienesAsociados = Bien::query()
-            ->where('categoria', $categoria->nombre)
+            ->where('categoria_id', $categoria->id)
             ->count();
 
         if ($bienesAsociados > 0) {
@@ -146,6 +161,13 @@ class CategoriaController extends Controller
         }
 
         $categoria->delete();
+
+        Bitacora::registrar(
+            'categorias',
+            'eliminar',
+            $categoria->id,
+            sprintf('Eliminó la categoría "%s".', $categoria->nombre)
+        );
 
         return redirect()
             ->route('bienes.categorias.index')
@@ -178,10 +200,17 @@ class CategoriaController extends Controller
         $nombre = $this->normalizeLocationName($validated['nombre']);
         $this->ensureLocationTextQuality($nombre);
 
-        Ubicacion::create([
+        $ubicacionCreada = Ubicacion::create([
             'nombre' => $nombre,
             'estado' => 'activo',
         ]);
+
+        Bitacora::registrar(
+            'ubicaciones',
+            'crear',
+            $ubicacionCreada?->id,
+            sprintf('Creó la ubicación "%s".', $nombre)
+        );
 
         return redirect()
             ->route('bienes.categorias.index', ['tab' => 'ubicaciones'])
@@ -212,15 +241,17 @@ class CategoriaController extends Controller
         ]);
 
         $nuevoNombre = $this->normalizeLocationName($validated['nombre']);
-        $this->ensureLocationTextQuality($nuevoNombre);
         $nombreAnterior = $ubicacion->nombre;
+        $this->ensureLocationTextQuality($nuevoNombre);
 
         $ubicacion->update(['nombre' => $nuevoNombre]);
 
-        Bien::query()
-            ->where('ubicacion_id', $ubicacion->id)
-            ->orWhere('ubicacion', $nombreAnterior)
-            ->update(['ubicacion' => $nuevoNombre]);
+        Bitacora::registrar(
+            'ubicaciones',
+            'actualizar',
+            $ubicacion->id,
+            sprintf('Actualizó la ubicación de "%s" a "%s".', $nombreAnterior, $nuevoNombre)
+        );
 
         return redirect()
             ->route('bienes.categorias.index', ['tab' => 'ubicaciones'])
@@ -231,6 +262,13 @@ class CategoriaController extends Controller
     {
         $nuevoEstado = $ubicacion->estado === 'activo' ? 'inactivo' : 'activo';
         $ubicacion->update(['estado' => $nuevoEstado]);
+
+        Bitacora::registrar(
+            'ubicaciones',
+            $nuevoEstado === 'activo' ? 'activar' : 'inactivar',
+            $ubicacion->id,
+            sprintf('%s la ubicación "%s".', $nuevoEstado === 'activo' ? 'Activó' : 'Inactivó', $ubicacion->nombre)
+        );
 
         $mensaje = $nuevoEstado === 'activo'
             ? 'Ubicación activada correctamente.'
@@ -244,10 +282,7 @@ class CategoriaController extends Controller
     public function destroyUbicacion(Ubicacion $ubicacion): RedirectResponse
     {
         $bienesAsociados = Bien::query()
-            ->where(function ($query) use ($ubicacion) {
-                $query->where('ubicacion_id', $ubicacion->id)
-                    ->orWhere('ubicacion', $ubicacion->nombre);
-            })
+            ->where('ubicacion_id', $ubicacion->id)
             ->count();
 
         if ($bienesAsociados > 0) {
@@ -257,6 +292,13 @@ class CategoriaController extends Controller
         }
 
         $ubicacion->delete();
+
+        Bitacora::registrar(
+            'ubicaciones',
+            'eliminar',
+            $ubicacion->id,
+            sprintf('Eliminó la ubicación "%s".', $ubicacion->nombre)
+        );
 
         return redirect()
             ->route('bienes.categorias.index', ['tab' => 'ubicaciones'])

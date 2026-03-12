@@ -137,8 +137,7 @@ class CatalogoValidationSecurityTest extends TestCase
             'nombre' => 'Silla ejecutiva',
             'codigo' => 'MOB-001',
             'descripcion' => 'Silla para oficina principal',
-            'categoria' => 'Mobiliario',
-            'ubicacion' => 'Oficina 1',
+            'categoria_id' => $categoria->id,
             'estado' => 'bueno',
         ]);
 

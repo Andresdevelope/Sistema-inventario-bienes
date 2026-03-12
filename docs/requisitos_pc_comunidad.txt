@@ -46,6 +46,40 @@ Requeridas por dependencias verificadas con Composer:
 - xmlwriter
 - mbstring (en este entorno está activa; Composer también puede cubrirla por polyfill)
 
+Para generar/imprimir PDF (Dompdf/mPDF u otras librerías similares):
+- No existe una extensión única llamada "pdf" en PHP.
+- Habilitar como mínimo:
+  - dom
+  - mbstring
+  - gd
+  - fileinfo
+  - iconv
+  - zlib
+- Recomendadas según uso:
+  - openssl (si el PDF carga recursos HTTPS)
+  - curl (si el PDF carga imágenes/CSS remotos)
+  - xml y xmlwriter (plantillas/documentos con manejo XML)
+
+Mini guía (Windows + XAMPP) para habilitar extensiones PHP:
+1. Abrir el archivo `C:\xampp\php\php.ini` con editor de texto como administrador.
+2. Buscar estas líneas y quitar `;` al inicio (si lo tienen):
+  - extension=gd
+  - extension=mbstring
+  - extension=fileinfo
+  - extension=openssl
+  - extension=curl
+  - extension=xml
+  - extension=xmlwriter
+  - extension=zip
+3. Guardar `php.ini`.
+4. Reiniciar Apache desde el panel de XAMPP.
+5. Verificar en terminal:
+  - `php -m` (debe listar las extensiones habilitadas)
+6. Si Apache usa otra versión de PHP, confirmar en navegador con `phpinfo()` que cargue el mismo `php.ini` editado.
+
+Nota práctica:
+- En PHP 8.x algunas extensiones pueden aparecer integradas según compilación; si no ves una línea exacta en `php.ini`, valida con `php -m` y `phpinfo()`.
+
 ==================================================
 3) EXTENSIONES PHP ACTIVAS EN ESTE SISTEMA (REFERENCIA)
 ==================================================
@@ -140,6 +174,7 @@ Después de copiar el proyecto:
 [ ] php artisan key:generate
 [ ] php artisan migrate --force
 [ ] npm run build
+[ ] Verificar extensiones de PDF habilitadas (dom, mbstring, gd, fileinfo, iconv, zlib)
 
 ==================================================
 7) EXTENSIONES DE VS CODE RECOMENDADAS (OPCIONAL PARA SOPORTE)

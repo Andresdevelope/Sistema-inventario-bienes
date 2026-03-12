@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BienIndexFilterRequest;
 use App\Models\Bien;
 use App\Models\Bitacora;
 use App\Models\Categoria;
 use App\Models\Ubicacion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Collection;
@@ -28,46 +30,56 @@ class BienController extends Controller
     /**
      * Mostrar listado paginado de bienes.
      */
-    public function index(Request $request): View
+    public function index(BienIndexFilterRequest $request): View|RedirectResponse
     {
+        $validated = $request->validated();
         $allowedPerPage = [10, 15, 25, 50, 100];
-        $perPage = (int) $request->integer('per_page', 15);
-        if (!in_array($perPage, $allowedPerPage, true)) {
+
+        $search = (string) ($validated['search'] ?? '');
+        $estado = (string) ($validated['estado'] ?? '');
+        $categoria = (string) ($validated['categoria'] ?? '');
+        $ubicacionId = isset($validated['ubicacion']) ? (int) $validated['ubicacion'] : null;
+        $perPage = isset($validated['per_page']) ? (int) $validated['per_page'] : 15;
+        $page = isset($validated['page']) ? (int) $validated['page'] : 1;
+
+        if (! in_array($perPage, $allowedPerPage, true)) {
             $perPage = 15;
         }
 
-        $search = trim((string) $request->input('search', ''));
-        $estado = trim((string) $request->input('estado', ''));
-        $categoria = trim((string) $request->input('categoria', ''));
-        $ubicacionId = $request->input('ubicacion');
         $estadosDisponibles = ['bueno', 'regular', 'malo', 'de_baja'];
-
-        if (is_string($ubicacionId)) {
-            $ubicacionId = trim($ubicacionId);
-        }
-
-        $ubicacionId = is_numeric($ubicacionId) ? (int) $ubicacionId : null;
 
         if (!in_array($estado, $estadosDisponibles, true)) {
             $estado = '';
         }
 
+        if (! $request->ajax()) {
+            $canonical = $this->buildCanonicalFilters($search, $estado, $categoria, $ubicacionId, $perPage, $page);
+            $original = $this->normalizeFilterQueryForComparison($request->query());
+            $canonicalComparable = $this->normalizeFilterQueryForComparison($canonical);
+
+            if ($canonicalComparable !== $original) {
+                return redirect()->route('bienes.index', $canonical);
+            }
+        }
+
         $query = Bien::query()
+            ->with('categoriaCatalogo:id,nombre,estado')
             ->with('ubicacionCatalogo:id,nombre,estado')
-            ->select(['id', 'nombre', 'codigo', 'descripcion', 'categoria', 'ubicacion', 'ubicacion_id', 'estado'])
+            ->select(['id', 'nombre', 'codigo', 'descripcion', 'categoria_id', 'ubicacion_id', 'estado'])
             ->latest('id');
 
         // Filtro por búsqueda general (nombre, código, descripción, categoría, ubicación)
         if ($search !== '') {
-            $query->where(function($q) use ($search) {
-                $q->where('nombre', 'like', "%$search%")
-                  ->orWhere('codigo', 'like', "%$search%")
-                  ->orWhere('descripcion', 'like', "%$search%")
-                  ->orWhere('categoria', 'like', "%$search%")
-                  ->orWhere('ubicacion', 'like', "%$search%")
-                  ->orWhereHas('ubicacionCatalogo', function ($ubicacionQuery) use ($search) {
-                      $ubicacionQuery->where('nombre', 'like', "%$search%");
-                  });
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('INSTR(LOWER(nombre), LOWER(?)) > 0', [$search])
+                    ->orWhereRaw('INSTR(LOWER(codigo), LOWER(?)) > 0', [$search])
+                    ->orWhereRaw('INSTR(LOWER(descripcion), LOWER(?)) > 0', [$search])
+                    ->orWhereHas('categoriaCatalogo', function ($categoriaQuery) use ($search) {
+                        $categoriaQuery->whereRaw('INSTR(LOWER(nombre), LOWER(?)) > 0', [$search]);
+                    })
+                    ->orWhereHas('ubicacionCatalogo', function ($ubicacionQuery) use ($search) {
+                        $ubicacionQuery->whereRaw('INSTR(LOWER(nombre), LOWER(?)) > 0', [$search]);
+                    });
             });
         }
 
@@ -78,7 +90,9 @@ class BienController extends Controller
 
         // Filtro por categoría
         if ($categoria !== '') {
-            $query->where('categoria', $categoria);
+            $query->whereHas('categoriaCatalogo', function ($relatedCategoriaQuery) use ($categoria) {
+                $relatedCategoriaQuery->where('nombre', $categoria);
+            });
         }
 
         // Filtro por ubicación
@@ -130,8 +144,10 @@ class BienController extends Controller
         );
 
         $this->validateTextQuality($validated);
-        $this->syncCategoryCatalog($validated['categoria'] ?? null);
+        $categoria = $this->syncCategoryCatalog($validated['categoria'] ?? null);
+        $validated['categoria_id'] = $categoria?->id;
         $validated = $this->resolveLocationPayload($validated);
+        unset($validated['categoria'], $validated['ubicacion']);
 
         $bien = Bien::create($validated);
 
@@ -150,7 +166,10 @@ class BienController extends Controller
      */
     public function show(Bien $bien): View
     {
-        $bien->load('ubicacionCatalogo:id,nombre,estado');
+        $bien->load([
+            'categoriaCatalogo:id,nombre,estado',
+            'ubicacionCatalogo:id,nombre,estado',
+        ]);
 
         return view('bienes.show', compact('bien'));
     }
@@ -160,7 +179,7 @@ class BienController extends Controller
      */
     public function edit(Bien $bien): View
     {
-        $categoriasActivas = $this->activeCategoryNames();
+        $categoriasActivas = $this->activeCategoryNames($bien->categoria_id);
         $ubicacionesActivas = $this->activeLocationOptions($bien->ubicacion_id);
 
         return view('bienes.edit', compact('bien', 'categoriasActivas', 'ubicacionesActivas'));
@@ -175,26 +194,43 @@ class BienController extends Controller
             'categoria' => ['nullable', 'string', Rule::exists('categorias', 'nombre')],
         ]);
 
-        $categoriaFiltro = $request->input('categoria');
+        $categoriaFiltro = is_string($request->input('categoria'))
+            ? trim($request->input('categoria'))
+            : null;
 
-        $query = Bien::query()
-            ->with('ubicacionCatalogo:id,nombre')
-            ->select(['id', 'nombre', 'codigo', 'categoria', 'estado', 'ubicacion', 'ubicacion_id'])
-            ->latest('id');
-
-        if (is_string($categoriaFiltro) && trim($categoriaFiltro) !== '') {
-            $query->where('categoria', trim($categoriaFiltro));
-            $categoriaFiltro = trim($categoriaFiltro);
-        } else {
+        if ($categoriaFiltro === '') {
             $categoriaFiltro = null;
+        }
+
+        $categoriaIdFiltro = $categoriaFiltro
+            ? (int) Categoria::query()->where('nombre', $categoriaFiltro)->value('id')
+            : null;
+
+        $query = DB::table('bienes')
+            ->leftJoin('categorias', 'bienes.categoria_id', '=', 'categorias.id')
+            ->leftJoin('ubicaciones', 'bienes.ubicacion_id', '=', 'ubicaciones.id')
+            ->selectRaw("bienes.id, bienes.nombre, bienes.codigo, bienes.estado, bienes.categoria_id, bienes.ubicacion_id, COALESCE(NULLIF(TRIM(categorias.nombre), ''), 'Sin categoría') as categoria_nombre, COALESCE(NULLIF(TRIM(ubicaciones.nombre), ''), '—') as ubicacion_nombre")
+            ->orderByDesc('bienes.id');
+
+        if ($categoriaFiltro !== null) {
+            if ($categoriaIdFiltro > 0) {
+                $query->where('bienes.categoria_id', $categoriaIdFiltro);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
         }
 
         $bienes = $query->get();
 
-        $resumenCategorias = Bien::query()
-            ->selectRaw("COALESCE(NULLIF(TRIM(categoria), ''), 'Sin categoría') as categoria_nombre, COUNT(*) as total")
-            ->when($categoriaFiltro, function ($q) use ($categoriaFiltro) {
-                $q->where('categoria', $categoriaFiltro);
+        $resumenCategorias = DB::table('bienes')
+            ->leftJoin('categorias', 'bienes.categoria_id', '=', 'categorias.id')
+            ->selectRaw("COALESCE(NULLIF(TRIM(categorias.nombre), ''), 'Sin categoría') as categoria_nombre, COUNT(*) as total")
+            ->when($categoriaFiltro !== null, function ($q) use ($categoriaIdFiltro) {
+                if ($categoriaIdFiltro > 0) {
+                    $q->where('bienes.categoria_id', $categoriaIdFiltro);
+                } else {
+                    $q->whereRaw('1 = 0');
+                }
             })
             ->groupBy('categoria_nombre')
             ->orderBy('categoria_nombre')
@@ -244,8 +280,10 @@ class BienController extends Controller
         $validated = $request->validate($rules, $this->bienValidationMessages());
 
         $this->validateTextQuality($validated);
-        $this->syncCategoryCatalog($validated['categoria'] ?? null);
+        $categoria = $this->syncCategoryCatalog($validated['categoria'] ?? null);
+        $validated['categoria_id'] = $categoria?->id;
         $validated = $this->resolveLocationPayload($validated);
+        unset($validated['categoria'], $validated['ubicacion']);
 
         $bien->update($validated);
 
@@ -482,10 +520,16 @@ class BienController extends Controller
     /**
      * Nombres de categorías activas para formularios/selectores.
      */
-    private function activeCategoryNames(): Collection
+    private function activeCategoryNames(?int $selectedId = null): Collection
     {
         return Categoria::query()
-            ->where('estado', 'activo')
+            ->where(function ($query) use ($selectedId) {
+                $query->where('estado', 'activo');
+
+                if ($selectedId !== null) {
+                    $query->orWhere('id', $selectedId);
+                }
+            })
             ->orderBy('nombre')
             ->pluck('nombre');
     }
@@ -514,7 +558,8 @@ class BienController extends Controller
     private function categorySummary(): Collection
     {
         return Bien::query()
-            ->selectRaw("COALESCE(NULLIF(TRIM(categoria), ''), 'Sin categoría') as categoria_nombre, COUNT(*) as total")
+            ->leftJoin('categorias', 'bienes.categoria_id', '=', 'categorias.id')
+            ->selectRaw("COALESCE(NULLIF(TRIM(categorias.nombre), ''), 'Sin categoría') as categoria_nombre, COUNT(*) as total")
             ->groupBy('categoria_nombre')
             ->orderByDesc('total')
             ->orderBy('categoria_nombre')
@@ -524,15 +569,15 @@ class BienController extends Controller
     /**
      * Mantiene sincronizado el catálogo de categorías según datos guardados en bienes.
      */
-    private function syncCategoryCatalog(?string $categoria): void
+    private function syncCategoryCatalog(?string $categoria): ?Categoria
     {
         $nombre = is_string($categoria) ? trim($categoria) : '';
 
         if ($nombre === '') {
-            return;
+            return null;
         }
 
-        Categoria::query()->updateOrCreate(
+        return Categoria::query()->updateOrCreate(
             ['nombre' => $nombre],
             ['estado' => 'activo']
         );
@@ -555,7 +600,6 @@ class BienController extends Controller
 
             if ($ubicacion) {
                 $validated['ubicacion_id'] = $ubicacion->id;
-                $validated['ubicacion'] = $ubicacion->nombre;
 
                 return $validated;
             }
@@ -567,7 +611,6 @@ class BienController extends Controller
 
         if ($nombreLegacy === '') {
             $validated['ubicacion_id'] = null;
-            $validated['ubicacion'] = null;
 
             return $validated;
         }
@@ -575,7 +618,6 @@ class BienController extends Controller
         $ubicacion = $this->syncLocationCatalog($nombreLegacy);
 
         $validated['ubicacion_id'] = $ubicacion?->id;
-        $validated['ubicacion'] = $ubicacion?->nombre;
 
         return $validated;
     }
@@ -592,6 +634,87 @@ class BienController extends Controller
             ['nombre' => $nombre],
             ['estado' => 'activo']
         );
+    }
+
+    /**
+     * @return array<string, int|string>
+     */
+    private function buildCanonicalFilters(
+        string $search,
+        string $estado,
+        string $categoria,
+        ?int $ubicacionId,
+        int $perPage,
+        int $page
+    ): array {
+        $filters = [];
+
+        if ($search !== '') {
+            $filters['search'] = $search;
+        }
+
+        if ($estado !== '') {
+            $filters['estado'] = $estado;
+        }
+
+        if ($categoria !== '') {
+            $filters['categoria'] = $categoria;
+        }
+
+        if ($ubicacionId !== null && $ubicacionId > 0) {
+            $filters['ubicacion'] = $ubicacionId;
+        }
+
+        if ($perPage !== 15) {
+            $filters['per_page'] = $perPage;
+        }
+
+        if ($page > 1) {
+            $filters['page'] = $page;
+        }
+
+        return $filters;
+    }
+
+    /**
+     * @param  array<string, mixed>  $query
+     * @return array<string, string>
+     */
+    private function normalizeFilterQueryForComparison(array $query): array
+    {
+        $allowed = ['search', 'estado', 'categoria', 'ubicacion', 'per_page', 'page'];
+        $normalized = [];
+
+        foreach ($allowed as $key) {
+            if (! array_key_exists($key, $query)) {
+                continue;
+            }
+
+            $value = $query[$key];
+
+            if (is_array($value) || $value === null) {
+                continue;
+            }
+
+            if (is_string($value)) {
+                $value = trim($value);
+            }
+
+            if ($value === '') {
+                continue;
+            }
+
+            if (in_array($key, ['ubicacion', 'per_page', 'page'], true) && is_numeric($value)) {
+                $normalized[$key] = (string) ((int) $value);
+                continue;
+            }
+
+            $normalized[$key] = (string) $value;
+        }
+
+        ksort($normalized);
+
+        return $normalized;
     }
 
 }

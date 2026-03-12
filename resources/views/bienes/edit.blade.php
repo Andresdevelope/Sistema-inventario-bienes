@@ -61,7 +61,7 @@
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                             <option value="">Seleccione una categoría</option>
                             @foreach(($categoriasActivas ?? collect()) as $categoria)
-                                <option value="{{ $categoria }}" {{ old('categoria', $bien->categoria) === $categoria ? 'selected' : '' }}>{{ $categoria }}</option>
+                                <option value="{{ $categoria }}" {{ old('categoria', $bien->categoria_nombre) === $categoria ? 'selected' : '' }}>{{ $categoria }}</option>
                             @endforeach
                         </select>
                         <p id="categoria-help" class="text-[11px] text-slate-500">Selecciona una categoría del catálogo activo.</p>

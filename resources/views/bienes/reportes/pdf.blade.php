@@ -71,8 +71,9 @@
         </thead>
         <tbody>
             @forelse($resumenCategorias as $row)
+                @php($categoriaResumen = trim((string) ($row->categoria_nombre ?? '')))
                 <tr>
-                    <td>{{ $row->categoria_nombre }}</td>
+                    <td>{{ $categoriaResumen !== '' ? $categoriaResumen : 'Sin categoría' }}</td>
                     <td class="text-right">{{ $row->total }}</td>
                 </tr>
             @empty
@@ -98,10 +99,11 @@
             @forelse($bienes as $bien)
                 @php($estado = strtolower(trim((string) $bien->estado)))
                 @php($estadoLabel = $estado === 'de_baja' ? 'Dado de baja' : ucfirst($estado))
+                @php($categoriaDetalle = trim((string) ($bien->categoria_nombre ?? '')))
                 <tr>
                     <td>{{ $bien->nombre }}</td>
                     <td>{{ $bien->codigo }}</td>
-                    <td>{{ $bien->categoria ?? 'Sin categoría' }}</td>
+                    <td>{{ $categoriaDetalle !== '' ? $categoriaDetalle : 'Sin categoría' }}</td>
                     <td>{{ $estadoLabel }}</td>
                     <td>{{ $bien->ubicacion_nombre ?? '—' }}</td>
                 </tr>
