@@ -1,0 +1,17 @@
+CONSTANCIA BREVE DE PROPIEDAD INTELECTUAL
+Proyecto: Sistema Inventario Bienes
+Fecha: 12/03/2026
+
+Se verificó la documentación disponible del proyecto y se constató que, a la fecha,
+no existe en el repositorio evidencia formal de:
+1) registro de propiedad intelectual ante SAPI,
+2) licencia Creative Commons declarada para el sistema,
+3) patente asociada al producto.
+
+En la interfaz del sistema se muestra el aviso “Sistema Inventario Bienes © 2026”,
+lo cual representa autoría visible, pero no sustituye el registro legal formal.
+
+Para cierre de cumplimiento, se recomienda anexar:
+- constancia de registro ante SAPI (si aplica),
+- o declaración formal de licencia del sistema,
+- y referenciar dicha evidencia en la documentación del proyecto.

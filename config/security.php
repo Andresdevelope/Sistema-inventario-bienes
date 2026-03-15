@@ -16,4 +16,15 @@ return [
     'force_https' => env('FORCE_HTTPS', false),
     'headers_enabled' => env('SECURITY_HEADERS_ENABLED', true),
     'hsts_enabled' => env('SECURITY_HSTS_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Recuperación de contraseña
+    |--------------------------------------------------------------------------
+    |
+    | recovery_token_ttl_minutes: minutos de validez del token enviado por
+    | correo tras validar preguntas de seguridad.
+    |
+    */
+    'recovery_token_ttl_minutes' => env('RECOVERY_TOKEN_TTL_MINUTES', 10),
 ];

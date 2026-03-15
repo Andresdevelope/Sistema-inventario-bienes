@@ -35,6 +35,7 @@ MATRIZ DE PRIVILEGIOS
 - Perfil: SI
 - Bienes (listar/crear/editar/eliminar): SI
 - Categorías (listar/crear/editar/activar-desactivar): SI
+- ubicaciones (listar/crear/editar/activar-desactivar) : SI
 - Exportar reportes PDF: SI
 - Usuarios (listar/crear/editar/eliminar): SI
 - Cambiar rol de usuarios: SI
@@ -48,6 +49,7 @@ MATRIZ DE PRIVILEGIOS
 - Perfil: SI
 - Bienes (listar/crear/editar/eliminar): SI
 - Categorías (listar/crear/editar/activar-desactivar): SI
+- ubicaciones (listar/crear/editar/activar-desactivar) : SI 
 - Exportar reportes PDF: SI
 - Usuarios (listar/crear/editar/eliminar): NO
 - Cambiar rol de usuarios: NO

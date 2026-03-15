@@ -88,6 +88,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'security_color_answer' => 'hashed',
+            'security_animal_answer' => 'hashed',
+            'security_padre_answer' => 'hashed',
             'locked_until' => 'datetime',
             'permissions' => 'array',
         ];

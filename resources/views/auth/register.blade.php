@@ -37,7 +37,7 @@
 
             <div class="space-y-1 relative">
                 <label class="block text-xs font-medium text-slate-700" for="password">Contraseña</label>
-                <input id="password" name="password" type="password" required minlength="16" maxlength="40" autocomplete="new-password"
+                <input id="password" name="password" type="password" required autocomplete="new-password" required minlength="16"
                     class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600 pr-10">
                 <button type="button" onclick="togglePassword('password', this)" tabindex="-1"
                     class="absolute right-2 top-8 text-slate-500 hover:text-slate-700 focus:outline-none">
@@ -56,7 +56,7 @@
                         <div id="password-strength-bar" class="h-full w-0 rounded-full bg-slate-300 transition-all duration-300"></div>
                     </div>
                     <ul id="password-rules" class="space-y-0.5 text-[11px] text-slate-600">
-                        <li data-rule="len" class="transition-colors">• Entre 16 y 40 caracteres.</li>
+                        <!-- <li data-rule="len" class="transition-colors">• Entre 16 y 40 caracteres.</li> -->
                         <li data-rule="mixed" class="transition-colors">• Incluye letras y números.</li>
                         <li data-rule="not-only-number" class="transition-colors">• No debe ser solo números.</li>
                         <li data-rule="not-repetitive" class="transition-colors">• Evita repeticiones o patrones débiles.</li>
@@ -68,7 +68,7 @@
 
             <div class="space-y-1 relative">
                 <label class="block text-xs font-medium text-slate-700" for="password_confirmation">Confirmar contraseña</label>
-                <input id="password_confirmation" name="password_confirmation" type="password" required minlength="16" maxlength="40" autocomplete="new-password"
+                <input id="password_confirmation" name="password_confirmation" type="password" required autocomplete="new-password" required minlength="16"
                     class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600 pr-10">
                 <button type="button" onclick="togglePassword('password_confirmation', this)" tabindex="-1"
                     class="absolute right-2 top-8 text-slate-500 hover:text-slate-700 focus:outline-none">

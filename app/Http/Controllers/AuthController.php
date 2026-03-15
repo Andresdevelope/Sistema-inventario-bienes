@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -114,7 +117,7 @@ class AuthController extends Controller
                 'unique:users,name',
             ],
             'email' => ['required', 'string', 'email', 'max:80', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:16', 'max:40', 'confirmed'],
+            'password' => ['required', 'string', 'min:16', 'confirmed'],
             'security_color_answer' => [
                 'required',
                 'string',
@@ -157,7 +160,6 @@ class AuthController extends Controller
 
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos 16 caracteres.',
-            'password.max' => 'La contraseña no puede superar los 40 caracteres.',
             'password.confirmed' => 'La confirmación de la contraseña no coincide.',
 
             'security_color_answer.required' => 'La respuesta de color favorito es obligatoria.',
@@ -192,9 +194,9 @@ class AuthController extends Controller
             // El cast "hashed" del modelo se encarga de encriptar la contraseña
             'password' => $validated['password'],
             'role' => $role,
-            'security_color_answer' => $validated['security_color_answer'],
-            'security_animal_answer' => $validated['security_animal_answer'],
-            'security_padre_answer' => $validated['security_padre_answer'],
+            'security_color_answer' => Hash::make($validated['security_color_answer']),
+            'security_animal_answer' => Hash::make($validated['security_animal_answer']),
+            'security_padre_answer' => Hash::make($validated['security_padre_answer']),
         ]);
 
         // No iniciar sesión automáticamente. Redirigir al login con mensaje de éxito.
@@ -221,14 +223,14 @@ class AuthController extends Controller
         $credentials = $request->validate([
             // Usamos "name" como nombre de usuario
             'name' => ['required', 'string', 'min:3', 'max:30'],
-            'password' => ['required', 'string', 'min:16', 'max:40'],
+            'password' => ['required', 'string', 'min:16'],
         ], [
             'name.required' => 'El nombre de usuario es obligatorio.',
             'name.min' => 'El nombre de usuario debe tener al menos 3 caracteres.',
             'name.max' => 'El nombre de usuario no puede superar los 30 caracteres.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos 16 caracteres.',
-            'password.max' => 'La contraseña no puede superar los 40 caracteres.',
+            
         ]);
         // Buscar usuario por nombre de usuario
         $user = User::where('name', $credentials['name'])->first();
@@ -333,13 +335,21 @@ class AuthController extends Controller
      * Mostrar formulario de recuperación (flujo unificado por pasos).
      * Paso 1: correo
      * Paso 2: dos preguntas (y tercera opcional si fallan)
-     * Paso 3: nueva contraseña
+     * Paso 3: validación de token enviado por correo
+     * Paso 4: nueva contraseña
      */
     public function showRecoveryForm(Request $request): View
     {
         // Si viene desde el enlace de "¿Olvidaste tu contraseña?" con reset=1, reiniciamos el flujo
         if ($request->query('reset')) {
-            $request->session()->forget(['password_recover_user_id', 'password_reset_user_id', 'recovery_step', 'show_third_question']);
+            $request->session()->forget([
+                'password_recover_user_id',
+                'password_token_user_id',
+                'password_token_email',
+                'password_reset_user_id',
+                'recovery_step',
+                'show_third_question',
+            ]);
         }
 
         $step = (int) $request->session()->get('recovery_step', 1);
@@ -366,6 +376,10 @@ class AuthController extends Controller
             if (! $this->validateRecaptcha($request)) {
                 return back()->withErrors(['recaptcha' => 'Verificación reCAPTCHA fallida.'])->onlyInput('email');
             }
+            $request->merge([
+                'email' => $this->sanitizeEmail($request->input('email')),
+            ]);
+
             $validated = $request->validate([
                 'email' => ['required', 'email'],
             ], [
@@ -414,12 +428,29 @@ class AuthController extends Controller
                     return back()->withErrors(['security_padre_answer' => 'Respuesta incorrecta.']);
                 }
 
-                // Tercera respuesta correcta: pasar a cambio de contraseña
+                // Tercera respuesta correcta: generar y enviar token por correo
+                $token = $this->generateRecoveryToken();
+                $this->storeRecoveryToken($user->email, $token);
+
+                try {
+                    $this->sendRecoveryTokenByEmail($user, $token);
+                } catch (\Throwable $e) {
+                    Log::error('Error enviando token de recuperación: ' . $e->getMessage(), [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                    ]);
+
+                    return back()->withErrors([
+                        'email' => 'No fue posible enviar el token al correo. Intenta nuevamente en unos minutos.',
+                    ]);
+                }
+
                 $request->session()->forget(['show_third_question', 'password_recover_user_id']);
-                $request->session()->put('password_reset_user_id', $user->id);
+                $request->session()->put('password_token_user_id', $user->id);
+                $request->session()->put('password_token_email', $user->email);
                 $request->session()->put('recovery_step', 3);
 
-                return redirect()->route('password.recover');
+                return redirect()->route('password.recover')->with('status', 'Te enviamos un token a tu correo. Ingrésalo para continuar.');
             }
 
             // Primer intento: validar solo color y animal
@@ -436,11 +467,28 @@ class AuthController extends Controller
 
             // Si ambas son correctas, pasar al cambio de contraseña
             if ($colorOk && $animalOk) {
+                $token = $this->generateRecoveryToken();
+                $this->storeRecoveryToken($user->email, $token);
+
+                try {
+                    $this->sendRecoveryTokenByEmail($user, $token);
+                } catch (\Throwable $e) {
+                    Log::error('Error enviando token de recuperación: ' . $e->getMessage(), [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                    ]);
+
+                    return back()->withErrors([
+                        'email' => 'No fue posible enviar el token al correo. Intenta nuevamente en unos minutos.',
+                    ]);
+                }
+
                 $request->session()->forget(['show_third_question', 'password_recover_user_id']);
-                $request->session()->put('password_reset_user_id', $user->id);
+                $request->session()->put('password_token_user_id', $user->id);
+                $request->session()->put('password_token_email', $user->email);
                 $request->session()->put('recovery_step', 3);
 
-                return redirect()->route('password.recover');
+                return redirect()->route('password.recover')->with('status', 'Te enviamos un token a tu correo. Ingrésalo para continuar.');
             }
 
             // Alguna falló: activar tercera pregunta y volver a mostrar el formulario
@@ -449,14 +497,62 @@ class AuthController extends Controller
             return back()->withErrors(['security_color_answer' => 'Alguna respuesta es incorrecta, ahora debes responder la tercera pregunta de seguridad.']);
         }
 
-        // Paso 3: cambio de contraseña
+        // Paso 3: validación de token enviado por correo
         if ($step === 3) {
             $validated = $request->validate([
-                'password' => ['required', 'string', 'min:16', 'max:40', 'confirmed'],
+                'token' => ['required', 'digits:6'],
+            ], [
+                'token.required' => 'Debes ingresar el token enviado a tu correo.',
+                'token.digits' => 'El token debe tener exactamente 6 dígitos.',
+            ]);
+
+            $userId = $request->session()->get('password_token_user_id');
+            $email = (string) $request->session()->get('password_token_email', '');
+            if (! $userId || $email === '') {
+                return redirect()->route('password.recover')->withErrors(['email' => 'Sesión de validación no válida.']);
+            }
+
+            $user = User::find($userId);
+            if (! $user || mb_strtolower($user->email) !== mb_strtolower($email)) {
+                return redirect()->route('password.recover')->withErrors(['email' => 'Usuario no encontrado para validar token.']);
+            }
+
+            $record = DB::table('password_reset_tokens')->where('email', $user->email)->first();
+            if (! $record || ! isset($record->token, $record->created_at)) {
+                return back()->withErrors(['token' => 'No se encontró un token activo. Solicita uno nuevo.']);
+            }
+
+            $ttlMinutes = (int) config('security.recovery_token_ttl_minutes', 10);
+            $createdAt = \Illuminate\Support\Carbon::parse((string) $record->created_at);
+            $expiresAt = $createdAt->addMinutes($ttlMinutes);
+            if (now()->greaterThan($expiresAt)) {
+                DB::table('password_reset_tokens')->where('email', $user->email)->delete();
+
+                return back()->withErrors(['token' => 'El token ha expirado. Inicia de nuevo el proceso de recuperación.']);
+            }
+
+            $providedHash = hash('sha256', (string) $validated['token']);
+            if (! hash_equals((string) $record->token, $providedHash)) {
+                return back()->withErrors(['token' => 'El token ingresado es incorrecto.']);
+            }
+
+            // Token válido: eliminarlo para evitar reutilización y avanzar
+            DB::table('password_reset_tokens')->where('email', $user->email)->delete();
+
+            $request->session()->forget(['password_token_user_id', 'password_token_email']);
+            $request->session()->put('password_reset_user_id', $user->id);
+            $request->session()->put('recovery_step', 4);
+
+            return redirect()->route('password.recover');
+        }
+
+        // Paso 4: cambio de contraseña
+        if ($step === 4) {
+            $validated = $request->validate([
+                'password' => ['required', 'string', 'min:16', 'confirmed'],
             ], [
                 'password.required' => 'La nueva contraseña es obligatoria.',
                 'password.min' => 'La nueva contraseña debe tener al menos 16 caracteres.',
-                'password.max' => 'La nueva contraseña no puede superar los 40 caracteres.',
                 'password.confirmed' => 'La confirmación de la contraseña no coincide.',
             ]);
 
@@ -480,22 +576,83 @@ class AuthController extends Controller
             }
             $user->save();
 
-            $request->session()->forget(['password_reset_user_id', 'password_recover_user_id', 'recovery_step', 'show_third_question']);
+            $request->session()->forget([
+                'password_reset_user_id',
+                'password_recover_user_id',
+                'password_token_user_id',
+                'password_token_email',
+                'recovery_step',
+                'show_third_question',
+            ]);
 
             return redirect()->route('login')->with('status', 'Contraseña actualizada correctamente. Ahora puedes iniciar sesión.');
         }
 
         // Si el paso no es válido, reiniciamos el flujo
-        $request->session()->forget(['password_reset_user_id', 'password_recover_user_id', 'recovery_step', 'show_third_question']);
+        $request->session()->forget([
+            'password_reset_user_id',
+            'password_recover_user_id',
+            'password_token_user_id',
+            'password_token_email',
+            'recovery_step',
+            'show_third_question',
+        ]);
 
         return redirect()->route('password.recover');
     }
 
     /**
-     * Comparar respuestas de seguridad ignorando mayúsculas/minúsculas y espacios.
+     * Genera token numérico de 6 dígitos para recuperación.
+     */
+    protected function generateRecoveryToken(): string
+    {
+        return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Guarda token de recuperación (hash) y fecha de creación.
+     */
+    protected function storeRecoveryToken(string $email, string $plainToken): void
+    {
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $email],
+            [
+                'token' => hash('sha256', $plainToken),
+                'created_at' => now(),
+            ]
+        );
+    }
+
+    /**
+     * Envía token de recuperación al correo del usuario.
+     */
+    protected function sendRecoveryTokenByEmail(User $user, string $token): void
+    {
+        $ttlMinutes = (int) config('security.recovery_token_ttl_minutes', 10);
+
+        Mail::raw(
+            "Hola {$user->name},\n\n" .
+            "Tu token de verificación para recuperar la contraseña es: {$token}\n\n" .
+            "Este token vence en {$ttlMinutes} minutos.\n\n" .
+            "Si no solicitaste este cambio, ignora este mensaje.",
+            function ($message) use ($user) {
+                $message->to($user->email)
+                    ->subject('Token de recuperación de contraseña');
+            }
+        );
+    }
+
+    /**
+     * Compara respuestas de seguridad con hash seguro.
+     * Mantiene compatibilidad con registros antiguos en texto plano.
      */
     protected function compareAnswer(string $stored, string $input): bool
     {
+        // Si el valor almacenado es un hash bcrypt, usar verificación segura
+        if (preg_match('/^\$2[ayb]\$/', $stored)) {
+            return Hash::check($input, $stored);
+        }
+        // Compatibilidad retroactiva con datos existentes en texto plano
         return mb_strtolower(trim($stored)) === mb_strtolower(trim($input));
     }
 

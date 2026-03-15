@@ -10,6 +10,8 @@
                 Recuperar contraseña
             @elseif ($step === 2)
                 Verificación de seguridad
+            @elseif ($step === 3)
+                Verificar token por correo
             @else
                 Definir nueva contraseña
             @endif
@@ -22,10 +24,18 @@
                 @if ($showThirdQuestion)
                     <br>Alguna respuesta fue incorrecta, ahora también debes responder la tercera pregunta.
                 @endif
+            @elseif ($step === 3)
+                Te enviamos un token de 6 dígitos a tu correo. Ingrésalo para continuar.
             @else
                 Elige una nueva contraseña para tu cuenta.
             @endif
         </p>
+
+        @if (session('status'))
+            <div class="mb-4 text-xs text-emerald-700 border border-emerald-200 bg-emerald-50 rounded px-3 py-2">
+                {{ session('status') }}
+            </div>
+        @endif
 
         @if ($errors->any())
             <div class="mb-4 text-xs text-red-700 border border-red-200 bg-red-50 rounded px-3 py-2">
@@ -83,20 +93,20 @@
                     {{-- Primer intento: dos primeras preguntas --}}
                     <div class="space-y-1">
                         <label class="block text-xs font-medium text-slate-700" for="security_color_answer">¿Cuál es tu color favorito?</label>
-                        <input id="security_color_answer" name="security_color_answer" type="text" value="{{ old('security_color_answer') }}" required
+                        <input id="security_color_answer" name="security_color_answer" type="text" value="{{ old('security_color_answer') }}" required maxlength="40"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
 
                     <div class="space-y-1">
                         <label class="block text-xs font-medium text-slate-700" for="security_animal_answer">¿Cuál es tu animal favorito?</label>
-                        <input id="security_animal_answer" name="security_animal_answer" type="text" value="{{ old('security_animal_answer') }}" required
+                        <input id="security_animal_answer" name="security_animal_answer" type="text" value="{{ old('security_animal_answer') }}" required maxlength="40"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
                 @else
                     {{-- Segundo intento: solo la tercera pregunta --}}
                     <div class="space-y-1">
                         <label class="block text-xs font-medium text-slate-700" for="security_padre_answer">Nombre de tu padre</label>
-                        <input id="security_padre_answer" name="security_padre_answer" type="text" value="{{ old('security_padre_answer') }}" required
+                        <input id="security_padre_answer" name="security_padre_answer" type="text" value="{{ old('security_padre_answer') }}" required maxlength="40"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
                 @endif
@@ -125,15 +135,45 @@
                     </button>
                 </div>
             </form>
-        @else
-            {{-- Paso 3: nueva contraseña --}}
-            <form id="recover-reset-form" method="POST" action="{{ route('password.recover.handle') }}" class="space-y-4">
+        @elseif ($step === 3)
+            {{-- Paso 3: token enviado por correo --}}
+            <form method="POST" action="{{ route('password.recover.handle') }}" class="space-y-4">
                 @csrf
                 <input type="hidden" name="step" value="3">
 
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700" for="token">Token de verificación</label>
+                    <input id="token" name="token" type="text" inputmode="numeric" pattern="\d{6}" maxlength="6" required value="{{ old('token') }}"
+                        class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm tracking-[0.25em] text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600"
+                        placeholder="000000">
+                    <p class="text-[11px] text-slate-500">El token vence en unos minutos por seguridad.</p>
+                </div>
+
+                <div class="pt-2 flex items-center justify-between text-xs">
+                    <a href="{{ route('login') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-4 py-2 font-semibold text-brand-700 shadow-inner shadow-brand-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-brand-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                        Cancelar
+                    </a>
+                    <button type="submit"
+                        class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-brand-900/30 transition duration-300 hover:-translate-y-0.5 hover:shadow-brand-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m6 2.25a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        Validar token
+                    </button>
+                </div>
+            </form>
+        @else
+            {{-- Paso 4: nueva contraseña --}}
+            <form id="recover-reset-form" method="POST" action="{{ route('password.recover.handle') }}" class="space-y-4">
+                @csrf
+                <input type="hidden" name="step" value="4">
+
                 <div class="space-y-1 relative">
                     <label class="block text-xs font-medium text-slate-700" for="password">Nueva contraseña</label>
-                    <input id="password" name="password" type="password" required minlength="16" maxlength="40" autocomplete="new-password"
+                    <input id="password" name="password" type="password" required minlength="16" autocomplete="new-password"
                         class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600 pr-10">
                     <button type="button" onclick="togglePassword('password', this)" tabindex="-1"
                         class="absolute right-2 top-8 text-slate-500 hover:text-slate-700 focus:outline-none">
@@ -147,7 +187,7 @@
 
                 <div class="space-y-1 relative">
                     <label class="block text-xs font-medium text-slate-700" for="password_confirmation">Confirmar contraseña</label>
-                    <input id="password_confirmation" name="password_confirmation" type="password" required minlength="16" maxlength="40" autocomplete="new-password"
+                    <input id="password_confirmation" name="password_confirmation" type="password" required minlength="16" autocomplete="new-password"
                         class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600 pr-10">
                     <button type="button" onclick="togglePassword('password_confirmation', this)" tabindex="-1"
                         class="absolute right-2 top-8 text-slate-500 hover:text-slate-700 focus:outline-none">
@@ -167,7 +207,7 @@
                         <div id="password-strength-bar" class="h-full w-0 bg-slate-400 transition-all duration-300"></div>
                     </div>
                     <ul class="space-y-1 text-[11px] text-slate-600">
-                        <li id="pwd-check-length">• Entre 16 y 40 caracteres.</li>
+                        <li id="pwd-check-length">• Mínimo 16 caracteres</li>
                         <li id="pwd-check-numeric">• No puede ser solo números.</li>
                         <li id="pwd-check-repeat">• No puede repetir el mismo carácter muchas veces.</li>
                         <li id="pwd-check-gibberish">• Evita texto aleatorio o secuencias débiles.</li>
@@ -256,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const hasConfirmation = conf.length > 0;
 
         const checksState = {
-            length: hasPassword && pwd.length >= 16 && pwd.length <= 40,
+            length: hasPassword && pwd.length >= 16,
             numeric: hasPassword && !/^\d+$/u.test(pwd),
             repeat: hasPassword && !/^(.)\1{5,}$/u.test(pwd),
             gibberish: hasPassword && !looksLikeGibberish(pwd, 30, 7),
@@ -299,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!checksState.length) {
-            passwordInput.setCustomValidity('La contraseña debe tener entre 16 y 40 caracteres.');
+            passwordInput.setCustomValidity('La contraseña debe tener al menos 16 caracteres.');
         } else if (!checksState.numeric) {
             passwordInput.setCustomValidity('La contraseña no puede estar compuesta solo por números.');
         } else if (!checksState.repeat) {

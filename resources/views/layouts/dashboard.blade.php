@@ -368,8 +368,8 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="relative">
-                        <label class="block text-[11px] font-medium text-slate-700 mb-1">Contraseña <span class="text-red-600">(mín. 16, máx. 25 caracteres)</span></label>
-                        <input type="password" name="password" id="create-user-password" minlength="16" maxlength="25"
+                        <label class="block text-[11px] font-medium text-slate-700 mb-1">Contraseña <span class="text-red-600">(mín. 16 caracteres)</span></label>
+                        <input type="password" name="password" id="create-user-password" required minlength="16"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 pr-8 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                         <button type="button" onclick="togglePassword('password', this)" tabindex="-1"
                             class="absolute right-2 top-7 text-slate-500 hover:text-slate-700 focus:outline-none">
@@ -380,8 +380,8 @@
                         </button>
                     </div>
                     <div class="relative">
-                        <label class="block text-[11px] font-medium text-slate-700 mb-1">Confirmar contraseña <span class="text-slate-500">(Máx. 25 caracteres)</span></label>
-                        <input type="password" name="password_confirmation" id="create-user-password-confirm" minlength="16" maxlength="25"
+                        <label class="block text-[11px] font-medium text-slate-700 mb-1">Confirmar contraseña</label>
+                        <input type="password" name="password_confirmation" id="create-user-password-confirm" minlength="16"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 pr-8 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                         <button type="button" onclick="togglePassword('password_confirmation', this)" tabindex="-1"
                             class="absolute right-2 top-7 text-slate-500 hover:text-slate-700 focus:outline-none">

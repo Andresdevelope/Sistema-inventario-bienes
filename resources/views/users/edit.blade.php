@@ -126,17 +126,17 @@
                 <div class="grid gap-4 md:grid-cols-3">
                     <div class="space-y-1 md:col-span-1">
                         <label class="block text-xs font-medium text-slate-700" for="security_color_answer">Color favorito</label>
-                        <input id="security_color_answer" name="security_color_answer" type="text" value="{{ old('security_color_answer', $user->security_color_answer) }}" required
+                        <input id="security_color_answer" name="security_color_answer" type="text" value="{{ old('security_color_answer') }}" required placeholder="Ingresa una nueva respuesta"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
                     <div class="space-y-1 md:col-span-1">
                         <label class="block text-xs font-medium text-slate-700" for="security_animal_answer">Animal favorito</label>
-                        <input id="security_animal_answer" name="security_animal_answer" type="text" value="{{ old('security_animal_answer', $user->security_animal_answer) }}" required
+                        <input id="security_animal_answer" name="security_animal_answer" type="text" value="{{ old('security_animal_answer') }}" required placeholder="Ingresa una nueva respuesta"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
                     <div class="space-y-1 md:col-span-1">
                         <label class="block text-xs font-medium text-slate-700" for="security_padre_answer">Nombre de tu padre</label>
-                        <input id="security_padre_answer" name="security_padre_answer" type="text" value="{{ old('security_padre_answer', $user->security_padre_answer) }}" required
+                        <input id="security_padre_answer" name="security_padre_answer" type="text" value="{{ old('security_padre_answer') }}" required placeholder="Ingresa una nueva respuesta"
                             class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600">
                     </div>
                 </div>
