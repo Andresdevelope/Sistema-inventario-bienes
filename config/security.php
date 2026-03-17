@@ -26,5 +26,11 @@ return [
     | correo tras validar preguntas de seguridad.
     |
     */
-    'recovery_token_ttl_minutes' => env('RECOVERY_TOKEN_TTL_MINUTES', 10),
+    'recovery_token_ttl_minutes' => env('RECOVERY_TOKEN_TTL_MINUTES', 1),
+
+    // Máximo de intentos permitidos para validar el token de recuperación (por usuario/sesión)
+    'recovery_token_max_attempts' => env('RECOVERY_TOKEN_MAX_ATTEMPTS', 3),
+
+    // Tiempo mínimo (en segundos) entre solicitudes de token de recuperación (rate limit)
+    'recovery_token_request_interval' => env('RECOVERY_TOKEN_REQUEST_INTERVAL', 60),
 ];

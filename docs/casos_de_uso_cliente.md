@@ -1,3 +1,4 @@
+
 # Casos de Uso del Sistema de Inventario de Bienes
 
 **Fecha:** 13 de marzo de 2026
@@ -75,6 +76,24 @@ Este documento explica, de manera sencilla y con ejemplos, cómo funciona el sis
 **Notas importantes:**
 - Solo puede haber dos administradores.
 - El usuario principal (superadministrador) no puede ser eliminado.
+
+---
+
+## 5. Registrar (crear) un usuario
+
+**¿Quién lo usa?**
+- Solo el administrador del sistema
+
+**¿Para qué sirve?**
+- Para dar de alta a un nuevo usuario en el sistema, asignándole un rol y configurando sus datos de acceso y seguridad.
+
+**Ejemplo práctico:**
+- El administrador necesita que un nuevo operador pueda ingresar al sistema. Ingresa al módulo de usuarios, llena el formulario con los datos del nuevo usuario (nombre, correo, rol, preguntas de seguridad, etc.) y guarda la información. El nuevo usuario ya puede iniciar sesión.
+
+**Notas importantes:**
+- El sistema valida que el correo no esté repetido y que todos los campos obligatorios estén completos.
+- Solo puede haber dos administradores activos a la vez.
+- El usuario principal (superadministrador) no puede ser eliminado ni modificado desde este flujo.
 
 ---
 

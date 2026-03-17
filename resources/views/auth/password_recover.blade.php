@@ -3,6 +3,7 @@
 @section('content')
 @php($step = $step ?? 1)
 @php($showThirdQuestion = $showThirdQuestion ?? false)
+@php($tokenRemainingMs = (int) ($tokenRemainingMs ?? 0))
 <div class="flex items-center justify-center min-h-screen">
     <div class="w-full max-w-md bg-white/90 backdrop-blur border border-slate-200 shadow-2xl rounded-2xl p-6 md:p-8 text-slate-900">
         <h1 class="text-2xl font-semibold mb-1 text-center">
@@ -146,16 +147,29 @@
                     <input id="token" name="token" type="text" inputmode="numeric" pattern="\d{6}" maxlength="6" required value="{{ old('token') }}"
                         class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm tracking-[0.25em] text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600"
                         placeholder="000000">
-                    <p class="text-[11px] text-slate-500">El token vence en unos minutos por seguridad.</p>
+                    <p id="token-timer"
+                        data-remaining-ms="{{ $tokenRemainingMs }}"
+                        class="text-[11px] text-slate-500">
+                        Tiempo restante: --:--
+                    </p>
                 </div>
 
-                <div class="pt-2 flex items-center justify-between text-xs">
-                    <a href="{{ route('login') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-4 py-2 font-semibold text-brand-700 shadow-inner shadow-brand-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-brand-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                        </svg>
-                        Cancelar
-                    </a>
+                <div class="pt-2 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 text-xs">
+                    <div class="flex flex-1 gap-2">
+                        <a href="{{ route('login') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-4 py-2 font-semibold text-brand-700 shadow-inner shadow-brand-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-brand-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                            </svg>
+                            Cancelar
+                        </a>
+                        <button type="submit" name="resend_token" value="1"
+                            class="inline-flex items-center justify-center gap-2 rounded-2xl border border-accent-400/50 bg-accent-50/80 px-4 py-2 font-semibold text-accent-700 shadow-inner shadow-accent-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-accent-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Reenviar token
+                        </button>
+                    </div>
                     <button type="submit"
                         class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-brand-900/30 transition duration-300 hover:-translate-y-0.5 hover:shadow-brand-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-300">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
@@ -252,6 +266,41 @@ function togglePassword(_, btn) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const tokenTimer = document.getElementById('token-timer');
+    if (tokenTimer) {
+        let remainingMs = Number(tokenTimer.dataset.remainingMs ?? 0);
+
+        const formatTimer = (ms) => {
+            const safeMs = Math.max(0, Math.floor(ms));
+            const totalSeconds = Math.floor(safeMs / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        };
+
+        const renderTimer = () => {
+            tokenTimer.textContent = remainingMs > 0
+                ? `Tiempo restante: ${formatTimer(remainingMs)}`
+                : 'Token expirado. Reenvía un nuevo token para continuar.';
+
+            tokenTimer.classList.toggle('text-red-700', remainingMs <= 0);
+            tokenTimer.classList.toggle('text-slate-500', remainingMs > 0);
+        };
+
+        renderTimer();
+
+        const interval = setInterval(() => {
+            remainingMs -= 100;
+            if (remainingMs <= 0) {
+                remainingMs = 0;
+                renderTimer();
+                clearInterval(interval);
+                return;
+            }
+            renderTimer();
+        }, 100);
+    }
+
     const form = document.getElementById('recover-reset-form');
     if (!form) return;
 

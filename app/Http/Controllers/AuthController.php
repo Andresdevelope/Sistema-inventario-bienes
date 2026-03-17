@@ -354,12 +354,29 @@ class AuthController extends Controller
 
         $step = (int) $request->session()->get('recovery_step', 1);
         $showThirdQuestion = (bool) $request->session()->get('show_third_question', false);
+        $tokenRemainingMs = 0;
+
+        // Si estamos en el paso de token, calculamos el tiempo restante real.
+        if ($step === 3) {
+            $email = (string) $request->session()->get('password_token_email', '');
+            if ($email !== '') {
+                $record = DB::table('password_reset_tokens')->where('email', $email)->first();
+                if ($record && isset($record->created_at)) {
+                    $ttlMinutes = (int) config('security.recovery_token_ttl_minutes', 1);
+                    $createdAt = \Illuminate\Support\Carbon::parse((string) $record->created_at);
+                    $expiresAt = $createdAt->copy()->addMinutes($ttlMinutes);
+                    $remainingMs = now()->diffInMilliseconds($expiresAt, false);
+                    $tokenRemainingMs = max(0, (int) $remainingMs);
+                }
+            }
+        }
 
         // Con reCAPTCHA v2 no generamos captcha local
 
         return view('auth.password_recover', [
             'step' => $step,
             'showThirdQuestion' => $showThirdQuestion,
+            'tokenRemainingMs' => $tokenRemainingMs,
         ]);
     }
 
@@ -393,6 +410,9 @@ class AuthController extends Controller
                 return back()->withErrors(['email' => 'No se encontró ningún usuario con ese correo.'])->onlyInput('email');
             }
 
+            // Limpiar cualquier estado previo de recuperación
+            $this->clearRecoveryTokenState($user->id, $user->email);
+
             $request->session()->put('password_recover_user_id', $user->id);
             $request->session()->put('recovery_step', 2);
             $request->session()->forget('show_third_question');
@@ -401,7 +421,18 @@ class AuthController extends Controller
         }
 
         // Paso 2: primero dos preguntas; si fallan, solo la tercera
+        // Rate limit para solicitud de token (por usuario/correo)
+        $rateLimitSeconds = (int) config('security.recovery_token_request_interval', 60);
         if ($step === 2) {
+            $userId = $request->session()->get('password_recover_user_id');
+            $user = $userId ? User::find($userId) : null;
+            if ($user) {
+                $lastTokenTime = $request->session()->get('last_token_sent_at_' . $user->id);
+                if ($lastTokenTime && now()->diffInSeconds($lastTokenTime) < $rateLimitSeconds) {
+                    $wait = $rateLimitSeconds - now()->diffInSeconds($lastTokenTime);
+                    return back()->withErrors(['email' => "Debes esperar $wait segundos antes de solicitar un nuevo token."]);
+                }
+            }
             // Validar reCAPTCHA en paso 2
             if (! $this->validateRecaptcha($request)) {
                 return back()->withErrors(['recaptcha' => 'Verificación reCAPTCHA fallida.']);
@@ -429,9 +460,9 @@ class AuthController extends Controller
                 }
 
                 // Tercera respuesta correcta: generar y enviar token por correo
+                $this->clearRecoveryTokenState($user->id, $user->email); // Limpia tokens previos
                 $token = $this->generateRecoveryToken();
                 $this->storeRecoveryToken($user->email, $token);
-
                 try {
                     $this->sendRecoveryTokenByEmail($user, $token);
                 } catch (\Throwable $e) {
@@ -439,17 +470,18 @@ class AuthController extends Controller
                         'user_id' => $user->id,
                         'email' => $user->email,
                     ]);
-
                     return back()->withErrors([
                         'email' => 'No fue posible enviar el token al correo. Intenta nuevamente en unos minutos.',
                     ]);
                 }
-
+                // Guardar timestamp del último envío de token
+                $request->session()->put('last_token_sent_at_' . $user->id, now());
                 $request->session()->forget(['show_third_question', 'password_recover_user_id']);
                 $request->session()->put('password_token_user_id', $user->id);
                 $request->session()->put('password_token_email', $user->email);
                 $request->session()->put('recovery_step', 3);
-
+                // Reiniciar contador de intentos de token
+                $request->session()->put('token_attempts_' . $user->id, 0);
                 return redirect()->route('password.recover')->with('status', 'Te enviamos un token a tu correo. Ingrésalo para continuar.');
             }
 
@@ -467,9 +499,9 @@ class AuthController extends Controller
 
             // Si ambas son correctas, pasar al cambio de contraseña
             if ($colorOk && $animalOk) {
+                $this->clearRecoveryTokenState($user->id, $user->email); // Limpia tokens previos
                 $token = $this->generateRecoveryToken();
                 $this->storeRecoveryToken($user->email, $token);
-
                 try {
                     $this->sendRecoveryTokenByEmail($user, $token);
                 } catch (\Throwable $e) {
@@ -477,17 +509,16 @@ class AuthController extends Controller
                         'user_id' => $user->id,
                         'email' => $user->email,
                     ]);
-
                     return back()->withErrors([
                         'email' => 'No fue posible enviar el token al correo. Intenta nuevamente en unos minutos.',
                     ]);
                 }
-
+                $request->session()->put('last_token_sent_at_' . $user->id, now());
                 $request->session()->forget(['show_third_question', 'password_recover_user_id']);
                 $request->session()->put('password_token_user_id', $user->id);
                 $request->session()->put('password_token_email', $user->email);
                 $request->session()->put('recovery_step', 3);
-
+                $request->session()->put('token_attempts_' . $user->id, 0);
                 return redirect()->route('password.recover')->with('status', 'Te enviamos un token a tu correo. Ingrésalo para continuar.');
             }
 
@@ -497,8 +528,49 @@ class AuthController extends Controller
             return back()->withErrors(['security_color_answer' => 'Alguna respuesta es incorrecta, ahora debes responder la tercera pregunta de seguridad.']);
         }
 
-        // Paso 3: validación de token enviado por correo
+        // Paso 3: validación de token enviado por correo o reenvío
         if ($step === 3) {
+            $userId = $request->session()->get('password_token_user_id');
+            $email = (string) $request->session()->get('password_token_email', '');
+            if (! $userId || $email === '') {
+                return redirect()->route('password.recover')->withErrors(['email' => 'Sesión de validación no válida.']);
+            }
+            $user = User::find($userId);
+            if (! $user || mb_strtolower($user->email) !== mb_strtolower($email)) {
+                return redirect()->route('password.recover')->withErrors(['email' => 'Usuario no encontrado para validar token.']);
+            }
+
+            // Si se presionó el botón de reenviar token
+            if ($request->has('resend_token')) {
+                $rateLimitSeconds = (int) config('security.recovery_token_request_interval', 60);
+                $lastTokenTime = $request->session()->get('last_token_sent_at_' . $user->id);
+                if ($lastTokenTime && now()->diffInSeconds($lastTokenTime) < $rateLimitSeconds) {
+                    $wait = $rateLimitSeconds - now()->diffInSeconds($lastTokenTime);
+                    return back()->withErrors(['token' => "Debes esperar $wait segundos antes de reenviar el token."]);
+                }
+                $this->clearRecoveryTokenState($user->id, $user->email); // Limpia tokens previos
+                $token = $this->generateRecoveryToken();
+                $this->storeRecoveryToken($user->email, $token);
+                try {
+                    $this->sendRecoveryTokenByEmail($user, $token);
+                } catch (\Throwable $e) {
+                    Log::error('Error reenviando token de recuperación: ' . $e->getMessage(), [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                    ]);
+                    return back()->withErrors([
+                        'token' => 'No fue posible reenviar el token. Intenta nuevamente en unos minutos.',
+                    ]);
+                }
+                $request->session()->put('last_token_sent_at_' . $user->id, now());
+                $request->session()->put('password_token_user_id', $user->id);
+                $request->session()->put('password_token_email', $user->email);
+                $request->session()->put('recovery_step', 3);
+                $request->session()->put('token_attempts_' . $user->id, 0);
+                return back()->with('status', 'Te reenviamos un nuevo token a tu correo.');
+            }
+
+            // Validación de token
             $validated = $request->validate([
                 'token' => ['required', 'digits:6'],
             ], [
@@ -506,15 +578,13 @@ class AuthController extends Controller
                 'token.digits' => 'El token debe tener exactamente 6 dígitos.',
             ]);
 
-            $userId = $request->session()->get('password_token_user_id');
-            $email = (string) $request->session()->get('password_token_email', '');
-            if (! $userId || $email === '') {
-                return redirect()->route('password.recover')->withErrors(['email' => 'Sesión de validación no válida.']);
-            }
-
-            $user = User::find($userId);
-            if (! $user || mb_strtolower($user->email) !== mb_strtolower($email)) {
-                return redirect()->route('password.recover')->withErrors(['email' => 'Usuario no encontrado para validar token.']);
+            // Limitar intentos de validación de token
+            $maxAttempts = (int) config('security.recovery_token_max_attempts', 5);
+            $attempts = (int) $request->session()->get('token_attempts_' . $user->id, 0) + 1;
+            $request->session()->put('token_attempts_' . $user->id, $attempts);
+            if ($attempts > $maxAttempts) {
+                $this->clearRecoveryTokenState($user->id, $user->email);
+                return redirect()->route('password.recover')->withErrors(['token' => 'Has superado el número máximo de intentos. Debes iniciar de nuevo el proceso.']);
             }
 
             $record = DB::table('password_reset_tokens')->where('email', $user->email)->first();
@@ -522,12 +592,12 @@ class AuthController extends Controller
                 return back()->withErrors(['token' => 'No se encontró un token activo. Solicita uno nuevo.']);
             }
 
-            $ttlMinutes = (int) config('security.recovery_token_ttl_minutes', 10);
+            $ttlMinutes = (int) config('security.recovery_token_ttl_minutes', 1);
             $createdAt = \Illuminate\Support\Carbon::parse((string) $record->created_at);
             $expiresAt = $createdAt->addMinutes($ttlMinutes);
             if (now()->greaterThan($expiresAt)) {
                 DB::table('password_reset_tokens')->where('email', $user->email)->delete();
-
+                $this->clearRecoveryTokenState($user->id, $user->email);
                 return back()->withErrors(['token' => 'El token ha expirado. Inicia de nuevo el proceso de recuperación.']);
             }
 
@@ -538,8 +608,7 @@ class AuthController extends Controller
 
             // Token válido: eliminarlo para evitar reutilización y avanzar
             DB::table('password_reset_tokens')->where('email', $user->email)->delete();
-
-            $request->session()->forget(['password_token_user_id', 'password_token_email']);
+            $request->session()->forget(['password_token_user_id', 'password_token_email', 'token_attempts_' . $user->id, 'last_token_sent_at_' . $user->id]);
             $request->session()->put('password_reset_user_id', $user->id);
             $request->session()->put('recovery_step', 4);
 
@@ -576,14 +645,7 @@ class AuthController extends Controller
             }
             $user->save();
 
-            $request->session()->forget([
-                'password_reset_user_id',
-                'password_recover_user_id',
-                'password_token_user_id',
-                'password_token_email',
-                'recovery_step',
-                'show_third_question',
-            ]);
+            $this->clearRecoveryTokenState($user->id, $user->email);
 
             return redirect()->route('login')->with('status', 'Contraseña actualizada correctamente. Ahora puedes iniciar sesión.');
         }
@@ -599,6 +661,33 @@ class AuthController extends Controller
         ]);
 
         return redirect()->route('password.recover');
+    }
+
+    /**
+     * Limpia todo el estado de recuperación de contraseña para un usuario/email.
+     * Elimina token en BD, intentos/rate-limit en sesión y variables del flujo.
+     */
+    protected function clearRecoveryTokenState(?int $userId, ?string $email): void
+    {
+        if ($email) {
+            DB::table('password_reset_tokens')->where('email', $email)->delete();
+        }
+
+        if ($userId) {
+            session()->forget([
+                'last_token_sent_at_' . $userId,
+                'token_attempts_' . $userId,
+            ]);
+        }
+
+        session()->forget([
+            'password_recover_user_id',
+            'password_token_user_id',
+            'password_token_email',
+            'password_reset_user_id',
+            'recovery_step',
+            'show_third_question',
+        ]);
     }
 
     /**
@@ -628,7 +717,7 @@ class AuthController extends Controller
      */
     protected function sendRecoveryTokenByEmail(User $user, string $token): void
     {
-        $ttlMinutes = (int) config('security.recovery_token_ttl_minutes', 10);
+        $ttlMinutes = (int) config('security.recovery_token_ttl_minutes', 1);
 
         Mail::raw(
             "Hola {$user->name},\n\n" .
