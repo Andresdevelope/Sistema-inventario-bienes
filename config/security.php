@@ -33,4 +33,7 @@ return [
 
     // Tiempo mínimo (en segundos) entre solicitudes de token de recuperación (rate limit)
     'recovery_token_request_interval' => env('RECOVERY_TOKEN_REQUEST_INTERVAL', 60),
+
+    // Máximo de reenvíos permitidos del token dentro del mismo proceso de recuperación
+    'recovery_token_max_resends' => env('RECOVERY_TOKEN_MAX_RESENDS', 3),
 ];

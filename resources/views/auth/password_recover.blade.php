@@ -4,6 +4,10 @@
 @php($step = $step ?? 1)
 @php($showThirdQuestion = $showThirdQuestion ?? false)
 @php($tokenRemainingMs = (int) ($tokenRemainingMs ?? 0))
+@php($resendRemainingMs = (int) ($resendRemainingMs ?? 0))
+@php($resendCount = (int) ($resendCount ?? 0))
+@php($maxResends = (int) ($maxResends ?? 3))
+@php($canResend = (bool) ($canResend ?? true))
 <div class="flex items-center justify-center min-h-screen">
     <div class="w-full max-w-md bg-white/90 backdrop-blur border border-slate-200 shadow-2xl rounded-2xl p-6 md:p-8 text-slate-900">
         <h1 class="text-2xl font-semibold mb-1 text-center">
@@ -152,24 +156,28 @@
                         class="text-[11px] text-slate-500">
                         Tiempo restante: --:--
                     </p>
+                    <p id="resend-timer"
+                        data-remaining-ms="{{ $resendRemainingMs }}"
+                        data-resend-count="{{ $resendCount }}"
+                        data-max-resends="{{ $maxResends }}"
+                        class="text-[11px] {{ $canResend ? 'text-emerald-700' : 'text-slate-500' }}">
+                        @if ($resendCount >= $maxResends)
+                            Límite de reenvíos alcanzado para este intento.
+                        @elseif ($resendRemainingMs > 0)
+                            Podrás reenviar cuando termine la espera.
+                        @else
+                            Puedes reenviar un nuevo token si no recibiste el correo.
+                        @endif
+                    </p>
                 </div>
 
                 <div class="pt-2 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 text-xs">
-                    <div class="flex flex-1 gap-2">
-                        <a href="{{ route('login') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-4 py-2 font-semibold text-brand-700 shadow-inner shadow-brand-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-brand-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                            </svg>
-                            Cancelar
-                        </a>
-                        <button type="submit" name="resend_token" value="1"
-                            class="inline-flex items-center justify-center gap-2 rounded-2xl border border-accent-400/50 bg-accent-50/80 px-4 py-2 font-semibold text-accent-700 shadow-inner shadow-accent-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-accent-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                            </svg>
-                            Reenviar token
-                        </button>
-                    </div>
+                    <a href="{{ route('login') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-400/50 bg-brand-50/80 px-4 py-2 font-semibold text-brand-700 shadow-inner shadow-brand-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-brand-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                        Cancelar
+                    </a>
                     <button type="submit"
                         class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-accent-500 px-4 py-2 text-[12px] font-semibold text-white shadow-lg shadow-brand-900/30 transition duration-300 hover:-translate-y-0.5 hover:shadow-brand-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-300">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
@@ -178,6 +186,20 @@
                         Validar token
                     </button>
                 </div>
+            </form>
+
+            <form method="POST" action="{{ route('password.recover.handle') }}" class="mt-2">
+                @csrf
+                <input type="hidden" name="step" value="3">
+                <input type="hidden" name="resend_token" value="1">
+                <button id="resend-button" type="submit"
+                    @disabled(! $canResend)
+                    class="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-accent-400/50 bg-accent-50/80 px-4 py-2 text-[12px] font-semibold text-accent-700 shadow-inner shadow-accent-200/60 transition duration-300 hover:-translate-y-0.5 hover:bg-accent-100/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-300 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Reenviar token
+                </button>
             </form>
         @else
             {{-- Paso 4: nueva contraseña --}}
@@ -266,17 +288,17 @@ function togglePassword(_, btn) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const formatTimer = (ms) => {
+        const safeMs = Math.max(0, Math.floor(ms));
+        const totalSeconds = Math.floor(safeMs / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    };
+
     const tokenTimer = document.getElementById('token-timer');
     if (tokenTimer) {
         let remainingMs = Number(tokenTimer.dataset.remainingMs ?? 0);
-
-        const formatTimer = (ms) => {
-            const safeMs = Math.max(0, Math.floor(ms));
-            const totalSeconds = Math.floor(safeMs / 1000);
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        };
 
         const renderTimer = () => {
             tokenTimer.textContent = remainingMs > 0
@@ -290,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTimer();
 
         const interval = setInterval(() => {
-            remainingMs -= 100;
+            remainingMs -= 1000;
             if (remainingMs <= 0) {
                 remainingMs = 0;
                 renderTimer();
@@ -298,7 +320,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             renderTimer();
-        }, 100);
+        }, 1000);
+    }
+
+    const resendTimer = document.getElementById('resend-timer');
+    const resendButton = document.getElementById('resend-button');
+    if (resendTimer && resendButton) {
+        let resendRemainingMs = Number(resendTimer.dataset.remainingMs ?? 0);
+        const resendCount = Number(resendTimer.dataset.resendCount ?? 0);
+        const maxResends = Number(resendTimer.dataset.maxResends ?? 0);
+        const maxReached = resendCount >= maxResends;
+
+        const renderResendTimer = () => {
+            if (maxReached) {
+                resendButton.disabled = true;
+                resendTimer.textContent = 'Límite de reenvíos alcanzado para este intento.';
+                resendTimer.classList.add('text-red-700');
+                resendTimer.classList.remove('text-slate-500', 'text-emerald-700');
+                return;
+            }
+
+            if (resendRemainingMs > 0) {
+                resendButton.disabled = true;
+                resendTimer.textContent = `Podrás reenviar en ${formatTimer(resendRemainingMs)}.`;
+                resendTimer.classList.add('text-slate-500');
+                resendTimer.classList.remove('text-red-700', 'text-emerald-700');
+                return;
+            }
+
+            resendButton.disabled = false;
+            resendTimer.textContent = 'Ya puedes reenviar un nuevo token.';
+            resendTimer.classList.add('text-emerald-700');
+            resendTimer.classList.remove('text-red-700', 'text-slate-500');
+        };
+
+        renderResendTimer();
+
+        if (!maxReached && resendRemainingMs > 0) {
+            const resendInterval = setInterval(() => {
+                resendRemainingMs -= 1000;
+                if (resendRemainingMs <= 0) {
+                    resendRemainingMs = 0;
+                    renderResendTimer();
+                    clearInterval(resendInterval);
+                    return;
+                }
+                renderResendTimer();
+            }, 1000);
+        }
     }
 
     const form = document.getElementById('recover-reset-form');

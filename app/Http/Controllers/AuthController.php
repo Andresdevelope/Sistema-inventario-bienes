@@ -355,9 +355,14 @@ class AuthController extends Controller
         $step = (int) $request->session()->get('recovery_step', 1);
         $showThirdQuestion = (bool) $request->session()->get('show_third_question', false);
         $tokenRemainingMs = 0;
+        $resendRemainingMs = 0;
+        $resendCount = 0;
+        $maxResends = (int) config('security.recovery_token_max_resends', 3);
+        $canResend = true;
 
         // Si estamos en el paso de token, calculamos el tiempo restante real.
         if ($step === 3) {
+            $userId = (int) $request->session()->get('password_token_user_id', 0);
             $email = (string) $request->session()->get('password_token_email', '');
             if ($email !== '') {
                 $record = DB::table('password_reset_tokens')->where('email', $email)->first();
@@ -369,6 +374,12 @@ class AuthController extends Controller
                     $tokenRemainingMs = max(0, (int) $remainingMs);
                 }
             }
+
+            if ($userId > 0) {
+                $resendCount = (int) $request->session()->get('token_resend_count_' . $userId, 0);
+                $resendRemainingMs = $this->getTokenRequestWaitSeconds($request, $userId) * 1000;
+                $canResend = $resendRemainingMs <= 0 && $resendCount < $maxResends;
+            }
         }
 
         // Con reCAPTCHA v2 no generamos captcha local
@@ -377,6 +388,10 @@ class AuthController extends Controller
             'step' => $step,
             'showThirdQuestion' => $showThirdQuestion,
             'tokenRemainingMs' => $tokenRemainingMs,
+            'resendRemainingMs' => $resendRemainingMs,
+            'resendCount' => $resendCount,
+            'maxResends' => $maxResends,
+            'canResend' => $canResend,
         ]);
     }
 
@@ -421,16 +436,14 @@ class AuthController extends Controller
         }
 
         // Paso 2: primero dos preguntas; si fallan, solo la tercera
-        // Rate limit para solicitud de token (por usuario/correo)
-        $rateLimitSeconds = (int) config('security.recovery_token_request_interval', 60);
         if ($step === 2) {
             $userId = $request->session()->get('password_recover_user_id');
             $user = $userId ? User::find($userId) : null;
             if ($user) {
-                $lastTokenTime = $request->session()->get('last_token_sent_at_' . $user->id);
-                if ($lastTokenTime && now()->diffInSeconds($lastTokenTime) < $rateLimitSeconds) {
-                    $wait = $rateLimitSeconds - now()->diffInSeconds($lastTokenTime);
-                    return back()->withErrors(['email' => "Debes esperar $wait segundos antes de solicitar un nuevo token."]);
+                $wait = $this->getTokenRequestWaitSeconds($request, $user->id);
+                if ($wait > 0) {
+                    $label = $wait === 1 ? 'segundo' : 'segundos';
+                    return back()->withErrors(['email' => "Debes esperar $wait $label antes de solicitar un nuevo token."]);
                 }
             }
             // Validar reCAPTCHA en paso 2
@@ -475,13 +488,7 @@ class AuthController extends Controller
                     ]);
                 }
                 // Guardar timestamp del último envío de token
-                $request->session()->put('last_token_sent_at_' . $user->id, now());
-                $request->session()->forget(['show_third_question', 'password_recover_user_id']);
-                $request->session()->put('password_token_user_id', $user->id);
-                $request->session()->put('password_token_email', $user->email);
-                $request->session()->put('recovery_step', 3);
-                // Reiniciar contador de intentos de token
-                $request->session()->put('token_attempts_' . $user->id, 0);
+                $this->prepareRecoveryTokenStepSession($request, $user, true, true);
                 return redirect()->route('password.recover')->with('status', 'Te enviamos un token a tu correo. Ingrésalo para continuar.');
             }
 
@@ -513,12 +520,7 @@ class AuthController extends Controller
                         'email' => 'No fue posible enviar el token al correo. Intenta nuevamente en unos minutos.',
                     ]);
                 }
-                $request->session()->put('last_token_sent_at_' . $user->id, now());
-                $request->session()->forget(['show_third_question', 'password_recover_user_id']);
-                $request->session()->put('password_token_user_id', $user->id);
-                $request->session()->put('password_token_email', $user->email);
-                $request->session()->put('recovery_step', 3);
-                $request->session()->put('token_attempts_' . $user->id, 0);
+                $this->prepareRecoveryTokenStepSession($request, $user, true, true);
                 return redirect()->route('password.recover')->with('status', 'Te enviamos un token a tu correo. Ingrésalo para continuar.');
             }
 
@@ -542,13 +544,20 @@ class AuthController extends Controller
 
             // Si se presionó el botón de reenviar token
             if ($request->has('resend_token')) {
-                $rateLimitSeconds = (int) config('security.recovery_token_request_interval', 60);
-                $lastTokenTime = $request->session()->get('last_token_sent_at_' . $user->id);
-                if ($lastTokenTime && now()->diffInSeconds($lastTokenTime) < $rateLimitSeconds) {
-                    $wait = $rateLimitSeconds - now()->diffInSeconds($lastTokenTime);
-                    return back()->withErrors(['token' => "Debes esperar $wait segundos antes de reenviar el token."]);
+                $maxResends = (int) config('security.recovery_token_max_resends', 3);
+                $resendCountKey = 'token_resend_count_' . $user->id;
+                $resendCount = (int) $request->session()->get($resendCountKey, 0);
+                if ($resendCount >= $maxResends) {
+                    return back()->withErrors(['token' => 'Has alcanzado el límite de reenvíos para este proceso. Inicia nuevamente la recuperación.']);
                 }
-                $this->clearRecoveryTokenState($user->id, $user->email); // Limpia tokens previos
+
+                $wait = $this->getTokenRequestWaitSeconds($request, $user->id);
+                if ($wait > 0) {
+                    $label = $wait === 1 ? 'segundo' : 'segundos';
+                    return back()->withErrors(['token' => "Debes esperar $wait $label antes de reenviar el token."]);
+                }
+
+                DB::table('password_reset_tokens')->where('email', $user->email)->delete();
                 $token = $this->generateRecoveryToken();
                 $this->storeRecoveryToken($user->email, $token);
                 try {
@@ -562,15 +571,17 @@ class AuthController extends Controller
                         'token' => 'No fue posible reenviar el token. Intenta nuevamente en unos minutos.',
                     ]);
                 }
-                $request->session()->put('last_token_sent_at_' . $user->id, now());
-                $request->session()->put('password_token_user_id', $user->id);
-                $request->session()->put('password_token_email', $user->email);
-                $request->session()->put('recovery_step', 3);
-                $request->session()->put('token_attempts_' . $user->id, 0);
-                return back()->with('status', 'Te reenviamos un nuevo token a tu correo.');
+                $this->prepareRecoveryTokenStepSession($request, $user, false, false);
+                $request->session()->put($resendCountKey, $resendCount + 1);
+                $remainingResends = max(0, $maxResends - ($resendCount + 1));
+                return back()->with('status', "Te reenviamos un nuevo token a tu correo. Reenvíos restantes: $remainingResends. Usa únicamente el último token recibido.");
             }
 
             // Validación de token
+            $request->merge([
+                'token' => $this->normalizeRecoveryTokenInput($request->input('token')),
+            ]);
+
             $validated = $request->validate([
                 'token' => ['required', 'digits:6'],
             ], [
@@ -597,18 +608,34 @@ class AuthController extends Controller
             $expiresAt = $createdAt->addMinutes($ttlMinutes);
             if (now()->greaterThan($expiresAt)) {
                 DB::table('password_reset_tokens')->where('email', $user->email)->delete();
-                $this->clearRecoveryTokenState($user->id, $user->email);
-                return back()->withErrors(['token' => 'El token ha expirado. Inicia de nuevo el proceso de recuperación.']);
+                $request->session()->put('password_token_user_id', $user->id);
+                $request->session()->put('password_token_email', $user->email);
+                $request->session()->put('recovery_step', 3);
+                $request->session()->forget('token_attempts_' . $user->id);
+                return back()->withErrors(['token' => 'El token ha expirado. Pulsa "Reenviar token" para recibir uno nuevo.']);
             }
 
             $providedHash = hash('sha256', (string) $validated['token']);
-            if (! hash_equals((string) $record->token, $providedHash)) {
-                return back()->withErrors(['token' => 'El token ingresado es incorrecto.']);
+            $storedToken = (string) $record->token;
+            $matchesHashedToken = hash_equals($storedToken, $providedHash);
+            $matchesLegacyPlainToken = hash_equals($storedToken, (string) $validated['token']);
+
+            if (! $matchesHashedToken && ! $matchesLegacyPlainToken) {
+                Log::info('Recovery token mismatch', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'resend_count' => (int) $request->session()->get('token_resend_count_' . $user->id, 0),
+                    'record_created_at' => (string) $record->created_at,
+                    'stored_token_prefix' => mb_substr($storedToken, 0, 8),
+                    'provided_hash_prefix' => mb_substr($providedHash, 0, 8),
+                ]);
+
+                return back()->withErrors(['token' => 'El token ingresado es incorrecto. Verifica que estés usando el último token reenviado.']);
             }
 
             // Token válido: eliminarlo para evitar reutilización y avanzar
             DB::table('password_reset_tokens')->where('email', $user->email)->delete();
-            $request->session()->forget(['password_token_user_id', 'password_token_email', 'token_attempts_' . $user->id, 'last_token_sent_at_' . $user->id]);
+            $request->session()->forget(['password_token_user_id', 'password_token_email', 'token_attempts_' . $user->id, 'last_token_sent_at_' . $user->id, 'token_resend_count_' . $user->id]);
             $request->session()->put('password_reset_user_id', $user->id);
             $request->session()->put('recovery_step', 4);
 
@@ -677,6 +704,7 @@ class AuthController extends Controller
             session()->forget([
                 'last_token_sent_at_' . $userId,
                 'token_attempts_' . $userId,
+                'token_resend_count_' . $userId,
             ]);
         }
 
@@ -688,6 +716,66 @@ class AuthController extends Controller
             'recovery_step',
             'show_third_question',
         ]);
+    }
+
+    /**
+     * Calcula segundos restantes del cooldown para solicitar/reenviar token.
+     */
+    protected function getTokenRequestWaitSeconds(Request $request, int $userId): int
+    {
+        if ($userId <= 0) {
+            return 0;
+        }
+
+        $rateLimitSeconds = max(0, (int) config('security.recovery_token_request_interval', 60));
+        if ($rateLimitSeconds === 0) {
+            return 0;
+        }
+
+        $lastTokenTime = $request->session()->get('last_token_sent_at_' . $userId);
+        if (! $lastTokenTime) {
+            return 0;
+        }
+
+        try {
+            $lastSentAt = $lastTokenTime instanceof \DateTimeInterface
+                ? \Illuminate\Support\Carbon::instance($lastTokenTime)
+                : \Illuminate\Support\Carbon::parse((string) $lastTokenTime);
+
+            $elapsedSeconds = max(0, time() - $lastSentAt->getTimestamp());
+            return max(0, $rateLimitSeconds - $elapsedSeconds);
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Prepara la sesión para el paso de validación de token (paso 3).
+     */
+    protected function prepareRecoveryTokenStepSession(Request $request, User $user, bool $resetResendCount, bool $clearQuestionStepState): void
+    {
+        $request->session()->put('last_token_sent_at_' . $user->id, now());
+        if ($clearQuestionStepState) {
+            $request->session()->forget(['show_third_question', 'password_recover_user_id']);
+        }
+
+        $request->session()->put('password_token_user_id', $user->id);
+        $request->session()->put('password_token_email', $user->email);
+        $request->session()->put('recovery_step', 3);
+        $request->session()->put('token_attempts_' . $user->id, 0);
+
+        if ($resetResendCount) {
+            $request->session()->put('token_resend_count_' . $user->id, 0);
+        }
+    }
+
+    /**
+     * Normaliza el token dejando solo dígitos.
+     */
+    protected function normalizeRecoveryTokenInput(?string $value): string
+    {
+        $raw = trim((string) $value);
+        return preg_replace('/\D+/u', '', $raw) ?? '';
     }
 
     /**
