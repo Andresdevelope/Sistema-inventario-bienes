@@ -86,7 +86,7 @@
 
             <div class="space-y-1 relative">
                 <label class="block text-xs font-medium text-slate-700" for="password">Contraseña</label>
-                <input id="password" name="password" type="password" required minlength="16" maxlength="40" autocomplete="current-password"
+                <input id="password" name="password" type="password" required minlength="16" autocomplete="current-password"
                     class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-slate-600 pr-10">
                 <button type="button" onclick="togglePassword('password', this)" tabindex="-1"
                     class="absolute right-2 top-8 text-slate-500 hover:text-slate-700 focus:outline-none">
